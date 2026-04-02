@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import React, { createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
 import TreeView, { type TreeViewHandle, type TreeViewNode } from "./TreeView";
@@ -68,7 +74,12 @@ describe("TreeView", () => {
     ref.current?.focus("child-2");
 
     await waitFor(() => {
-      expect(screen.getByRole("treeitem", { name: /Child 2/i })).toHaveFocus();
+      const item = screen.getByRole("treeitem", { name: /Child 2/i });
+      const toggle = item.querySelector(
+        '[data-slot="tree-toggle"]',
+      ) as HTMLElement;
+      expect(toggle).toBeTruthy();
+      expect(toggle).toHaveFocus();
     });
   });
 
@@ -95,22 +106,38 @@ describe("TreeView", () => {
   it("supports keyboard navigation and expansion", async () => {
     render(<TreeView ariaLabel="Keyboard tree" data={data} />);
 
-    const root = screen.getByRole("treeitem", { name: /Root/i });
-    root.focus();
+    const rootItem = screen.getByRole("treeitem", { name: /Root/i });
+    const rootToggle = rootItem.querySelector(
+      '[data-slot="tree-toggle"]',
+    ) as HTMLElement;
+    rootToggle.focus();
 
-    fireEvent.keyDown(root, { key: "ArrowDown" });
+    fireEvent.keyDown(rootToggle, { key: "ArrowDown" });
     await waitFor(() => {
-      expect(screen.getByRole("treeitem", { name: /Child 1/i })).toHaveFocus();
+      const child1Item = screen.getByRole("treeitem", { name: /Child 1/i });
+      const child1Toggle = child1Item.querySelector(
+        '[data-slot="tree-toggle"]',
+      ) as HTMLElement | null;
+      if (child1Toggle) {
+        expect(child1Toggle).toHaveFocus();
+      } else {
+        expect(child1Item).toHaveFocus();
+      }
     });
 
-    fireEvent.keyDown(screen.getByRole("treeitem", { name: /Child 1/i }), {
+    fireEvent.keyDown(document.activeElement as Element, {
       key: "ArrowDown",
     });
     await waitFor(() => {
-      expect(screen.getByRole("treeitem", { name: /Child 2/i })).toHaveFocus();
+      const child2Item = screen.getByRole("treeitem", { name: /Child 2/i });
+      const child2Toggle = child2Item.querySelector(
+        '[data-slot="tree-toggle"]',
+      ) as HTMLElement;
+      expect(child2Toggle).toBeTruthy();
+      expect(child2Toggle).toHaveFocus();
     });
 
-    fireEvent.keyDown(screen.getByRole("treeitem", { name: /Child 2/i }), {
+    fireEvent.keyDown(document.activeElement as Element, {
       key: "ArrowRight",
     });
     expect(screen.getByText("Grandchild")).toBeInTheDocument();

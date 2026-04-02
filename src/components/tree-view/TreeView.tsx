@@ -406,8 +406,24 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
 
     const focusRowElement = useCallback((id: string) => {
       const element = rowRefs.current.get(id);
-      if (element && document.activeElement !== element) {
-        element.focus();
+      if (!element) return;
+
+      // Prefer focusing the toggle button inside the row so Tab lands on toggles.
+      const toggle = element.querySelector(
+        '[data-slot="tree-toggle"]',
+      ) as HTMLElement | null;
+
+      if (toggle) {
+        if (document.activeElement !== toggle) toggle.focus();
+        return;
+      }
+
+      // Fallback: ensure the row element is programmatically focusable and focus it.
+      try {
+        element.tabIndex = -1;
+        if (document.activeElement !== element) element.focus();
+      } catch (e) {
+        /* ignore */
       }
     }, []);
 
@@ -438,13 +454,9 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
       resolvedFocusedId,
     ]);
 
-    useEffect(() => {
-      if (!resolvedFocusedId) {
-        return;
-      }
-
-      focusRowElement(resolvedFocusedId);
-    }, [focusRowElement, resolvedFocusedId]);
+    // Do not programmatically focus rows on every `focusedId` change — allow
+    // the browser to manage tab focus. The imperative `focus(id)` method still
+    // calls `focusRowElement` so callers can opt-in to programmatic focus.
 
     const updateExpandedIds = useCallback(
       (nextExpandedIds: string[]) => {
@@ -872,7 +884,6 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
             }}
             role="treeitem"
             style={itemStyle}
-            tabIndex={focused ? 0 : -1}
             onClick={(event) => {
               if (isDirectTreeItemEventTarget(event)) {
                 updateFocusedId(item.id);
