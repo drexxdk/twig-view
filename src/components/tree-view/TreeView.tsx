@@ -30,6 +30,10 @@ export type TreeViewNode = {
   disabled?: boolean;
   defaultExpanded?: boolean;
   icon?: React.ReactNode;
+  toggleIconOpen?: React.ReactNode;
+  toggleIconClosed?: React.ReactNode;
+  toggleClassName?: string;
+  toggleStyle?: React.CSSProperties;
   className?: string;
   meta?: Record<string, unknown>;
 };
@@ -93,6 +97,9 @@ export type TreeViewProps = Omit<
   routing?: TreeViewRouting;
   renderNode?: (args: TreeViewRenderNodeArgs) => React.ReactNode;
   renderToggle?: (args: TreeViewRenderToggleArgs) => React.ReactNode;
+  toggleIcons?: { open?: React.ReactNode; closed?: React.ReactNode };
+  toggleClassName?: string;
+  toggleStyle?: React.CSSProperties;
 };
 
 type FlattenedTreeItem = {
@@ -269,21 +276,58 @@ function DefaultToggle({
   expanded: boolean;
   size: number;
 }) {
+  const s = Math.max(10, size);
+
   return (
     <span
       aria-hidden="true"
       className={styles.defaultToggleIcon}
-      style={{ width: size, height: size }}
+      style={{
+        width: size,
+        height: size,
+        borderRadius: "50%",
+        display: "inline-grid",
+        placeItems: "center",
+        background: "var(--tree-toggle-bg, rgba(2,6,23,0.9))",
+        color: "var(--tree-toggle-foreground, #ffffff)",
+      }}
     >
-      <svg viewBox="0 0 16 16" width={size} height={size} focusable="false">
-        <path
-          d={expanded ? "M3 6l5 5 5-5" : "M6 3l5 5-5 5"}
-          fill="none"
-          stroke="currentColor"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="1.75"
-        />
+      <svg
+        viewBox="0 0 24 24"
+        width={s * 0.6}
+        height={s * 0.6}
+        focusable="false"
+        aria-hidden="true"
+      >
+        {expanded ? (
+          <path
+            d="M6 12h12"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+          />
+        ) : (
+          <>
+            <path
+              d="M6 12h12"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+            <path
+              d="M12 6v12"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+          </>
+        )}
       </svg>
     </span>
   );
@@ -312,6 +356,9 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
       routing = "indent-vertical",
       renderNode,
       renderToggle,
+      toggleIcons,
+      toggleClassName,
+      toggleStyle,
       className,
       style,
       ...rest
@@ -690,8 +737,10 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
           "--tree-row-height": `${resolvedRowHeight}px`,
           "--tree-children-stem-height": `${childrenStemHeight}px`,
         } as TreeCssProperties;
-        const toggleNode = renderToggle ? (
-          renderToggle({
+        let toggleNode: React.ReactNode;
+
+        if (renderToggle) {
+          toggleNode = renderToggle({
             node: item.node,
             id: item.id,
             path: item.path,
@@ -701,10 +750,44 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
             toggleable,
             disabled: item.disabled,
             size: toggleSize,
-          })
-        ) : (
-          <DefaultToggle expanded={expanded} size={toggleSize} />
-        );
+          });
+        } else {
+          const openIcon =
+            (item.node as any).toggleIconOpen ?? toggleIcons?.open;
+          const closedIcon =
+            (item.node as any).toggleIconClosed ?? toggleIcons?.closed;
+          const nodeToggleClass = joinClassNames(
+            toggleClassName,
+            (item.node as any).toggleClassName,
+          );
+          const nodeToggleStyle = {
+            ...(toggleStyle ?? {}),
+            ...((item.node as any).toggleStyle ?? {}),
+          } as React.CSSProperties;
+
+          if (openIcon || closedIcon) {
+            toggleNode = (
+              <span
+                aria-hidden="true"
+                className={joinClassNames(
+                  styles.defaultToggleIcon,
+                  nodeToggleClass,
+                )}
+                style={{
+                  width: toggleSize,
+                  height: toggleSize,
+                  ...nodeToggleStyle,
+                }}
+              >
+                {expanded ? (openIcon ?? closedIcon) : (closedIcon ?? openIcon)}
+              </span>
+            );
+          } else {
+            toggleNode = (
+              <DefaultToggle expanded={expanded} size={toggleSize} />
+            );
+          }
+        }
         const content = renderNode
           ? renderNode({
               node: item.node,
@@ -873,13 +956,21 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
                   aria-controls={groupId}
                   aria-expanded={expanded}
                   aria-label={expanded ? "Collapse node" : "Expand node"}
-                  className={styles.toggleButton}
+                  className={joinClassNames(
+                    styles.toggleButton,
+                    toggleClassName,
+                    (item.node as any).toggleClassName,
+                  )}
                   data-slot="tree-toggle"
                   disabled={item.disabled}
                   type="button"
                   onClick={(event) => {
                     event.stopPropagation();
                     toggle(item.id);
+                  }}
+                  style={{
+                    ...(toggleStyle ?? {}),
+                    ...((item.node as any).toggleStyle ?? {}),
                   }}
                 >
                   {toggleNode}

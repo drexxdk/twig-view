@@ -408,23 +408,39 @@ export default function App() {
 
   function renderToggle(expanded: boolean, size: number) {
     return (
-      <span
-        aria-hidden="true"
-        style={{
-          width: size,
-          height: size,
-          display: "inline-grid",
-          placeItems: "center",
-          borderRadius: 999,
-          background: expanded ? "rgb(22, 78, 99)" : "rgb(51, 65, 85)",
-          boxShadow: "0 0 0 3px rgba(15, 23, 42, 0.96)",
-          color: expanded ? "#7dd3fc" : "#cbd5e1",
-          fontSize: Math.max(11, size * 0.55),
-          lineHeight: 1,
-        }}
-      >
-        {expanded ? "−" : "+"}
-      </span>
+      <>
+        <span
+          aria-hidden="true"
+          style={{
+            width: size,
+            height: size,
+            display: "inline-grid",
+            placeItems: "center",
+            borderRadius: 6,
+            background: expanded ? "rgb(22, 78, 99)" : "rgb(51, 65, 85)",
+            color: expanded ? "#7dd3fc" : "#cbd5e1",
+            fontSize: Math.max(11, size * 0.6),
+            lineHeight: 1,
+          }}
+        >
+          {expanded ? "−" : "+"}
+        </span>
+        <span
+          style={{
+            width: size,
+            height: size,
+            display: "inline-grid",
+            placeItems: "center",
+            borderRadius: 6,
+            background: expanded ? "#ec4899" : "rgb(51, 65, 85)",
+            color: expanded ? "#000000" : "#cbd5e1",
+            fontSize: Math.max(11, size * 0.6),
+            lineHeight: 1,
+          }}
+        >
+          {expanded ? "−" : "+"}
+        </span>
+      </>
     );
   }
 
@@ -517,12 +533,70 @@ export default function App() {
                 line={scenario.line}
                 rowGap={scenario.rowGap}
                 toggleSize={scenario.toggleSize}
+                style={
+                  (scenario.id === "wide-toggle"
+                    ? {
+                        ["--tree-toggle-bg"]: "#ec4899",
+                        ["--tree-toggle-foreground"]: "#000000",
+                      }
+                    : {
+                        ["--tree-toggle-bg"]: scenario.line?.color,
+                        ["--tree-toggle-foreground"]: "#ffffff",
+                      }) as unknown as React.CSSProperties
+                }
                 renderNode={({ node, hasChildren, toggleable }) =>
                   renderNode(node, hasChildren, toggleable)
                 }
-                renderToggle={({ expanded, size }) =>
-                  renderToggle(expanded, size)
-                }
+                {...(scenario.id === "rounded-elbows"
+                  ? {
+                      toggleIcons: {
+                        open: (
+                          <span
+                            style={{
+                              width: scenario.toggleSize ?? 18,
+                              height: scenario.toggleSize ?? 18,
+                              display: "inline-grid",
+                              placeItems: "center",
+                            }}
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              width={scenario.toggleSize ?? 18}
+                              height={scenario.toggleSize ?? 18}
+                              aria-hidden
+                            >
+                              <path
+                                d="M12 21s-7-4.35-9-7.07C-0.5 9.5 4 4 7.5 6.5 9.5 7.9 12 10 12 10s2.5-2.1 4.5-3.5C20 4 24.5 9.5 21 13.93 19 16.65 12 21 12 21z"
+                                fill="#ef4444"
+                              />
+                            </svg>
+                          </span>
+                        ),
+                        closed: (
+                          <span
+                            style={{
+                              width: scenario.toggleSize ?? 18,
+                              height: scenario.toggleSize ?? 18,
+                              display: "inline-grid",
+                              placeItems: "center",
+                            }}
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              width={scenario.toggleSize ?? 18}
+                              height={scenario.toggleSize ?? 18}
+                              aria-hidden
+                            >
+                              <path
+                                d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
+                                fill="#facc15"
+                              />
+                            </svg>
+                          </span>
+                        ),
+                      },
+                    }
+                  : {})}
               />
             </section>
           ))}
