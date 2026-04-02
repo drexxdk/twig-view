@@ -19,3 +19,50 @@ button,
 input {
   font: inherit;
 }
+
+.demoTree [data-slot="tree-item"] {
+  border-radius: 14px;
+}
+
+.demoTree [data-slot="tree-item"]:focus-visible {
+  outline: none;
+}
+
+.demoTree
+  [data-slot="tree-item"]:focus-visible
+  > [data-slot="tree-row"]
+  > [data-slot="tree-content"] {
+  outline: 2px solid rgba(125, 211, 252, 0.8);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+
+.demoTree [data-slot="tree-toggle"]:focus-visible {
+  outline: 2px solid rgba(125, 211, 252, 0.8);
+  outline-offset: 3px;
+  border-radius: 999px;
+}
+
+.demoTree [data-slot="tree-content"] {
+  min-height: 18px;
+}
+
+.demoTreeGrid {
+  display: grid;
+  gap: 28px;
+}
+
+@media (min-width: 720px) {
+  .demoTreeGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
+.demoTreeLabel {
+  margin: 0 0 14px;
+  color: rgba(191, 219, 254, 0.88);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}

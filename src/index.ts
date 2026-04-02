@@ -3,6 +3,8 @@ export { default } from "./components/tree-view/TreeView";
 export { snapToDeviceGrid } from "./components/tree-view/useLineWidthDpi";
 export type {
   TreeViewHandle,
+  TreeViewLineOptions,
+  TreeViewLineStyle,
   TreeViewNode,
   TreeViewProps,
   TreeViewRenderNodeArgs,

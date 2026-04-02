@@ -1,87 +1,224 @@
 .tree {
   --tree-line-width: 1px;
-  --tree-line-color: #94a3b8;
+  --tree-line-color: currentColor;
+  --tree-line-radius: 0px;
+  --tree-line-style: solid;
   --tree-indent: 28px;
   --tree-row-gap: 8px;
   --tree-child-gap: 6px;
   --tree-toggle-size: 18px;
-  display: grid;
-  gap: var(--tree-row-gap);
+  --tree-connector-center: calc(
+    (var(--tree-toggle-size) / 2) - (var(--tree-line-width) / 2)
+  );
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  list-style: none;
 }
 
 .treeItem {
-  --tree-depth-offset: calc(var(--tree-item-depth, 0) * var(--tree-indent));
-  color: #0f172a;
-  outline: none;
-}
-
-.treeItem:focus-visible .treeContent {
-  outline: 2px solid #2563eb;
-  outline-offset: 2px;
+  position: relative;
+  min-width: 0;
+  list-style: none;
+  --tree-ancestor-width: 0px;
+  --tree-row-height: var(--tree-toggle-size);
+  --tree-children-stem-height: 0px;
 }
 
 .treeItemDisabled {
   opacity: 0.55;
 }
 
+.treeItem + .treeItem {
+  margin-top: var(--tree-row-gap);
+}
+
+.treeItem[data-depth]:not([data-depth="1"]) {
+  padding-left: var(--tree-indent);
+}
+
 .treeRow {
   position: relative;
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding-left: calc(var(--tree-depth-offset) + var(--tree-child-gap));
+  align-items: center;
+  gap: var(--tree-child-gap);
   min-height: var(--tree-toggle-size);
+  min-width: 0;
 }
 
-.treeGuides {
+.treeAncestors {
   position: absolute;
-  inset: 0 auto 0 0;
-  width: calc(var(--tree-depth-offset) + var(--tree-child-gap));
+  top: calc(var(--tree-row-gap) * -1);
+  bottom: calc(var(--tree-row-gap) * -1);
+  left: calc(var(--tree-ancestor-width) * -1);
+  display: flex;
+  width: var(--tree-ancestor-width);
   pointer-events: none;
 }
 
-.treeItem[data-depth="1"] .treeGuides {
+.treeAncestorRail {
+  position: relative;
+  flex: 0 0 var(--tree-indent);
+  width: var(--tree-indent);
+}
+
+.treeAncestorRail[data-active="true"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--tree-connector-center);
+  width: 0;
+  border-left: var(--tree-line-width) var(--tree-line-style)
+    var(--tree-line-color);
+}
+
+.treeItem[data-depth]:not([data-depth="1"])::before,
+.treeItem[data-depth]:not([data-depth="1"])::after,
+.treeItem[data-depth="1"][data-has-next-sibling="true"]::before,
+.treeItem[data-depth]:not([data-depth="1"]) > .treeRow::before,
+.treeItem[data-depth]:not([data-depth="1"]) > .treeRow::after,
+.treeItem[data-depth="1"][data-last-child="true"] > .treeRow::after,
+.treeChildrenStem {
+  content: "";
+  position: absolute;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.treeItem[data-depth]:not([data-depth="1"])::after {
+  left: var(--tree-connector-center);
+  width: 0;
+  border-left: var(--tree-line-width) var(--tree-line-style)
+    var(--tree-line-color);
+}
+
+.treeItem[data-depth="1"][data-has-next-sibling="true"]::before {
+  left: var(--tree-connector-center);
+  top: calc(var(--tree-row-gap) * -1);
+  bottom: calc(var(--tree-row-gap) * -1);
+  width: 0;
+  border-left: var(--tree-line-width) var(--tree-line-style)
+    var(--tree-line-color);
+}
+
+.tree
+  > .treeItem:first-child[data-depth="1"][data-has-next-sibling="true"]::before {
+  top: calc(var(--tree-row-height) / 2);
+}
+
+.treeItem[data-has-next-sibling="true"][data-depth]:not([data-depth="1"]):not(
+    [data-visible-children="true"]
+  )::after {
+  top: 50%;
+  bottom: calc(var(--tree-row-gap) * -1);
+}
+
+.treeItem[data-depth]:not([data-depth="1"])::after {
   display: none;
 }
 
-.treeGuides::before {
-  content: "";
-  position: absolute;
-  left: calc(var(--tree-depth-offset) - (var(--tree-indent) / 2));
-  top: calc(var(--tree-toggle-size) / 2);
-  width: calc(var(--tree-indent) / 2);
-  border-top: var(--tree-line-width) solid var(--tree-line-color);
+.treeItem[data-depth]:not([data-depth="1"]) > .treeRow::before {
+  left: calc((var(--tree-indent) * -1) + var(--tree-connector-center));
+  top: calc(50% - (var(--tree-line-width) / 2));
+  width: calc(var(--tree-indent) + (var(--tree-line-width) / 2));
+  border-top: var(--tree-line-width) var(--tree-line-style)
+    var(--tree-line-color);
 }
 
-.treeGuides::after {
-  content: "";
-  position: absolute;
-  left: calc(var(--tree-depth-offset) - (var(--tree-indent) / 2));
-  top: calc((var(--tree-row-gap) * -1) - var(--tree-child-gap));
-  bottom: calc(50% - var(--tree-line-width));
-  border-left: var(--tree-line-width) solid var(--tree-line-color);
+.treeItem[data-depth]:not([data-depth="1"]) > .treeRow::after {
+  left: calc((var(--tree-indent) * -1) + var(--tree-connector-center));
+  top: calc(var(--tree-row-gap) * -1);
+  height: calc(50% + var(--tree-row-gap));
+  width: 0;
+  border-left: var(--tree-line-width) var(--tree-line-style)
+    var(--tree-line-color);
+}
+
+.treeItem[data-depth="1"][data-last-child="true"] > .treeRow::after {
+  left: var(--tree-connector-center);
+  top: calc(var(--tree-row-gap) * -1);
+  height: calc(50% + var(--tree-row-gap));
+  width: 0;
+  border-left: var(--tree-line-width) var(--tree-line-style)
+    var(--tree-line-color);
+}
+
+.treeItem[data-last-child="true"]:not(
+    [data-visible-children="true"]
+  )[data-depth]:not([data-depth="1"])
+  > .treeRow::after {
+  display: none;
+}
+
+.treeItem[data-last-child="true"]:not([data-visible-children="true"]):not(
+    [data-shares-continuing-axis="true"]
+  )[data-depth]:not([data-depth="1"])
+  > .treeRow::before {
+  top: calc(var(--tree-row-gap) * -1);
+  height: calc(50% + var(--tree-row-gap));
+  left: calc((var(--tree-indent) * -1) + var(--tree-connector-center));
+  width: calc(var(--tree-indent) + (var(--tree-line-width) / 2));
+  border-top: 0;
+  border-bottom: var(--tree-line-width) var(--tree-line-style)
+    var(--tree-line-color);
+  border-left: var(--tree-line-width) var(--tree-line-style)
+    var(--tree-line-color);
+  border-bottom-left-radius: min(
+    var(--tree-line-radius),
+    calc(var(--tree-indent) / 2)
+  );
+}
+
+.treeChildrenStem {
+  top: calc(var(--tree-row-height) / 2);
+  height: var(--tree-children-stem-height);
+  width: 0;
+  border-left: var(--tree-line-width) var(--tree-line-style)
+    var(--tree-line-color);
+}
+
+.treeItem[data-depth="1"] > .treeChildrenStem {
+  left: var(--tree-connector-center);
+}
+
+.treeItem[data-depth]:not([data-depth="1"]) > .treeChildrenStem {
+  left: calc(var(--tree-indent) + var(--tree-connector-center));
+}
+
+.tree[data-show-parent-lines="false"] > .treeItem[data-depth="1"]::before,
+.tree[data-show-parent-lines="false"]
+  > .treeItem[data-depth="1"]
+  > .treeRow::after {
+  display: none;
+}
+
+.treeGroup {
+  position: relative;
+  margin: var(--tree-row-gap) 0 0;
+  padding: 0;
+  min-width: 0;
+  list-style: none;
 }
 
 .toggleButton,
 .togglePlaceholder {
   width: var(--tree-toggle-size);
   height: var(--tree-toggle-size);
-  flex: 0 0 var(--tree-toggle-size);
+  flex: 0 0 auto;
+  align-self: center;
 }
 
 .toggleButton {
   display: inline-grid;
   place-items: center;
   padding: 0;
+  margin: 0;
   border: 0;
-  background: transparent;
-  color: #334155;
+  background: none;
+  color: inherit;
+  font: inherit;
   cursor: pointer;
-}
-
-.toggleButton:focus-visible {
-  outline: 2px solid #2563eb;
-  outline-offset: 2px;
 }
 
 .toggleButton:disabled {
@@ -98,8 +235,11 @@
 }
 
 .treeContent {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-height: var(--tree-toggle-size);
   min-width: 0;
-  padding: 2px 0;
 }
 
 .treeGroupMarker {

@@ -32,8 +32,13 @@ describe("TreeView", () => {
   it("renders tree semantics and always-visible children", () => {
     render(<TreeView ariaLabel="Example tree" data={data} />);
 
-    expect(screen.getByRole("tree", { name: "Example tree" })).toBeInTheDocument();
-    expect(screen.getByRole("treeitem", { name: /Root/i })).toHaveAttribute("aria-expanded", "true");
+    expect(
+      screen.getByRole("tree", { name: "Example tree" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("treeitem", { name: /Root/i })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
     expect(screen.getByText("Visible child")).toBeInTheDocument();
   });
 
@@ -55,6 +60,18 @@ describe("TreeView", () => {
     });
   });
 
+  it("supports imperative focus", async () => {
+    const ref = createRef<TreeViewHandle>();
+
+    render(<TreeView ariaLabel="Example tree" data={data} ref={ref} />);
+
+    ref.current?.focus("child-2");
+
+    await waitFor(() => {
+      expect(screen.getByRole("treeitem", { name: /Child 2/i })).toHaveFocus();
+    });
+  });
+
   it("fires controlled expansion changes", () => {
     const onExpandedIdsChange = vi.fn();
 
@@ -67,26 +84,75 @@ describe("TreeView", () => {
       />,
     );
 
-    const toggleButtons = screen.getAllByRole("button", { name: /expand node|collapse node/i });
+    const toggleButtons = screen.getAllByRole("button", {
+      name: /expand node|collapse node/i,
+    });
     fireEvent.click(toggleButtons[1]);
 
     expect(onExpandedIdsChange).toHaveBeenCalledWith(["root", "child-2"]);
   });
 
-  it("supports keyboard navigation and expansion", () => {
+  it("supports keyboard navigation and expansion", async () => {
     render(<TreeView ariaLabel="Keyboard tree" data={data} />);
 
     const root = screen.getByRole("treeitem", { name: /Root/i });
     root.focus();
 
     fireEvent.keyDown(root, { key: "ArrowDown" });
-    expect(screen.getByRole("treeitem", { name: /Child 1/i })).toHaveFocus();
+    await waitFor(() => {
+      expect(screen.getByRole("treeitem", { name: /Child 1/i })).toHaveFocus();
+    });
 
-    fireEvent.keyDown(screen.getByRole("treeitem", { name: /Child 1/i }), { key: "ArrowDown" });
-    const childTwo = screen.getByRole("treeitem", { name: /Child 2/i });
-    expect(childTwo).toHaveFocus();
+    fireEvent.keyDown(screen.getByRole("treeitem", { name: /Child 1/i }), {
+      key: "ArrowDown",
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("treeitem", { name: /Child 2/i })).toHaveFocus();
+    });
 
-    fireEvent.keyDown(childTwo, { key: "ArrowRight" });
+    fireEvent.keyDown(screen.getByRole("treeitem", { name: /Child 2/i }), {
+      key: "ArrowRight",
+    });
     expect(screen.getByText("Grandchild")).toBeInTheDocument();
+  });
+
+  it("applies line options to the tree root", async () => {
+    render(
+      <TreeView
+        ariaLabel="Styled tree"
+        data={data}
+        line={{
+          color: "tomato",
+          radius: 12,
+          showParentLines: false,
+          style: "dashed",
+          width: 2,
+        }}
+      />,
+    );
+
+    const tree = screen.getByRole("tree", {
+      name: "Styled tree",
+    }) as HTMLDivElement;
+
+    await waitFor(() => {
+      expect(tree.style.getPropertyValue("--tree-line-width")).toBe("2px");
+    });
+
+    expect(tree.style.getPropertyValue("--tree-line-color")).toBe("tomato");
+    expect(tree.style.getPropertyValue("--tree-line-radius")).toBe("12px");
+    expect(tree.style.getPropertyValue("--tree-line-style")).toBe("dashed");
+  });
+
+  it("can hide parent continuation rails", () => {
+    const { container } = render(
+      <TreeView
+        ariaLabel="Compact tree"
+        data={data}
+        line={{ showParentLines: false }}
+      />,
+    );
+
+    expect(container.querySelector('[data-slot="tree-guide-rail"]')).toBeNull();
   });
 });
