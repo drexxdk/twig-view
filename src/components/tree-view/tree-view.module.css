@@ -1,0 +1,107 @@
+.tree {
+  --tree-line-width: 1px;
+  --tree-line-color: #94a3b8;
+  --tree-indent: 28px;
+  --tree-row-gap: 8px;
+  --tree-child-gap: 6px;
+  --tree-toggle-size: 18px;
+  display: grid;
+  gap: var(--tree-row-gap);
+}
+
+.treeItem {
+  --tree-depth-offset: calc(var(--tree-item-depth, 0) * var(--tree-indent));
+  color: #0f172a;
+  outline: none;
+}
+
+.treeItem:focus-visible .treeContent {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.treeItemDisabled {
+  opacity: 0.55;
+}
+
+.treeRow {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding-left: calc(var(--tree-depth-offset) + var(--tree-child-gap));
+  min-height: var(--tree-toggle-size);
+}
+
+.treeGuides {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--tree-depth-offset) + var(--tree-child-gap));
+  pointer-events: none;
+}
+
+.treeItem[data-depth="1"] .treeGuides {
+  display: none;
+}
+
+.treeGuides::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--tree-depth-offset) - (var(--tree-indent) / 2));
+  top: calc(var(--tree-toggle-size) / 2);
+  width: calc(var(--tree-indent) / 2);
+  border-top: var(--tree-line-width) solid var(--tree-line-color);
+}
+
+.treeGuides::after {
+  content: "";
+  position: absolute;
+  left: calc(var(--tree-depth-offset) - (var(--tree-indent) / 2));
+  top: calc((var(--tree-row-gap) * -1) - var(--tree-child-gap));
+  bottom: calc(50% - var(--tree-line-width));
+  border-left: var(--tree-line-width) solid var(--tree-line-color);
+}
+
+.toggleButton,
+.togglePlaceholder {
+  width: var(--tree-toggle-size);
+  height: var(--tree-toggle-size);
+  flex: 0 0 var(--tree-toggle-size);
+}
+
+.toggleButton {
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #334155;
+  cursor: pointer;
+}
+
+.toggleButton:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.toggleButton:disabled {
+  cursor: default;
+}
+
+.togglePlaceholder {
+  display: inline-block;
+}
+
+.defaultToggleIcon {
+  display: inline-grid;
+  place-items: center;
+}
+
+.treeContent {
+  min-width: 0;
+  padding: 2px 0;
+}
+
+.treeGroupMarker {
+  display: none;
+}
