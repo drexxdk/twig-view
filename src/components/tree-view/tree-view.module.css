@@ -144,6 +144,12 @@
     var(--tree-line-color);
 }
 
+.tree
+  > .treeItem:first-child[data-depth="1"][data-last-child="true"]
+  > .treeRow::after {
+  display: none;
+}
+
 .treeItem[data-last-child="true"]:not(
     [data-visible-children="true"]
   )[data-depth]:not([data-depth="1"])
@@ -152,6 +158,34 @@
 }
 
 .treeItem[data-last-child="true"]:not([data-visible-children="true"]):not(
+    [data-shares-continuing-axis="true"]
+  )[data-depth]:not([data-depth="1"])
+  > .treeRow::before {
+  top: calc(var(--tree-row-gap) * -1);
+  height: calc(50% + var(--tree-row-gap));
+  left: calc((var(--tree-indent) * -1) + var(--tree-connector-center));
+  width: calc(var(--tree-indent) + (var(--tree-line-width) / 2));
+  border-top: 0;
+  border-bottom: var(--tree-line-width) var(--tree-line-style)
+    var(--tree-line-color);
+  border-left: var(--tree-line-width) var(--tree-line-style)
+    var(--tree-line-color);
+  border-bottom-left-radius: min(
+    var(--tree-line-radius),
+    calc(var(--tree-indent) / 2)
+  );
+}
+
+.tree[data-line-rounded="true"]
+  .treeItem[data-last-child="true"][data-visible-children="true"]:not(
+    [data-shares-continuing-axis="true"]
+  )[data-depth]:not([data-depth="1"])
+  > .treeRow::after {
+  display: none;
+}
+
+.tree[data-line-rounded="true"]
+  .treeItem[data-last-child="true"][data-visible-children="true"]:not(
     [data-shares-continuing-axis="true"]
   )[data-depth]:not([data-depth="1"])
   > .treeRow::before {

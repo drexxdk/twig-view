@@ -667,9 +667,16 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
                 Boolean(lastChildItem) &&
                 !lastChildHasVisibleChildren &&
                 !(lastChildItem ? sharesContinuingAxis(lastChildItem) : false);
+              const lastChildUsesRoundedTerminalBend =
+                resolvedLineRadius > 0 &&
+                Boolean(lastChildItem) &&
+                lastChildHasVisibleChildren &&
+                !(lastChildItem ? sharesContinuingAxis(lastChildItem) : false);
               const lastChildOffsetWithinGroup =
                 previousSiblingOffset +
-                (lastChildUsesTerminalCorner ? 0 : lastChildRowHeight / 2);
+                (lastChildUsesTerminalCorner || lastChildUsesRoundedTerminalBend
+                  ? 0
+                  : lastChildRowHeight / 2);
 
               return (
                 resolvedRowHeight / 2 + rowGap + lastChildOffsetWithinGroup
@@ -922,6 +929,7 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
         aria-label={ariaLabel}
         aria-labelledby={ariaLabelledBy}
         className={joinClassNames(styles.tree, className)}
+        data-line-rounded={resolvedLineRadius > 0 ? "true" : "false"}
         data-show-parent-lines={resolvedShowParentLines ? "true" : "false"}
         data-slot="tree"
         role="tree"
