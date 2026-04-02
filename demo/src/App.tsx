@@ -62,7 +62,9 @@ const multilineTree: TreeViewNode[] = [
       <span>
         Release plan
         <br />
-        <small style={{ color: "#94a3b8" }}>Multi-line label with nested notes</small>
+        <small style={{ color: "#94a3b8" }}>
+          Multi-line label with nested notes
+        </small>
       </span>
     ),
     defaultExpanded: true,
@@ -73,7 +75,9 @@ const multilineTree: TreeViewNode[] = [
           <span>
             Copy review
             <br />
-            <small style={{ color: "#94a3b8" }}>Ends immediately after this branch</small>
+            <small style={{ color: "#94a3b8" }}>
+              Ends immediately after this branch
+            </small>
           </span>
         ),
       },
@@ -88,7 +92,9 @@ const multilineTree: TreeViewNode[] = [
               <span>
                 Hero lockups
                 <br />
-                <small style={{ color: "#94a3b8" }}>Two-line terminal child</small>
+                <small style={{ color: "#94a3b8" }}>
+                  Two-line terminal child
+                </small>
               </span>
             ),
           },
@@ -368,7 +374,11 @@ export default function App() {
     });
   }
 
-  function renderNode(node: TreeViewNode, hasChildren: boolean, toggleable: boolean) {
+  function renderNode(
+    node: TreeViewNode,
+    hasChildren: boolean,
+    toggleable: boolean,
+  ) {
     return (
       <div
         style={{
@@ -510,7 +520,9 @@ export default function App() {
                 renderNode={({ node, hasChildren, toggleable }) =>
                   renderNode(node, hasChildren, toggleable)
                 }
-                renderToggle={({ expanded, size }) => renderToggle(expanded, size)}
+                renderToggle={({ expanded, size }) =>
+                  renderToggle(expanded, size)
+                }
               />
             </section>
           ))}
