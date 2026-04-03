@@ -279,26 +279,8 @@ function DefaultToggle({
   const s = Math.max(10, size);
 
   return (
-    <span
-      aria-hidden="true"
-      className={styles.defaultToggleIcon}
-      style={{
-        width: size,
-        height: size,
-        borderRadius: "50%",
-        display: "inline-grid",
-        placeItems: "center",
-        background: "var(--tree-toggle-bg, rgba(2,6,23,0.9))",
-        color: "var(--tree-toggle-foreground, #ffffff)",
-      }}
-    >
-      <svg
-        viewBox="0 0 24 24"
-        width={s * 0.6}
-        height={s * 0.6}
-        focusable="false"
-        aria-hidden="true"
-      >
+    <span aria-hidden="true" className={styles.defaultToggleIcon}>
+      <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
         {expanded ? (
           <path
             d="M6 12h12"
@@ -786,8 +768,6 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
                   nodeToggleClass,
                 )}
                 style={{
-                  width: toggleSize,
-                  height: toggleSize,
                   ...nodeToggleStyle,
                 }}
               >
@@ -797,6 +777,14 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
           } else {
             toggleNode = (
               <DefaultToggle expanded={expanded} size={toggleSize} />
+            );
+          }
+
+          // If the item is a toggleable control but disabled, render an
+          // empty toggle circle (no inner icon) so the affordance is visible.
+          if (item.disabled && toggleable) {
+            toggleNode = (
+              <span aria-hidden="true" className={styles.defaultToggleIcon} />
             );
           }
         }
@@ -991,7 +979,17 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
                   aria-hidden="true"
                   className={styles.togglePlaceholder}
                   data-slot="tree-toggle-placeholder"
-                />
+                >
+                  {/* Only show the visible toggle circle for items that have
+                      children but aren't toggleable (always-visible branch).
+                      Leave placeholders for leaf nodes empty. */}
+                  {item.hasChildren ? (
+                    <span
+                      aria-hidden="true"
+                      className={styles.defaultToggleIcon}
+                    />
+                  ) : null}
+                </span>
               )}
               <div
                 className={styles.treeContent}
