@@ -27,8 +27,11 @@
   --tree-children-stem-height: 0px;
 }
 
-.treeItemDisabled {
-  opacity: 0.55;
+/* When an item is disabled, only visually dim the circular toggle.
+   Keep connector lines and content colors unchanged so consumers can
+   provide their own disabled styling for the rest. */
+.treeItemDisabled .defaultToggleIcon {
+  background-color: color-mix(in oklab, var(--tree-toggle-bg), black 40%);
 }
 
 .treeItem + .treeItem {
@@ -243,6 +246,7 @@
   height: var(--tree-toggle-size);
   flex: 0 0 auto;
   align-self: center;
+  z-index: 1;
 }
 
 .toggleButton {
