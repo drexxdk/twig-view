@@ -76,14 +76,15 @@ const multilineTree: TreeViewNode[] = [
             Copy review
             <br />
             <small style={{ color: "#94a3b8" }}>
-              Ends immediately after this branch
+              Short branch that ends right after the elbow
             </small>
           </span>
         ),
       },
       {
         id: "launch-assets",
-        label: "Launch assets",
+        label:
+          "Launch assets for paid social, partner email, and homepage hero delivery",
         defaultExpanded: true,
         children: [
           {
@@ -108,7 +109,8 @@ const multilineTree: TreeViewNode[] = [
   },
   {
     id: "handoff",
-    label: "Handoff",
+    label:
+      "Handoff summary for localization review, stakeholder sign-off, and archive delivery",
     children: [
       {
         id: "docs-export",
@@ -187,36 +189,36 @@ const mixedTree: TreeViewNode[] = [
 const terminalTree: TreeViewNode[] = [
   {
     id: "branch-a",
-    label: "Branch A",
+    label: "Homepage rollout",
     defaultExpanded: true,
     children: [
       {
         id: "leaf-a1",
-        label: "Leaf A1",
+        label: "QA checklist",
       },
       {
         id: "leaf-a2",
-        label: "Leaf A2",
+        label: "Visual sign-off",
       },
     ],
   },
   {
     id: "branch-b",
-    label: "Branch B",
+    label: "Localization batch",
     defaultExpanded: true,
     children: [
       {
         id: "branch-b1",
-        label: "Branch B1",
+        label: "Spanish review",
         defaultExpanded: true,
         children: [
           {
             id: "leaf-b1a",
-            label: "Leaf B1A",
+            label: "Legal approval",
           },
           {
             id: "leaf-b1b",
-            label: "Leaf B1B",
+            label: "Vendor notes",
           },
         ],
       },
@@ -224,11 +226,12 @@ const terminalTree: TreeViewNode[] = [
   },
   {
     id: "branch-c",
-    label: "Branch C",
+    label:
+      "Archive delivery for partner toolkits, event screens, and regional backup requests",
     children: [
       {
         id: "leaf-c1",
-        label: "Leaf C1",
+        label: "Checksum report",
       },
     ],
   },

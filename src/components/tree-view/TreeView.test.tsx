@@ -34,6 +34,169 @@ const data: TreeViewNode[] = [
   },
 ];
 
+function renderMultilineLabel(title: string, note: string) {
+  return (
+    <span>
+      {title}
+      <br />
+      <small>{note}</small>
+    </span>
+  );
+}
+
+function buildMultilineRegressionData(options?: { openLastRoot?: boolean }) {
+  return [
+    {
+      id: "release-plan",
+      label: renderMultilineLabel(
+        "Release plan",
+        "Multi-line label with nested notes",
+      ),
+      defaultExpanded: true,
+      children: [
+        {
+          id: "copy-review",
+          label: renderMultilineLabel(
+            "Copy review",
+            "Short branch that ends right after the elbow",
+          ),
+        },
+        {
+          id: "launch-assets",
+          label:
+            "Launch assets for paid social, partner email, and homepage hero delivery",
+          defaultExpanded: true,
+          children: [
+            {
+              id: "hero-lockups",
+              label: renderMultilineLabel(
+                "Hero lockups",
+                "Two-line terminal child",
+              ),
+            },
+            {
+              id: "campaign-video",
+              label: "Campaign video",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: "handoff",
+      label:
+        "Handoff summary for localization review, stakeholder sign-off, and archive delivery",
+      defaultExpanded: options?.openLastRoot,
+      children: [
+        {
+          id: "docs-export",
+          label: "Docs export",
+        },
+      ],
+    },
+  ] satisfies TreeViewNode[];
+}
+
+function buildWideNestedRegressionData() {
+  return [
+    {
+      id: "systems",
+      label: "Systems",
+      defaultExpanded: true,
+      children: [
+        {
+          id: "ingest",
+          label: "Ingest",
+        },
+        {
+          id: "processing",
+          label: "Processing",
+          defaultExpanded: true,
+          children: [
+            {
+              id: "queue-a",
+              label: "Queue A",
+            },
+            {
+              id: "queue-b",
+              label: "Queue B",
+              defaultExpanded: true,
+              children: [
+                {
+                  id: "worker-1",
+                  label: "Worker 1",
+                },
+                {
+                  id: "worker-2",
+                  label: "Worker 2",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ] satisfies TreeViewNode[];
+}
+
+function buildHiddenRailsRegressionData(options?: { openLastRoot?: boolean }) {
+  return [
+    {
+      id: "project-docs",
+      label: "Project docs",
+      defaultExpanded: true,
+      children: [
+        {
+          id: "getting-started",
+          label: "Getting started",
+        },
+        {
+          id: "guides",
+          label: "Guides",
+          defaultExpanded: true,
+          children: [
+            {
+              id: "accessibility",
+              label: "Accessibility",
+            },
+            {
+              id: "connector-routing",
+              label: "Connector routing",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: "always-visible",
+      label: "Reference assets",
+      toggleable: false,
+      children: [
+        {
+          id: "reference-child-a",
+          label: "Brand kit",
+        },
+        {
+          id: "reference-child-b",
+          label: "Launch checklist",
+        },
+      ],
+    },
+    {
+      id: "handoff-root",
+      label:
+        "Handoff summary for localization review, stakeholder sign-off, and archive delivery",
+      defaultExpanded: options?.openLastRoot,
+      children: [
+        {
+          id: "handoff-export",
+          label: "Docs export",
+        },
+      ],
+    },
+  ] satisfies TreeViewNode[];
+}
+
 describe("TreeView", () => {
   it("renders tree semantics and always-visible children", () => {
     render(<TreeView ariaLabel="Example tree" data={data} />);
@@ -659,6 +822,202 @@ describe("TreeView", () => {
     expect(icon.className).toContain("disabled-node-toggle");
     expect(icon.style.backgroundColor).toBe("rgb(7, 8, 9)");
     expect(icon.style.borderColor).toBe("rgb(10, 11, 12)");
+  });
+
+  it("marks first multiline roots for continuation selector coverage", () => {
+    render(
+      <TreeView
+        ariaLabel="Multiline regression tree"
+        data={buildMultilineRegressionData()}
+        line={{
+          color: "#4ade80",
+          radius: 14,
+          showParentLines: true,
+          width: 1.5,
+        }}
+        rowGap={10}
+        toggleSize={18}
+      />,
+    );
+
+    const releasePlan = screen.getByRole("treeitem", { name: /Release plan/i });
+    const releasePlanRow = releasePlan.querySelector(
+      '[data-slot="tree-row"]',
+    ) as HTMLElement;
+
+    expect(releasePlan).toHaveAttribute("data-depth", "1");
+    expect(releasePlan).toHaveAttribute("data-has-next-sibling", "true");
+    expect(releasePlan).toHaveAttribute("data-visible-children", "true");
+    expect(
+      releasePlanRow.querySelector('[data-slot="tree-child-stem"]'),
+    ).toBeNull();
+  });
+
+  it("renders a single outgoing child stem for wrapped nested branches", () => {
+    render(
+      <TreeView
+        ariaLabel="Multiline regression tree"
+        data={buildMultilineRegressionData()}
+        line={{
+          color: "#4ade80",
+          radius: 14,
+          showParentLines: true,
+          width: 1.5,
+        }}
+        rowGap={10}
+        toggleSize={18}
+      />,
+    );
+
+    const launchAssets = screen.getByRole("treeitem", {
+      name: /Launch assets/i,
+    });
+    const launchAssetsRow = launchAssets.querySelector(
+      '[data-slot="tree-row"]',
+    ) as HTMLElement;
+
+    expect(launchAssets).toHaveAttribute("data-depth", "2");
+    expect(launchAssets).toHaveAttribute("data-last-child", "true");
+    expect(launchAssets).toHaveAttribute("data-visible-children", "true");
+    expect(
+      launchAssetsRow.querySelectorAll('[data-slot="tree-child-stem"]'),
+    ).toHaveLength(1);
+  });
+
+  it("renders a single outgoing child stem for wide nested branches", () => {
+    render(
+      <TreeView
+        ariaLabel="Wide nested tree"
+        data={buildWideNestedRegressionData()}
+        line={{ color: "#f472b6", radius: 0, showParentLines: true, width: 3 }}
+        toggleSize={26}
+        indent={34}
+        childGap={10}
+      />,
+    );
+
+    const queueB = screen.getByRole("treeitem", { name: /Queue B/i });
+    const queueBRow = queueB.querySelector(
+      '[data-slot="tree-row"]',
+    ) as HTMLElement;
+
+    expect(queueB).toHaveAttribute("data-depth", "3");
+    expect(queueB).toHaveAttribute("data-last-child", "true");
+    expect(queueB).toHaveAttribute("data-visible-children", "true");
+    expect(
+      queueBRow.querySelectorAll('[data-slot="tree-child-stem"]'),
+    ).toHaveLength(1);
+  });
+
+  it("keeps hidden-rail always-visible roots expanded for connector coverage", () => {
+    render(
+      <TreeView
+        ariaLabel="Hidden rails regression tree"
+        data={buildHiddenRailsRegressionData()}
+        line={{
+          color: "#38bdf8",
+          radius: 0,
+          showParentLines: false,
+          width: 1.5,
+        }}
+      />,
+    );
+
+    const tree = screen.getByRole("tree", {
+      name: /Hidden rails regression tree/i,
+    });
+    const alwaysVisible = screen.getByRole("treeitem", {
+      name: /Reference assets/i,
+    });
+
+    expect(tree).toHaveAttribute("data-show-parent-lines", "false");
+    expect(alwaysVisible).toHaveAttribute("data-visible-children", "true");
+    expect(alwaysVisible).not.toHaveAttribute("data-toggleable");
+    expect(screen.getByText("Brand kit")).toBeInTheDocument();
+  });
+
+  it("keeps hidden-rail multiline last roots collapsed when not expanded", () => {
+    render(
+      <TreeView
+        ariaLabel="Hidden rails regression tree"
+        data={buildHiddenRailsRegressionData()}
+        line={{
+          color: "#38bdf8",
+          radius: 0,
+          showParentLines: false,
+          width: 1.5,
+        }}
+      />,
+    );
+
+    const handoff = screen.getByRole("treeitem", { name: /Handoff summary/i });
+
+    expect(handoff).toHaveAttribute("data-depth", "1");
+    expect(handoff).toHaveAttribute("data-last-child", "true");
+    expect(handoff).not.toHaveAttribute("data-visible-children");
+    expect(screen.queryByText("Docs export")).not.toBeInTheDocument();
+  });
+
+  it("keeps hidden-rail multiline last roots open when expanded", () => {
+    render(
+      <TreeView
+        ariaLabel="Hidden rails regression tree"
+        data={buildHiddenRailsRegressionData({ openLastRoot: true })}
+        line={{
+          color: "#38bdf8",
+          radius: 0,
+          showParentLines: false,
+          width: 1.5,
+        }}
+      />,
+    );
+
+    const handoff = screen.getByRole("treeitem", { name: /Handoff summary/i });
+    const handoffRow = handoff.querySelector(
+      '[data-slot="tree-row"]',
+    ) as HTMLElement;
+
+    expect(handoff).toHaveAttribute("data-depth", "1");
+    expect(handoff).toHaveAttribute("data-last-child", "true");
+    expect(handoff).toHaveAttribute("data-visible-children", "true");
+    expect(
+      handoffRow.querySelector('[data-slot="tree-child-stem"]'),
+    ).toBeNull();
+    expect(screen.getByText("Docs export")).toBeInTheDocument();
+  });
+
+  it("keeps rounded multiline last roots open when expanded", () => {
+    render(
+      <TreeView
+        ariaLabel="Rounded multiline regression tree"
+        data={buildMultilineRegressionData({ openLastRoot: true })}
+        line={{
+          color: "#4ade80",
+          radius: 14,
+          showParentLines: true,
+          width: 1.5,
+        }}
+        rowGap={10}
+        toggleSize={18}
+      />,
+    );
+
+    const tree = screen.getByRole("tree", {
+      name: /Rounded multiline regression tree/i,
+    });
+    const handoff = screen.getByRole("treeitem", { name: /Handoff summary/i });
+    const handoffRow = handoff.querySelector(
+      '[data-slot="tree-row"]',
+    ) as HTMLElement;
+
+    expect(tree).toHaveAttribute("data-line-rounded", "true");
+    expect(handoff).toHaveAttribute("data-depth", "1");
+    expect(handoff).toHaveAttribute("data-last-child", "true");
+    expect(handoff).toHaveAttribute("data-visible-children", "true");
+    expect(
+      handoffRow.querySelector('[data-slot="tree-child-stem"]'),
+    ).toBeNull();
+    expect(screen.getByText("Docs export")).toBeInTheDocument();
   });
 
   it("can hide parent continuation rails", () => {

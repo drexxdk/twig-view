@@ -30,6 +30,54 @@ The package only ships structural tree layout and connector geometry.
 - Node `id` values should be globally unique and stable across rerenders, reorders, and controlled updates. Focus recovery, imperative methods, and subtree preservation all rely on stable IDs rather than array position.
 - Standard `className` and `style` props are forwarded to the tree root.
 
+## Example
+
+```tsx
+import TreeView, { type TreeViewNode } from "twig-view";
+
+const data: TreeViewNode[] = [
+  {
+    id: "docs",
+    label: "Documentation",
+    defaultExpanded: true,
+    children: [
+      {
+        id: "guides",
+        label: "Guides",
+        children: [
+          {
+            id: "api",
+            label: "API reference",
+            toggleClassName: "nodeToggle",
+            toggleStyle: { backgroundColor: "#0f766e" },
+            children: [{ id: "v1", label: "v1" }],
+          },
+        ],
+      },
+    ],
+  },
+];
+
+export function Example() {
+  return (
+    <TreeView
+      ariaLabel="Documentation tree"
+      data={data}
+      line={{ color: "#22c55e", radius: 12, width: 1.5 }}
+      toggle={{
+        background: "#22c55e",
+        foreground: "#052e16",
+        focusRingColor: "#86efac",
+      }}
+      toggleClassName="rootToggle"
+      toggleStyle={{ border: "1px solid rgba(255, 255, 255, 0.2)" }}
+    />
+  );
+}
+```
+
+In this setup, the root `toggle` prop provides the default color tokens for the built-in toggle renderer, while `toggleClassName` and `toggleStyle` are merged with any node-level `toggleClassName` and `toggleStyle`. Node-level values win when they overlap.
+
 ## Development
 
 ```bash

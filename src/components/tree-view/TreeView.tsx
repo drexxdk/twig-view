@@ -800,6 +800,7 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
         const toggleable = item.toggleable && item.hasChildren;
         const hasVisibleChildren =
           item.hasChildren && (!toggleable || expanded);
+        const showNestedChildStem = hasVisibleChildren && item.depth > 1;
         const groupId = `${treeId}-${item.id}-group`;
         const labelId = `${treeId}-${item.id}-label`;
         const childNodes = hasVisibleChildren ? (node.children ?? []) : [];
@@ -959,6 +960,13 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
               </span>
             ) : null}
             <div className={styles.treeRow} data-slot="tree-row">
+              {showNestedChildStem ? (
+                <span
+                  aria-hidden="true"
+                  className={styles.treeChildStem}
+                  data-slot="tree-child-stem"
+                />
+              ) : null}
               {toggleable ? (
                 <button
                   aria-controls={groupId}
