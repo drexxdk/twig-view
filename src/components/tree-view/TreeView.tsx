@@ -255,6 +255,64 @@ function flattenVisibleTree(nodes: TreeViewNode[], expanded: Set<string>) {
   return { items, itemsById };
 }
 
+function findVisibleFocusFallbackId(
+  nodes: TreeViewNode[],
+  targetId: string,
+  items: FlattenedTreeItem[],
+  itemsById: Map<string, FlattenedTreeItem>,
+  previousItemsById?: Map<string, FlattenedTreeItem>,
+) {
+  function findTargetPath(
+    currentNodes: TreeViewNode[],
+    ancestorIds: string[],
+  ): string[] | null {
+    for (const node of currentNodes) {
+      const nextAncestorIds = [...ancestorIds, node.id];
+
+      if (node.id === targetId) {
+        return nextAncestorIds;
+      }
+
+      if (node.children?.length) {
+        const childPath = findTargetPath(node.children, nextAncestorIds);
+
+        if (childPath) {
+          return childPath;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  const targetPath = findTargetPath(nodes, []);
+
+  if (targetPath !== null) {
+    for (let index = targetPath.length - 2; index >= 0; index -= 1) {
+      const ancestorItem = itemsById.get(targetPath[index]);
+
+      if (ancestorItem && !ancestorItem.disabled) {
+        return ancestorItem.id;
+      }
+    }
+  }
+
+  const previousItem = previousItemsById?.get(targetId);
+  let ancestorId = previousItem?.parentId ?? null;
+
+  while (ancestorId) {
+    const visibleAncestor = itemsById.get(ancestorId);
+
+    if (visibleAncestor && !visibleAncestor.disabled) {
+      return visibleAncestor.id;
+    }
+
+    ancestorId = previousItemsById?.get(ancestorId)?.parentId ?? null;
+  }
+
+  return items.find((item) => !item.disabled)?.id ?? null;
+}
+
 function getNextFocusableId(
   items: FlattenedTreeItem[],
   currentId: string | null,
@@ -410,6 +468,10 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
     const resolvedFocusedId = isFocusedControlled
       ? (focusedId ?? null)
       : uncontrolledFocusedId;
+    const treeRef = useRef<HTMLUListElement | null>(null);
+    const previousItemsByIdRef = useRef<Map<string, FlattenedTreeItem>>(
+      new Map(),
+    );
     const rowRefs = useRef(new Map<string, HTMLLIElement>());
 
     const focusRowElement = useCallback((id: string) => {
@@ -444,23 +506,49 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
         return;
       }
 
-      const firstEnabledItem = items.find((item) => !item.disabled);
-      if (!firstEnabledItem) {
+      const nextFocusedId = resolvedFocusedId
+        ? findVisibleFocusFallbackId(
+            data,
+            resolvedFocusedId,
+            items,
+            itemsById,
+            previousItemsByIdRef.current,
+          )
+        : (items.find((item) => !item.disabled)?.id ?? null);
+
+      if (!nextFocusedId) {
         return;
       }
 
       if (!isFocusedControlled) {
-        setUncontrolledFocusedId(firstEnabledItem.id);
+        setUncontrolledFocusedId(nextFocusedId);
       }
 
-      onFocusedIdChange?.(firstEnabledItem.id);
+      onFocusedIdChange?.(nextFocusedId);
+
+      if (
+        typeof document !== "undefined" &&
+        treeRef.current &&
+        (document.activeElement === null ||
+          document.activeElement === document.body)
+      ) {
+        window.requestAnimationFrame(() => {
+          focusRowElement(nextFocusedId);
+        });
+      }
     }, [
+      data,
+      focusRowElement,
       isFocusedControlled,
       items,
       itemsById,
       onFocusedIdChange,
       resolvedFocusedId,
     ]);
+
+    useEffect(() => {
+      previousItemsByIdRef.current = itemsById;
+    }, [itemsById]);
 
     // Do not programmatically focus rows on every `focusedId` change — allow
     // the browser to manage tab focus. The imperative `focus(id)` method still
@@ -948,6 +1036,7 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
           resolvedLineOptions.showParentLines ? "true" : "false"
         }
         data-slot="tree"
+        ref={treeRef}
         role="tree"
         style={treeStyle}
         {...rest}

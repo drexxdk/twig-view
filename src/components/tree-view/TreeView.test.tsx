@@ -230,6 +230,267 @@ describe("TreeView", () => {
     expect(screen.getByText("Grandchild")).toBeInTheDocument();
   });
 
+  it("falls back to the nearest visible ancestor when a focused item is hidden", async () => {
+    const ref = createRef<TreeViewHandle>();
+
+    render(<TreeView ariaLabel="Example tree" data={data} ref={ref} />);
+
+    ref.current?.expand("child-2");
+    await waitFor(() => {
+      expect(screen.getByText("Grandchild")).toBeInTheDocument();
+    });
+
+    ref.current?.focus("grandchild");
+
+    await waitFor(() => {
+      const grandchildItem = screen.getByRole("treeitem", {
+        name: /Grandchild/i,
+      });
+      expect(grandchildItem).toHaveFocus();
+    });
+
+    ref.current?.collapse("child-2");
+
+    await waitFor(() => {
+      const child2Item = screen.getByRole("treeitem", { name: /Child 2/i });
+      const child2Toggle = child2Item.querySelector(
+        '[data-slot="tree-toggle"]',
+      ) as HTMLElement;
+      expect(child2Toggle).toHaveFocus();
+    });
+  });
+
+  it("reports the nearest visible ancestor when controlled focus becomes hidden", async () => {
+    const onFocusedIdChange = vi.fn();
+    const { rerender } = render(
+      <TreeView
+        ariaLabel="Controlled focus tree"
+        data={data}
+        expandedIds={["root", "child-2"]}
+        focusedId="grandchild"
+        onFocusedIdChange={onFocusedIdChange}
+      />,
+    );
+
+    onFocusedIdChange.mockClear();
+
+    rerender(
+      <TreeView
+        ariaLabel="Controlled focus tree"
+        data={data}
+        expandedIds={["root"]}
+        focusedId="grandchild"
+        onFocusedIdChange={onFocusedIdChange}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(onFocusedIdChange).toHaveBeenCalledWith("child-2");
+    });
+  });
+
+  it("falls back to the nearest surviving ancestor when a focused item is removed", async () => {
+    const ref = createRef<TreeViewHandle>();
+    const removableData: TreeViewNode[] = [
+      {
+        id: "root",
+        label: "Root",
+        defaultExpanded: true,
+        children: [
+          {
+            id: "branch",
+            label: "Branch",
+            defaultExpanded: true,
+            children: [{ id: "leaf", label: "Leaf" }],
+          },
+        ],
+      },
+    ];
+
+    const { rerender } = render(
+      <TreeView ariaLabel="Removal tree" data={removableData} ref={ref} />,
+    );
+
+    ref.current?.focus("leaf");
+
+    await waitFor(() => {
+      const leafItem = screen.getByRole("treeitem", { name: /Leaf/i });
+      expect(leafItem).toHaveFocus();
+    });
+
+    rerender(
+      <TreeView
+        ariaLabel="Removal tree"
+        data={[
+          {
+            id: "root",
+            label: "Root",
+            defaultExpanded: true,
+            children: [{ id: "branch", label: "Branch" }],
+          },
+        ]}
+        ref={ref}
+      />,
+    );
+
+    await waitFor(() => {
+      const branchItem = screen.getByRole("treeitem", { name: /Branch/i });
+      expect(branchItem).toHaveFocus();
+    });
+  });
+
+  it("reports the nearest surviving ancestor when controlled focus is removed", async () => {
+    const onFocusedIdChange = vi.fn();
+    const { rerender } = render(
+      <TreeView
+        ariaLabel="Controlled removal tree"
+        data={[
+          {
+            id: "root",
+            label: "Root",
+            defaultExpanded: true,
+            children: [
+              {
+                id: "branch",
+                label: "Branch",
+                defaultExpanded: true,
+                children: [{ id: "leaf", label: "Leaf" }],
+              },
+            ],
+          },
+        ]}
+        focusedId="leaf"
+        onFocusedIdChange={onFocusedIdChange}
+      />,
+    );
+
+    onFocusedIdChange.mockClear();
+
+    rerender(
+      <TreeView
+        ariaLabel="Controlled removal tree"
+        data={[
+          {
+            id: "root",
+            label: "Root",
+            defaultExpanded: true,
+            children: [{ id: "branch", label: "Branch" }],
+          },
+        ]}
+        focusedId="leaf"
+        onFocusedIdChange={onFocusedIdChange}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(onFocusedIdChange).toHaveBeenCalledWith("branch");
+    });
+  });
+
+  it("preserves focus when sibling branches reorder but the focused item still exists", async () => {
+    const ref = createRef<TreeViewHandle>();
+    const reorderableData: TreeViewNode[] = [
+      {
+        id: "alpha",
+        label: "Alpha",
+      },
+      {
+        id: "beta",
+        label: "Beta",
+        defaultExpanded: true,
+        children: [{ id: "beta-leaf", label: "Beta leaf" }],
+      },
+    ];
+
+    const { rerender } = render(
+      <TreeView ariaLabel="Reorder tree" data={reorderableData} ref={ref} />,
+    );
+
+    ref.current?.focus("beta-leaf");
+
+    await waitFor(() => {
+      const leafItem = screen.getByRole("treeitem", { name: /Beta leaf/i });
+      expect(leafItem).toHaveFocus();
+    });
+
+    rerender(
+      <TreeView
+        ariaLabel="Reorder tree"
+        data={[
+          {
+            id: "beta",
+            label: "Beta",
+            defaultExpanded: true,
+            children: [{ id: "beta-leaf", label: "Beta leaf" }],
+          },
+          {
+            id: "alpha",
+            label: "Alpha",
+          },
+        ]}
+        ref={ref}
+      />,
+    );
+
+    await waitFor(() => {
+      const leafItem = screen.getByRole("treeitem", { name: /Beta leaf/i });
+      expect(leafItem).toHaveFocus();
+    });
+  });
+
+  it("does not report a focus change when a controlled focused subtree reorders", async () => {
+    const onFocusedIdChange = vi.fn();
+    const { rerender } = render(
+      <TreeView
+        ariaLabel="Controlled reorder tree"
+        data={[
+          {
+            id: "alpha",
+            label: "Alpha",
+          },
+          {
+            id: "beta",
+            label: "Beta",
+            defaultExpanded: true,
+            children: [{ id: "beta-leaf", label: "Beta leaf" }],
+          },
+        ]}
+        focusedId="beta-leaf"
+        onFocusedIdChange={onFocusedIdChange}
+      />,
+    );
+
+    onFocusedIdChange.mockClear();
+
+    rerender(
+      <TreeView
+        ariaLabel="Controlled reorder tree"
+        data={[
+          {
+            id: "beta",
+            label: "Beta",
+            defaultExpanded: true,
+            children: [{ id: "beta-leaf", label: "Beta leaf" }],
+          },
+          {
+            id: "alpha",
+            label: "Alpha",
+          },
+        ]}
+        focusedId="beta-leaf"
+        onFocusedIdChange={onFocusedIdChange}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("treeitem", { name: /Beta leaf/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(onFocusedIdChange).not.toHaveBeenCalled();
+  });
+
   it("applies line options to the tree root", async () => {
     render(
       <TreeView
