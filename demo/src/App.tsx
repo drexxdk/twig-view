@@ -151,6 +151,48 @@ const mixedTree: TreeViewNode[] = [
               {
                 id: "worker-2",
                 label: "Worker 2",
+                defaultExpanded: true,
+                children: [
+                  {
+                    id: "retry-orchestrator",
+                    label: "Retry orchestrator",
+                    defaultExpanded: true,
+                    children: [
+                      {
+                        id: "batch-7",
+                        label: "Batch 7",
+                        defaultExpanded: true,
+                        children: [
+                          {
+                            id: "segment-eu",
+                            label: "Segment EU",
+                            defaultExpanded: true,
+                            children: [
+                              {
+                                id: "locale-handoff",
+                                label: "Locale handoff",
+                                defaultExpanded: true,
+                                children: [
+                                  {
+                                    id: "qa-sign-off",
+                                    label: "QA sign-off",
+                                    defaultExpanded: true,
+                                    children: [
+                                      {
+                                        id: "upload-receipt",
+                                        label: "Upload receipt",
+                                      },
+                                    ],
+                                  },
+                                ],
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
               },
             ],
           },

@@ -93,7 +93,6 @@
     var(--tree-line-color);
 }
 
-.treeItem[data-depth]:not([data-depth="1"])::before,
 .treeItem[data-depth]:not([data-depth="1"])::after,
 .treeItem[data-depth="1"][data-has-next-sibling="true"]::before,
 .tree
