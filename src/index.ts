@@ -10,4 +10,5 @@ export type {
   TreeViewRenderNodeArgs,
   TreeViewRenderToggleArgs,
   TreeViewRouting,
-} from "./components/tree-view/TreeView";
+  TreeViewToggleOptions,
+} from "./components/tree-view/TreeView.types";
