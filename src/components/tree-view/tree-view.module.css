@@ -23,7 +23,6 @@
   min-width: 0;
   list-style: none;
   --tree-ancestor-width: 0px;
-  --tree-row-height: var(--tree-toggle-size);
   --tree-children-stem-height: 0px;
 }
 
@@ -109,7 +108,7 @@
 
 .tree
   > .treeItem:first-child[data-depth="1"][data-has-next-sibling="true"]::before {
-  top: calc(var(--tree-row-height) / 2);
+  top: calc(var(--tree-toggle-size) / 2);
 }
 
 .treeItem[data-has-next-sibling="true"][data-depth]:not([data-depth="1"]):not(
@@ -210,19 +209,12 @@
 }
 
 .treeChildrenStem {
-  top: calc(var(--tree-row-height) / 2);
+  top: 50%;
+  left: var(--tree-connector-center);
   height: var(--tree-children-stem-height);
   width: 0;
   border-left: var(--tree-line-width) var(--tree-line-style)
     var(--tree-line-color);
-}
-
-.treeItem[data-depth="1"] > .treeChildrenStem {
-  left: var(--tree-connector-center);
-}
-
-.treeItem[data-depth]:not([data-depth="1"]) > .treeChildrenStem {
-  left: calc(var(--tree-indent) + var(--tree-connector-center));
 }
 
 .tree[data-show-parent-lines="false"] > .treeItem[data-depth="1"]::before,

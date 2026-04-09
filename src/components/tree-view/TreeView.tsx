@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useId,
   useImperativeHandle,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -117,6 +118,10 @@ type FlattenedTreeItem = {
 };
 
 type TreeCssProperties = React.CSSProperties & Record<`--${string}`, string>;
+
+type TreeItemLayout = {
+  childrenStemHeight: number;
+};
 
 const DEFAULT_LINE_WIDTH = 1;
 const DEFAULT_LINE_COLOR = "currentColor";
@@ -380,11 +385,11 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
     const resolvedFocusedId = isFocusedControlled
       ? (focusedId ?? null)
       : uncontrolledFocusedId;
+    const treeRef = useRef<HTMLUListElement | null>(null);
     const rowRefs = useRef(new Map<string, HTMLLIElement>());
-    const rowObservers = useRef(new Map<string, ResizeObserver>());
-    const itemObservers = useRef(new Map<string, ResizeObserver>());
-    const [rowHeights, setRowHeights] = useState<Record<string, number>>({});
-    const [itemHeights, setItemHeights] = useState<Record<string, number>>({});
+    const [itemLayout, setItemLayout] = useState<
+      Record<string, TreeItemLayout>
+    >({});
 
     const focusRowElement = useCallback((id: string) => {
       const element = rowRefs.current.get(id);
@@ -574,6 +579,138 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
       return Boolean(itemsById.get(item.parentId)?.hasNextSibling);
     }
 
+    const getDirectChildBySlot = useCallback(
+      (element: HTMLElement, slot: string) => {
+        for (const child of Array.from(element.children)) {
+          if (!(child instanceof HTMLElement)) {
+            continue;
+          }
+
+          if (child.dataset.slot === slot) {
+            return child;
+          }
+        }
+
+        return null;
+      },
+      [],
+    );
+
+    const measureItemLayout = useCallback(() => {
+      const nextLayout: Record<string, TreeItemLayout> = {};
+
+      items.forEach((item) => {
+        const itemElement = rowRefs.current.get(item.id);
+
+        if (!itemElement) {
+          return;
+        }
+
+        const rowElement = getDirectChildBySlot(itemElement, "tree-row");
+        const rowRect = rowElement?.getBoundingClientRect();
+        let childrenStemHeight = 0;
+
+        if (
+          item.hasChildren &&
+          (!item.toggleable || expandedSet.has(item.id))
+        ) {
+          const groupElement = getDirectChildBySlot(itemElement, "tree-group");
+          const lastChildElement = groupElement?.lastElementChild;
+
+          if (
+            groupElement instanceof HTMLElement &&
+            lastChildElement instanceof HTMLElement
+          ) {
+            const lastChildRow = getDirectChildBySlot(
+              lastChildElement,
+              "tree-row",
+            );
+            const lastChildRowRect = lastChildRow?.getBoundingClientRect();
+            const lastChildItem = itemsById.get(
+              item.childIds[item.childIds.length - 1],
+            );
+
+            if (rowRect && lastChildRowRect && lastChildItem) {
+              const lastChildHasVisibleChildren =
+                lastChildItem.hasChildren &&
+                (!lastChildItem.toggleable ||
+                  expandedSet.has(lastChildItem.id));
+              const lastChildUsesTerminalCorner =
+                !lastChildHasVisibleChildren &&
+                !sharesContinuingAxis(lastChildItem);
+              const lastChildUsesRoundedTerminalBend =
+                resolvedLineRadius > 0 &&
+                lastChildHasVisibleChildren &&
+                !sharesContinuingAxis(lastChildItem);
+              const targetY =
+                lastChildUsesTerminalCorner || lastChildUsesRoundedTerminalBend
+                  ? lastChildRowRect.top
+                  : lastChildRowRect.top + lastChildRowRect.height / 2;
+
+              childrenStemHeight = targetY - (rowRect.top + rowRect.height / 2);
+            }
+          }
+        }
+
+        nextLayout[item.id] = {
+          childrenStemHeight,
+        };
+      });
+
+      setItemLayout((previous) => {
+        const previousKeys = Object.keys(previous);
+        const nextKeys = Object.keys(nextLayout);
+
+        if (previousKeys.length !== nextKeys.length) {
+          return nextLayout;
+        }
+
+        for (const key of nextKeys) {
+          const prevItem = previous[key];
+          const nextItem = nextLayout[key];
+
+          if (
+            !prevItem ||
+            prevItem.childrenStemHeight !== nextItem.childrenStemHeight
+          ) {
+            return nextLayout;
+          }
+        }
+
+        return previous;
+      });
+    }, [expandedSet, getDirectChildBySlot, items, toggleSize]);
+
+    useLayoutEffect(() => {
+      measureItemLayout();
+
+      if (typeof ResizeObserver === "undefined") {
+        return;
+      }
+
+      const observer = new ResizeObserver(() => {
+        measureItemLayout();
+      });
+
+      const treeElement = treeRef.current;
+
+      if (treeElement) {
+        observer.observe(treeElement);
+      }
+
+      rowRefs.current.forEach((itemElement) => {
+        const rowElement = getDirectChildBySlot(itemElement, "tree-row");
+
+        if (rowElement) {
+          observer.observe(rowElement);
+        }
+      });
+
+      return () => {
+        observer.disconnect();
+      };
+    }, [getDirectChildBySlot, items, measureItemLayout]);
+
     function handleKeyDown(
       event: React.KeyboardEvent<HTMLElement>,
       item: FlattenedTreeItem,
@@ -675,60 +812,13 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
         const groupId = `${treeId}-${item.id}-group`;
         const labelId = `${treeId}-${item.id}-label`;
         const childNodes = hasVisibleChildren ? (node.children ?? []) : [];
-        const parentItem = item.parentId ? itemsById.get(item.parentId) : null;
         const itemSharesContinuingAxis = sharesContinuingAxis(item);
         const ancestorRailCount = item.ancestorContinuation.length;
-        const resolvedRowHeight = rowHeights[item.id] ?? toggleSize;
-        const childrenStemHeight = hasVisibleChildren
-          ? (() => {
-              const lastChild = childNodes[childNodes.length - 1];
-
-              if (!lastChild) {
-                return 0;
-              }
-
-              const lastChildItem = itemsById.get(lastChild.id);
-
-              const previousSiblingOffset = childNodes
-                .slice(0, -1)
-                .reduce((total, childNode) => {
-                  const childItemHeight =
-                    itemHeights[childNode.id] ??
-                    rowHeights[childNode.id] ??
-                    toggleSize;
-                  return total + childItemHeight + rowGap;
-                }, 0);
-              const lastChildRowHeight = rowHeights[lastChild.id] ?? toggleSize;
-              const lastChildHasVisibleChildren = lastChildItem
-                ? lastChildItem.hasChildren &&
-                  (!lastChildItem.toggleable ||
-                    expandedSet.has(lastChildItem.id))
-                : false;
-              const lastChildUsesTerminalCorner =
-                Boolean(lastChildItem) &&
-                !lastChildHasVisibleChildren &&
-                !(lastChildItem ? sharesContinuingAxis(lastChildItem) : false);
-              const lastChildUsesRoundedTerminalBend =
-                resolvedLineRadius > 0 &&
-                Boolean(lastChildItem) &&
-                lastChildHasVisibleChildren &&
-                !(lastChildItem ? sharesContinuingAxis(lastChildItem) : false);
-              const lastChildOffsetWithinGroup =
-                previousSiblingOffset +
-                (lastChildUsesTerminalCorner || lastChildUsesRoundedTerminalBend
-                  ? 0
-                  : lastChildRowHeight / 2);
-
-              return (
-                resolvedRowHeight / 2 + rowGap + lastChildOffsetWithinGroup
-              );
-            })()
-          : 0;
+        const childrenStemHeight = itemLayout[item.id]?.childrenStemHeight ?? 0;
         const itemStyle = {
           ...(ancestorRailCount
             ? { "--tree-ancestor-width": `${ancestorRailCount * indent}px` }
             : {}),
-          "--tree-row-height": `${resolvedRowHeight}px`,
           "--tree-children-stem-height": `${childrenStemHeight}px`,
         } as TreeCssProperties;
         let toggleNode: React.ReactNode;
@@ -830,44 +920,11 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
             data-toggleable={toggleable ? "true" : undefined}
             data-visible-children={hasVisibleChildren ? "true" : undefined}
             ref={(element) => {
-              const itemObserver = itemObservers.current.get(item.id);
-
               if (element) {
                 rowRefs.current.set(item.id, element);
-
-                const updateHeight = () => {
-                  const nextHeight = element.getBoundingClientRect().height;
-
-                  setItemHeights((previous) => {
-                    if (previous[item.id] === nextHeight) {
-                      return previous;
-                    }
-
-                    return {
-                      ...previous,
-                      [item.id]: nextHeight,
-                    };
-                  });
-                };
-
-                updateHeight();
-
-                if (typeof ResizeObserver !== "undefined") {
-                  itemObserver?.disconnect();
-
-                  const nextItemObserver = new ResizeObserver(() => {
-                    updateHeight();
-                  });
-
-                  nextItemObserver.observe(element);
-                  itemObservers.current.set(item.id, nextItemObserver);
-                }
-
                 return;
               }
 
-              itemObserver?.disconnect();
-              itemObservers.current.delete(item.id);
               rowRefs.current.delete(item.id);
             }}
             role="treeitem"
@@ -905,51 +962,14 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
                 )}
               </span>
             ) : null}
-            <div
-              className={styles.treeRow}
-              data-slot="tree-row"
-              ref={(element) => {
-                const observer = rowObservers.current.get(item.id);
-
-                if (!element) {
-                  observer?.disconnect();
-                  rowObservers.current.delete(item.id);
-                  return;
-                }
-
-                const updateHeight = () => {
-                  const nextHeight = element.getBoundingClientRect().height;
-
-                  setRowHeights((previous) => {
-                    if (previous[item.id] === nextHeight) {
-                      return previous;
-                    }
-
-                    return {
-                      ...previous,
-                      [item.id]: nextHeight,
-                    };
-                  });
-                };
-
-                updateHeight();
-
-                if (typeof ResizeObserver === "undefined") {
-                  observer?.disconnect();
-                  rowObservers.current.delete(item.id);
-                  return;
-                }
-
-                observer?.disconnect();
-
-                const nextObserver = new ResizeObserver(() => {
-                  updateHeight();
-                });
-
-                nextObserver.observe(element);
-                rowObservers.current.set(item.id, nextObserver);
-              }}
-            >
+            <div className={styles.treeRow} data-slot="tree-row">
+              {hasVisibleChildren ? (
+                <span
+                  aria-hidden="true"
+                  className={styles.treeChildrenStem}
+                  data-slot="tree-children-stem"
+                />
+              ) : null}
               {toggleable ? (
                 <button
                   aria-controls={groupId}
@@ -1000,13 +1020,6 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
               </div>
             </div>
             {hasVisibleChildren ? (
-              <span
-                aria-hidden="true"
-                className={styles.treeChildrenStem}
-                data-slot="tree-children-stem"
-              />
-            ) : null}
-            {hasVisibleChildren ? (
               <ul
                 className={styles.treeGroup}
                 data-show-parent-lines={
@@ -1032,6 +1045,7 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
         data-line-rounded={resolvedLineRadius > 0 ? "true" : "false"}
         data-show-parent-lines={resolvedShowParentLines ? "true" : "false"}
         data-slot="tree"
+        ref={treeRef}
         role="tree"
         style={treeStyle}
         {...rest}
