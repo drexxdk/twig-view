@@ -22,6 +22,13 @@ export type TreeViewLineOptions = {
   style?: TreeViewLineStyle;
 };
 
+export type TreeViewToggleOptions = {
+  background?: string;
+  foreground?: string;
+  focusRingColor?: string;
+  focusRingOffset?: number;
+};
+
 export type TreeViewNode = {
   id: string;
   label: React.ReactNode;
@@ -98,6 +105,7 @@ export type TreeViewProps = Omit<
   renderNode?: (args: TreeViewRenderNodeArgs) => React.ReactNode;
   renderToggle?: (args: TreeViewRenderToggleArgs) => React.ReactNode;
   toggleIcons?: { open?: React.ReactNode; closed?: React.ReactNode };
+  toggle?: TreeViewToggleOptions;
   toggleClassName?: string;
   toggleStyle?: React.CSSProperties;
 };
@@ -127,6 +135,7 @@ const DEFAULT_INDENT = 28;
 const DEFAULT_ROW_GAP = 8;
 const DEFAULT_CHILD_GAP = 6;
 const DEFAULT_TOGGLE_SIZE = 18;
+const DEFAULT_TOGGLE_FOCUS_RING_OFFSET = 2;
 
 function joinClassNames(
   ...classNames: Array<string | false | null | undefined>
@@ -271,15 +280,19 @@ function getNextFocusableId(
 
 function DefaultToggle({
   expanded,
-  size,
+  className,
+  style,
 }: {
   expanded: boolean;
-  size: number;
+  className?: string;
+  style?: React.CSSProperties;
 }) {
-  const s = Math.max(10, size);
-
   return (
-    <span aria-hidden="true" className={styles.defaultToggleIcon}>
+    <span
+      aria-hidden="true"
+      className={joinClassNames(styles.defaultToggleIcon, className)}
+      style={style}
+    >
       <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
         {expanded ? (
           <path
@@ -331,6 +344,7 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
       line,
       lineWidth,
       lineColor,
+      toggle: toggleOptions,
       indent = DEFAULT_INDENT,
       rowGap = DEFAULT_ROW_GAP,
       childGap = DEFAULT_CHILD_GAP,
@@ -347,12 +361,26 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
     },
     ref,
   ) {
-    const resolvedLineWidth = line?.width ?? lineWidth ?? DEFAULT_LINE_WIDTH;
-    const resolvedLineColor = line?.color ?? lineColor ?? DEFAULT_LINE_COLOR;
-    const resolvedLineRadius = line?.radius ?? DEFAULT_LINE_RADIUS;
-    const resolvedShowParentLines =
-      line?.showParentLines ?? DEFAULT_SHOW_PARENT_LINES;
-    const resolvedLineStyle = line?.style ?? DEFAULT_LINE_STYLE;
+    const resolvedLineOptions = useMemo(
+      () => ({
+        width: line?.width ?? lineWidth ?? DEFAULT_LINE_WIDTH,
+        color: line?.color ?? lineColor ?? DEFAULT_LINE_COLOR,
+        radius: line?.radius ?? DEFAULT_LINE_RADIUS,
+        showParentLines: line?.showParentLines ?? DEFAULT_SHOW_PARENT_LINES,
+        style: line?.style ?? DEFAULT_LINE_STYLE,
+      }),
+      [line, lineColor, lineWidth],
+    );
+    const resolvedToggleOptions = useMemo(
+      () => ({
+        background: toggleOptions?.background,
+        foreground: toggleOptions?.foreground,
+        focusRingColor: toggleOptions?.focusRingColor,
+        focusRingOffset:
+          toggleOptions?.focusRingOffset ?? DEFAULT_TOGGLE_FOCUS_RING_OFFSET,
+      }),
+      [toggleOptions],
+    );
     const treeId = useId();
     const isExpandedControlled = expandedIds !== undefined;
     const isFocusedControlled = focusedId !== undefined;
@@ -372,7 +400,9 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
       () => new Set(resolvedExpandedIds),
       [resolvedExpandedIds],
     );
-    const { isResolved, lineWidthDpi } = useLineWidthDpi(resolvedLineWidth);
+    const { isResolved, lineWidthDpi } = useLineWidthDpi(
+      resolvedLineOptions.width,
+    );
     const { items, itemsById } = useMemo(
       () => flattenVisibleTree(data, expandedSet),
       [data, expandedSet],
@@ -508,7 +538,8 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
 
     const focusItem = useCallback(
       (id: string) => {
-        if (!itemsById.has(id)) {
+        const item = itemsById.get(id);
+        if (!item || item.disabled) {
           return;
         }
 
@@ -541,13 +572,26 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
     const treeStyle: TreeCssProperties = {
       ...(style ?? {}),
       "--tree-line-width": `${lineWidthDpi}px`,
-      "--tree-line-color": resolvedLineColor,
-      "--tree-line-radius": `${resolvedLineRadius}px`,
-      "--tree-line-style": resolvedLineStyle,
+      "--tree-line-color": resolvedLineOptions.color,
+      "--tree-line-radius": `${resolvedLineOptions.radius}px`,
+      "--tree-line-style": resolvedLineOptions.style,
       "--tree-indent": `${indent}px`,
       "--tree-row-gap": `${rowGap}px`,
       "--tree-child-gap": `${childGap}px`,
       "--tree-toggle-size": `${toggleSize}px`,
+      ...(resolvedToggleOptions.background
+        ? { "--tree-toggle-bg": resolvedToggleOptions.background }
+        : {}),
+      ...(resolvedToggleOptions.foreground
+        ? { "--tree-toggle-foreground": resolvedToggleOptions.foreground }
+        : {}),
+      ...(resolvedToggleOptions.focusRingColor
+        ? {
+            "--tree-toggle-focus-ring-color":
+              resolvedToggleOptions.focusRingColor,
+          }
+        : {}),
+      "--tree-toggle-focus-ring-offset": `${resolvedToggleOptions.focusRingOffset}px`,
     };
 
     if (routing !== "indent-vertical") {
@@ -678,6 +722,14 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
             ? { "--tree-ancestor-width": `${ancestorRailCount * indent}px` }
             : {}),
         } as TreeCssProperties;
+        const mergedToggleClassName = joinClassNames(
+          toggleClassName,
+          item.node.toggleClassName,
+        );
+        const mergedToggleStyle = {
+          ...(toggleStyle ?? {}),
+          ...(item.node.toggleStyle ?? {}),
+        } as React.CSSProperties;
         let toggleNode: React.ReactNode;
 
         if (renderToggle) {
@@ -693,18 +745,8 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
             size: toggleSize,
           });
         } else {
-          const openIcon =
-            (item.node as any).toggleIconOpen ?? toggleIcons?.open;
-          const closedIcon =
-            (item.node as any).toggleIconClosed ?? toggleIcons?.closed;
-          const nodeToggleClass = joinClassNames(
-            toggleClassName,
-            (item.node as any).toggleClassName,
-          );
-          const nodeToggleStyle = {
-            ...(toggleStyle ?? {}),
-            ...((item.node as any).toggleStyle ?? {}),
-          } as React.CSSProperties;
+          const openIcon = item.node.toggleIconOpen ?? toggleIcons?.open;
+          const closedIcon = item.node.toggleIconClosed ?? toggleIcons?.closed;
 
           if (openIcon || closedIcon) {
             toggleNode = (
@@ -712,18 +754,20 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
                 aria-hidden="true"
                 className={joinClassNames(
                   styles.defaultToggleIcon,
-                  nodeToggleClass,
+                  mergedToggleClassName,
                 )}
-                style={{
-                  ...nodeToggleStyle,
-                }}
+                style={mergedToggleStyle}
               >
                 {expanded ? (openIcon ?? closedIcon) : (closedIcon ?? openIcon)}
               </span>
             );
           } else {
             toggleNode = (
-              <DefaultToggle expanded={expanded} size={toggleSize} />
+              <DefaultToggle
+                expanded={expanded}
+                className={mergedToggleClassName}
+                style={mergedToggleStyle}
+              />
             );
           }
 
@@ -731,7 +775,14 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
           // empty toggle circle (no inner icon) so the affordance is visible.
           if (item.disabled && toggleable) {
             toggleNode = (
-              <span aria-hidden="true" className={styles.defaultToggleIcon} />
+              <span
+                aria-hidden="true"
+                className={joinClassNames(
+                  styles.defaultToggleIcon,
+                  mergedToggleClassName,
+                )}
+                style={mergedToggleStyle}
+              />
             );
           }
         }
@@ -802,7 +853,7 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
               }
             }}
           >
-            {resolvedShowParentLines && ancestorRailCount > 0 ? (
+            {resolvedLineOptions.showParentLines && ancestorRailCount > 0 ? (
               <span
                 aria-hidden="true"
                 className={styles.treeAncestors}
@@ -827,8 +878,7 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
                   aria-label={expanded ? "Collapse node" : "Expand node"}
                   className={joinClassNames(
                     styles.toggleButton,
-                    toggleClassName,
-                    (item.node as any).toggleClassName,
+                    mergedToggleClassName,
                   )}
                   data-slot="tree-toggle"
                   disabled={item.disabled}
@@ -837,10 +887,7 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
                     event.stopPropagation();
                     toggle(item.id);
                   }}
-                  style={{
-                    ...(toggleStyle ?? {}),
-                    ...((item.node as any).toggleStyle ?? {}),
-                  }}
+                  style={mergedToggleStyle}
                 >
                   {toggleNode}
                 </button>
@@ -856,7 +903,11 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
                   {item.hasChildren ? (
                     <span
                       aria-hidden="true"
-                      className={styles.defaultToggleIcon}
+                      className={joinClassNames(
+                        styles.defaultToggleIcon,
+                        mergedToggleClassName,
+                      )}
+                      style={mergedToggleStyle}
                     />
                   ) : null}
                 </span>
@@ -873,7 +924,7 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
               <ul
                 className={styles.treeGroup}
                 data-show-parent-lines={
-                  resolvedShowParentLines ? "true" : "false"
+                  resolvedLineOptions.showParentLines ? "true" : "false"
                 }
                 data-slot="tree-group"
                 id={groupId}
@@ -892,8 +943,10 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
         aria-label={ariaLabel}
         aria-labelledby={ariaLabelledBy}
         className={joinClassNames(styles.tree, className)}
-        data-line-rounded={resolvedLineRadius > 0 ? "true" : "false"}
-        data-show-parent-lines={resolvedShowParentLines ? "true" : "false"}
+        data-line-rounded={resolvedLineOptions.radius > 0 ? "true" : "false"}
+        data-show-parent-lines={
+          resolvedLineOptions.showParentLines ? "true" : "false"
+        }
         data-slot="tree"
         role="tree"
         style={treeStyle}

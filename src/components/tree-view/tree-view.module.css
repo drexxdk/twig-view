@@ -9,6 +9,12 @@
   --tree-toggle-size: 18px;
   --tree-toggle-bg: rgba(2, 6, 23, 0.9);
   --tree-toggle-foreground: #ffffff;
+  --tree-toggle-focus-ring-color: color-mix(
+    in oklab,
+    var(--tree-toggle-bg),
+    white 30%
+  );
+  --tree-toggle-focus-ring-offset: 2px;
   --tree-connector-center: calc(
     (var(--tree-toggle-size) / 2) - (var(--tree-line-width) / 2)
   );
@@ -273,6 +279,12 @@
 
 .toggleButton:disabled {
   cursor: default;
+}
+
+.toggleButton:focus-visible {
+  outline: var(--tree-line-width) solid var(--tree-toggle-focus-ring-color);
+  outline-offset: var(--tree-toggle-focus-ring-offset);
+  border-radius: 999px;
 }
 
 .togglePlaceholder {
