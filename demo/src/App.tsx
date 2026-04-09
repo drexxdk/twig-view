@@ -3,6 +3,10 @@ import TreeView, { type TreeViewHandle, type TreeViewNode } from "twig-view";
 
 const documentationTree: TreeViewNode[] = [
   {
+    id: "roadmap",
+    label: "Product roadmap",
+  },
+  {
     id: "docs",
     label: <strong>Project docs</strong>,
     defaultExpanded: true,
