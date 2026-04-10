@@ -162,6 +162,7 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
         aria-labelledby={ariaLabelledBy}
         className={joinClassNames(styles.tree, className)}
         data-line-rounded={resolvedLineOptions.radius > 0 ? "true" : "false"}
+        data-line-style={resolvedLineOptions.style}
         data-show-parent-lines={
           resolvedLineOptions.showParentLines ? "true" : "false"
         }
@@ -178,6 +179,10 @@ export const TreeView = forwardRef<TreeViewHandle, TreeViewProps>(
           expandedSet={expandedSet}
           resolvedFocusedId={resolvedFocusedId}
           indent={indent}
+          lineRadius={resolvedLineOptions.radius}
+          lineStyle={resolvedLineOptions.style}
+          lineWidth={lineWidthDpi}
+          rowGap={rowGap}
           toggleSize={toggleSize}
           showParentLines={resolvedLineOptions.showParentLines}
           renderNode={renderNode}

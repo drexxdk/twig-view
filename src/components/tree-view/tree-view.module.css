@@ -15,9 +15,6 @@
     white 30%
   );
   --tree-toggle-focus-ring-offset: 2px;
-  --tree-connector-center: calc(
-    (var(--tree-toggle-size) / 2) - (var(--tree-line-width) / 2)
-  );
   margin: 0;
   padding: 0;
   min-width: 0;
@@ -31,9 +28,6 @@
   --tree-ancestor-width: 0px;
 }
 
-/* When an item is disabled, only visually dim the circular toggle.
-   Keep connector lines and content colors unchanged so consumers can
-   provide their own disabled styling for the rest. */
 .treeItemDisabled .defaultToggleIcon {
   background-color: color-mix(in oklab, var(--tree-toggle-bg), black 40%);
 }
@@ -46,252 +40,25 @@
   padding-left: var(--tree-indent);
 }
 
+.treeConnectorCanvas {
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.treeConnectorSvg {
+  display: block;
+  overflow: visible;
+}
+
 .treeRow {
-  --tree-row-connector-left: calc(
-    (var(--tree-indent) * -1) + var(--tree-connector-center)
-  );
-  --tree-row-connector-top: calc(var(--tree-row-gap) * -1);
-  --tree-row-connector-half-height: calc(50% + var(--tree-row-gap));
-  --tree-row-connector-extended-top: calc(
-    (var(--tree-toggle-size) / -2) - var(--tree-row-gap)
-  );
-  --tree-row-connector-extended-height: calc(
-    50% + var(--tree-row-gap) + (var(--tree-toggle-size) / 2)
-  );
   position: relative;
   display: flex;
   align-items: center;
   gap: var(--tree-child-gap);
   min-height: var(--tree-toggle-size);
   min-width: 0;
-}
-
-.treeAncestors {
-  position: absolute;
-  top: calc(var(--tree-row-gap) * -1);
-  bottom: calc(var(--tree-row-gap) * -1);
-  left: calc(var(--tree-ancestor-width) * -1);
-  display: flex;
-  width: var(--tree-ancestor-width);
-  pointer-events: none;
-}
-
-.treeAncestorRail {
-  position: relative;
-  flex: 0 0 var(--tree-indent);
-  width: var(--tree-indent);
-}
-
-.treeAncestorRail[data-active="true"]::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: var(--tree-connector-center);
-  width: 0;
-  border-left: var(--tree-line-width) var(--tree-line-style)
-    var(--tree-line-color);
-}
-
-.treeItem[data-depth]:not([data-depth="1"])::after,
-.treeItem[data-depth="1"][data-has-next-sibling="true"]::before,
-.tree
-  > .treeItem:first-child[data-depth="1"][data-has-next-sibling="true"]
-  > .treeRow::after,
-.tree
-  > .treeItem:first-child[data-depth="1"][data-has-next-sibling="true"][data-visible-children="true"]
-  > .treeGroup::before,
-.treeItem[data-depth]:not([data-depth="1"]) > .treeRow::before,
-.treeItem[data-depth]:not([data-depth="1"]) > .treeRow::after,
-.treeItem[data-depth="1"][data-last-child="true"] > .treeRow::after {
-  content: "";
-  position: absolute;
-  box-sizing: border-box;
-  pointer-events: none;
-}
-
-.treeItem[data-depth]:not([data-depth="1"])::after {
-  left: var(--tree-connector-center);
-  width: 0;
-  border-left: var(--tree-line-width) var(--tree-line-style)
-    var(--tree-line-color);
-}
-
-.treeItem[data-depth="1"][data-has-next-sibling="true"]::before {
-  left: var(--tree-connector-center);
-  top: calc(var(--tree-row-gap) * -1);
-  bottom: calc(var(--tree-row-gap) * -1);
-  width: 0;
-  border-left: var(--tree-line-width) var(--tree-line-style)
-    var(--tree-line-color);
-}
-
-.tree
-  > .treeItem:first-child[data-depth="1"][data-has-next-sibling="true"]::before {
-  display: none;
-}
-
-.tree
-  > .treeItem:first-child[data-depth="1"][data-has-next-sibling="true"]
-  > .treeRow::after {
-  left: var(--tree-connector-center);
-  top: calc(50% - (var(--tree-line-width) / 2));
-  bottom: calc(var(--tree-row-gap) * -1);
-  width: 0;
-  border-left: var(--tree-line-width) var(--tree-line-style)
-    var(--tree-line-color);
-}
-
-.tree
-  > .treeItem:first-child[data-depth="1"][data-has-next-sibling="true"][data-visible-children="true"]
-  > .treeGroup::before {
-  left: var(--tree-connector-center);
-  top: 0;
-  bottom: calc(var(--tree-row-gap) * -1);
-  width: 0;
-  border-left: var(--tree-line-width) var(--tree-line-style)
-    var(--tree-line-color);
-}
-
-.treeItem[data-has-next-sibling="true"][data-depth]:not(
-    [data-depth="1"]
-  )::after {
-  top: calc(var(--tree-toggle-size) / 2);
-  bottom: calc(var(--tree-row-gap) * -1);
-  display: block;
-}
-
-.treeItem[data-depth]:not([data-depth="1"])::after {
-  display: none;
-}
-
-.treeItem[data-depth]:not([data-depth="1"]) > .treeRow::before {
-  left: var(--tree-row-connector-left);
-  top: calc(50% - (var(--tree-line-width) / 2));
-  width: calc(var(--tree-indent) + (var(--tree-line-width) / 2));
-  border-top: var(--tree-line-width) var(--tree-line-style)
-    var(--tree-line-color);
-}
-
-.treeItem[data-depth]:not([data-depth="1"]) > .treeRow::after {
-  left: var(--tree-row-connector-left);
-  top: var(--tree-row-connector-top);
-  height: var(--tree-row-connector-half-height);
-  width: 0;
-  border-left: var(--tree-line-width) var(--tree-line-style)
-    var(--tree-line-color);
-}
-
-.treeGroup
-  > .treeItem:first-child[data-depth]:not([data-depth="1"])
-  > .treeRow::after {
-  top: var(--tree-row-connector-extended-top);
-  height: var(--tree-row-connector-extended-height);
-}
-
-.treeItem[data-depth="1"][data-last-child="true"] > .treeRow::after {
-  left: var(--tree-connector-center);
-  top: calc(var(--tree-row-gap) * -1);
-  height: calc(50% + var(--tree-row-gap));
-  width: 0;
-  border-left: var(--tree-line-width) var(--tree-line-style)
-    var(--tree-line-color);
-}
-
-.tree
-  > .treeItem:first-child[data-depth="1"][data-last-child="true"]
-  > .treeRow::after {
-  display: none;
-}
-
-.tree
-  > .treeItem:not(
-    :first-child
-  )[data-depth="1"][data-last-child="true"][data-visible-children="true"]
-  > .treeRow::after {
-  display: block;
-  top: calc(var(--tree-row-gap) * -1);
-  bottom: calc(var(--tree-row-gap) * -1);
-  height: auto;
-}
-
-.tree[data-show-parent-lines="false"]
-  > .treeItem[data-depth="1"][data-last-child="true"][data-visible-children="true"]
-  > .treeRow::after {
-  top: calc(var(--tree-row-gap) * -1);
-  bottom: calc(var(--tree-row-gap) * -1);
-  height: auto;
-}
-
-.treeItem[data-last-child="true"]:not([data-visible-children="true"]):not(
-    [data-shares-continuing-axis="true"]
-  )[data-depth]:not([data-depth="1"])
-  > .treeRow::after,
-.tree[data-line-rounded="true"]
-  .treeItem[data-last-child="true"][data-visible-children="true"]:not(
-    [data-shares-continuing-axis="true"]
-  )[data-depth]:not([data-depth="1"])
-  > .treeRow::after {
-  display: none;
-}
-
-.treeItem[data-last-child="true"]:not([data-visible-children="true"]):not(
-    [data-shares-continuing-axis="true"]
-  )[data-depth]:not([data-depth="1"])
-  > .treeRow::before,
-.tree[data-line-rounded="true"]
-  .treeItem[data-last-child="true"][data-visible-children="true"]:not(
-    [data-shares-continuing-axis="true"]
-  )[data-depth]:not([data-depth="1"])
-  > .treeRow::before {
-  top: var(--tree-row-connector-top);
-  height: var(--tree-row-connector-half-height);
-  left: var(--tree-row-connector-left);
-  width: calc(var(--tree-indent) + (var(--tree-line-width) / 2));
-  border-top: 0;
-  border-bottom: var(--tree-line-width) var(--tree-line-style)
-    var(--tree-line-color);
-  border-left: var(--tree-line-width) var(--tree-line-style)
-    var(--tree-line-color);
-  border-bottom-left-radius: min(
-    var(--tree-line-radius),
-    calc(var(--tree-indent) / 2)
-  );
-}
-
-.treeGroup
-  > .treeItem:first-child[data-last-child="true"]:not(
-    [data-visible-children="true"]
-  ):not([data-shares-continuing-axis="true"])[data-depth]:not([data-depth="1"])
-  > .treeRow::before,
-.tree[data-line-rounded="true"]
-  .treeGroup
-  > .treeItem:first-child[data-last-child="true"][data-visible-children="true"]:not(
-    [data-shares-continuing-axis="true"]
-  )[data-depth]:not([data-depth="1"])
-  > .treeRow::before {
-  top: var(--tree-row-connector-extended-top);
-  height: var(--tree-row-connector-extended-height);
-}
-
-.treeGroup {
-  position: relative;
-  margin: var(--tree-row-gap) 0 0;
-  padding: 0;
-  min-width: 0;
-  list-style: none;
-}
-
-.treeChildStem {
-  position: absolute;
-  left: var(--tree-connector-center);
-  top: 50%;
-  bottom: calc(var(--tree-row-gap) * -1);
-  width: 0;
-  border-left: var(--tree-line-width) var(--tree-line-style)
-    var(--tree-line-color);
-  pointer-events: none;
-  z-index: 0;
+  z-index: 1;
 }
 
 .toggleButton,
@@ -355,6 +122,9 @@
   min-width: 0;
 }
 
-.treeGroupMarker {
-  display: none;
+.treeGroup {
+  margin: var(--tree-row-gap) 0 0;
+  padding: 0;
+  min-width: 0;
+  list-style: none;
 }

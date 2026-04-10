@@ -872,15 +872,11 @@ describe("TreeView", () => {
     const launchAssets = screen.getByRole("treeitem", {
       name: /Launch assets/i,
     });
-    const launchAssetsRow = launchAssets.querySelector(
-      '[data-slot="tree-row"]',
-    ) as HTMLElement;
-
     expect(launchAssets).toHaveAttribute("data-depth", "2");
     expect(launchAssets).toHaveAttribute("data-last-child", "true");
     expect(launchAssets).toHaveAttribute("data-visible-children", "true");
     expect(
-      launchAssetsRow.querySelectorAll('[data-slot="tree-child-stem"]'),
+      launchAssets.querySelectorAll('[data-slot="tree-child-stem"]'),
     ).toHaveLength(1);
   });
 
@@ -897,15 +893,11 @@ describe("TreeView", () => {
     );
 
     const queueB = screen.getByRole("treeitem", { name: /Queue B/i });
-    const queueBRow = queueB.querySelector(
-      '[data-slot="tree-row"]',
-    ) as HTMLElement;
-
     expect(queueB).toHaveAttribute("data-depth", "3");
     expect(queueB).toHaveAttribute("data-last-child", "true");
     expect(queueB).toHaveAttribute("data-visible-children", "true");
     expect(
-      queueBRow.querySelectorAll('[data-slot="tree-child-stem"]'),
+      queueB.querySelectorAll('[data-slot="tree-child-stem"]'),
     ).toHaveLength(1);
   });
 

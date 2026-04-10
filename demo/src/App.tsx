@@ -1,5 +1,9 @@
 import { useMemo, useRef } from "react";
-import TreeView, { type TreeViewHandle, type TreeViewNode } from "twig-view";
+import TreeView, {
+  type TreeViewHandle,
+  type TreeViewLineStyle,
+  type TreeViewNode,
+} from "twig-view";
 
 const documentationTree: TreeViewNode[] = [
   {
@@ -332,6 +336,7 @@ type Scenario = {
     color: string;
     radius: number;
     showParentLines: boolean;
+    style: TreeViewLineStyle;
     width: number;
   };
   toggleSize?: number;
@@ -347,7 +352,13 @@ const scenarios: Scenario[] = [
     title: "Rounded elbow reference",
     note: "Dedicated rounded-L demo. The last child rows here should show obvious curved elbows with no competing trunk segments.",
     data: roundedElbowTree,
-    line: { color: "#22d3ee", radius: 18, showParentLines: true, width: 2.5 },
+    line: {
+      color: "#22d3ee",
+      radius: 18,
+      showParentLines: true,
+      style: "solid",
+      width: 2.5,
+    },
     toggleSize: 22,
     indent: 32,
     rowGap: 10,
@@ -358,7 +369,13 @@ const scenarios: Scenario[] = [
     title: "Rounded parent rails",
     note: "Parent rails shown, rounded terminal corners, mixed toggleable and always-visible branches.",
     data: documentationTree,
-    line: { color: "#38bdf8", radius: 12, showParentLines: true, width: 1.5 },
+    line: {
+      color: "#38bdf8",
+      radius: 12,
+      showParentLines: true,
+      style: "dashed",
+      width: 1.5,
+    },
     focusId: "routing",
   },
   {
@@ -366,14 +383,26 @@ const scenarios: Scenario[] = [
     title: "Hidden parent rails",
     note: "Parent rails suppressed while direct parent-child joins stay visible.",
     data: documentationTree,
-    line: { color: "#38bdf8", radius: 0, showParentLines: false, width: 1.5 },
+    line: {
+      color: "#38bdf8",
+      radius: 0,
+      showParentLines: false,
+      style: "dotted",
+      width: 1.5,
+    },
   },
   {
     id: "terminal-matrix",
     title: "Terminal branch matrix",
     note: "Multiple last-child endings on different levels to expose L-corner bugs quickly.",
     data: terminalTree,
-    line: { color: "#f59e0b", radius: 10, showParentLines: true, width: 2 },
+    line: {
+      color: "#f59e0b",
+      radius: 10,
+      showParentLines: true,
+      style: "solid",
+      width: 2,
+    },
     toggleSize: 20,
   },
   {
@@ -381,8 +410,14 @@ const scenarios: Scenario[] = [
     title: "Multi-line labels",
     note: "Rows with wrapped labels, nested terminals, and varied row heights.",
     data: multilineTree,
-    line: { color: "#4ade80", radius: 14, showParentLines: true, width: 1.5 },
-    toggleSize: 18,
+    line: {
+      color: "#4ade80",
+      radius: 14,
+      showParentLines: true,
+      style: "dashed",
+      width: 1.5,
+    },
+    toggleSize: 34,
     rowGap: 10,
   },
   {
@@ -390,8 +425,14 @@ const scenarios: Scenario[] = [
     title: "Wide lines and large toggles",
     note: "Stress test for alignment with thicker strokes, larger toggles, and deeper indentation.",
     data: mixedTree,
-    line: { color: "#f472b6", radius: 0, showParentLines: true, width: 3 },
-    toggleSize: 26,
+    line: {
+      color: "#f472b6",
+      radius: 0,
+      showParentLines: true,
+      style: "solid",
+      width: 3,
+    },
+    toggleSize: 42,
     indent: 34,
     childGap: 10,
   },
@@ -400,8 +441,14 @@ const scenarios: Scenario[] = [
     title: "Compact hidden rails",
     note: "Thin lines, smaller toggles, and hidden parent rails for compact layouts.",
     data: terminalTree,
-    line: { color: "#a78bfa", radius: 0, showParentLines: false, width: 1 },
-    toggleSize: 14,
+    line: {
+      color: "#a78bfa",
+      radius: 0,
+      showParentLines: false,
+      style: "dotted",
+      width: 1,
+    },
+    toggleSize: 10,
     indent: 24,
     rowGap: 6,
     childGap: 4,
