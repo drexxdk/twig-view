@@ -10,6 +10,10 @@
   --row-block-size: calc(var(--toggle-size) + (var(--item-padding-block) * 2));
   --branch-indent: calc(var(--toggle-size) + var(--spacing));
   --connector-origin-x: calc(((var(--toggle-size) / 2) + var(--spacing)) * -1);
+  --twig-toggle-open-bg: #16a34a;
+  --twig-toggle-closed-bg: #6b7280;
+  --twig-toggle-foreground: #ffffff;
+  --twig-toggle-icon-size: calc(var(--toggle-size) * 0.6);
 
   width: 100%;
   display: flex;
@@ -39,8 +43,70 @@
   }
 
   .toggleRow {
+    width: 100%;
+    position: relative;
+    z-index: 2;
     gap: 4px;
     cursor: pointer;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+  }
+
+  .toggleButtonIcon {
+    position: relative;
+    z-index: 1;
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 var(--toggle-size);
+    width: var(--toggle-size);
+    height: var(--toggle-size);
+    border-radius: 50%;
+    background: var(--twig-toggle-closed-bg);
+    color: var(--twig-toggle-foreground);
+    overflow: visible;
+    font-style: normal;
+  }
+
+  .toggleButtonIcon > * {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transform-origin: center;
+    flex: none;
+  }
+
+  .toggleButtonIconSvg {
+    display: block;
+    width: var(--twig-toggle-icon-size);
+    height: var(--twig-toggle-icon-size);
+  }
+
+  .childrenViewport {
+    display: grid;
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+
+  .childrenViewport > ul {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .childrenViewport[data-animate="true"] {
+    transition:
+      grid-template-rows var(--twig-animation-duration)
+        var(--twig-animation-easing),
+      opacity var(--twig-animation-duration) var(--twig-animation-easing);
+  }
+
+  .childrenViewport[data-expanded="false"] {
+    grid-template-rows: 0fr;
+    opacity: calc(1 - var(--twig-animation-opacity));
+    pointer-events: none;
   }
 
   ul {
@@ -57,14 +123,15 @@
       flex-direction: column;
       position: relative;
 
-      &:has(> ul) {
-        > ul > li {
+      &:has(> .childrenViewport > ul) {
+        > .childrenViewport > ul > li {
           > .itemRow:before {
             content: "";
             position: absolute;
-            left: var(--connector-origin-x);
+            z-index: 0;
+            left: calc(var(--connector-origin-x) - (var(--line-width) / 2));
             top: 0;
-            width: var(--branch-indent);
+            width: calc(var(--branch-indent) + (var(--line-width) / 2));
             height: calc(50% + (var(--line-width) / 2));
             box-sizing: border-box;
             border-left: var(--line-width) solid var(--line-color);
@@ -76,7 +143,8 @@
             &:after {
               content: "";
               position: absolute;
-              left: var(--connector-origin-x);
+              z-index: 0;
+              left: calc(var(--connector-origin-x) - (var(--line-width) / 2));
               top: 50%;
               bottom: 0;
               width: var(--line-width);
@@ -93,47 +161,27 @@
         }
       }
 
-      & > ul {
+      & > .childrenViewport > ul {
         padding-left: var(--branch-indent);
       }
     }
   }
 
-  & input[type="checkbox"] {
-    display: none;
-
-    &:checked + label > i {
-      background: green;
+  li[data-expanded="true"] > .toggleRow {
+    > .toggleButtonIcon {
+      background: var(--twig-toggle-open-bg);
     }
 
-    &:checked + label:after {
+    &:after {
       content: "";
       position: absolute;
+      z-index: 0;
       top: 50%;
       left: calc((var(--toggle-size) / 2) - (var(--line-width) / 2));
       bottom: 0;
       width: var(--line-width);
       background-color: var(--line-color);
       pointer-events: none;
-    }
-
-    &:not(:checked) + label {
-      > i {
-        background: gray;
-      }
-
-      & + ul {
-        display: none;
-      }
-    }
-
-    & + label {
-      & > i {
-        flex: 0 0 var(--toggle-size);
-        width: var(--toggle-size);
-        height: var(--toggle-size);
-        border-radius: 50%;
-      }
     }
   }
 }

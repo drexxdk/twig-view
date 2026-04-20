@@ -1,726 +1,445 @@
-import { useMemo, useRef, useState, useEffect } from "react";
-import Simple from "./pages/Simple";
-import TreeView, {
-  type TreeViewHandle,
-  type TreeViewLineStyle,
-  type TreeViewNode,
-} from "twig-view";
+import { useState } from "react";
+import {
+  TwigTree,
+  type TwigTreeItem,
+  type TwigTreeRenderToggleIconArgs,
+} from "./components";
 
-const documentationTree: TreeViewNode[] = [
+const twigTreeItems: TwigTreeItem[] = [
   {
-    id: "roadmap",
-    label: "Product roadmap",
+    id: "test-1",
+    label: "test 1",
   },
   {
-    id: "docs",
-    label: <strong>Project docs</strong>,
+    id: "test-2",
+    label: "test 2",
+  },
+  {
+    id: "test-3",
+    label: "test 3",
     defaultExpanded: true,
     children: [
       {
-        id: "getting-started",
-        label: "Getting started",
+        id: "test-3-1",
+        label: "test 3.1",
       },
       {
-        id: "guides",
-        label: "Guides",
-        defaultExpanded: true,
+        id: "test-3-2",
+        label: "test 3.2",
         children: [
           {
-            id: "accessibility",
-            label: "Accessibility",
+            id: "test-3-2-1",
+            label: "test 3.2.1",
           },
           {
-            id: "routing",
-            label: "Connector routing",
+            id: "test-3-2-2",
+            label: "test 3.2.2",
+          },
+          {
+            id: "test-3-2-3",
+            label: "test 3.2.3",
           },
         ],
       },
     ],
   },
   {
-    id: "always-open",
-    label: "Always visible branch",
-    toggleable: false,
-    children: [
-      {
-        id: "child-a",
-        label: "Child A",
-      },
-      {
-        id: "child-b",
-        label: "Child B",
-      },
-    ],
+    id: "test-4",
+    label: "test 4",
   },
   {
-    id: "tokens",
-    label: "Design tokens",
+    id: "test-5",
+    label: "test 5",
     children: [
       {
-        id: "colors",
-        label: "Colors",
+        id: "test-5-1",
+        label: "test 5.1",
+      },
+      {
+        id: "test-5-2",
+        label: "test 5.2",
+      },
+      {
+        id: "test-5-3",
+        label: "test 5.3",
       },
     ],
   },
 ];
 
-const multilineTree: TreeViewNode[] = [
-  {
-    id: "release-plan",
-    label: (
-      <span>
-        Release plan
-        <br />
-        <small style={{ color: "#94a3b8" }}>
-          Multi-line label with nested notes
-        </small>
-      </span>
-    ),
-    defaultExpanded: true,
-    children: [
-      {
-        id: "copy-review",
-        label: (
-          <span>
-            Copy review
-            <br />
-            <small style={{ color: "#94a3b8" }}>
-              Short branch that ends right after the elbow
-            </small>
-          </span>
-        ),
-      },
-      {
-        id: "launch-assets",
-        label:
-          "Launch assets for paid social, partner email, and homepage hero delivery",
-        defaultExpanded: true,
-        children: [
-          {
-            id: "hero-lockups",
-            label: (
-              <span>
-                Hero lockups
-                <br />
-                <small style={{ color: "#94a3b8" }}>
-                  Two-line terminal child
-                </small>
-              </span>
-            ),
-          },
-          {
-            id: "campaign-video",
-            label: "Campaign video",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "handoff",
-    label:
-      "Handoff summary for localization review, stakeholder sign-off, and archive delivery",
-    children: [
-      {
-        id: "docs-export",
-        label: "Docs export",
-      },
-    ],
-  },
-];
-
-const mixedTree: TreeViewNode[] = [
-  {
-    id: "systems",
-    label: "Systems",
-    defaultExpanded: true,
-    children: [
-      {
-        id: "ingest",
-        label: "Ingest",
-      },
-      {
-        id: "processing",
-        label: "Processing",
-        defaultExpanded: true,
-        children: [
-          {
-            id: "queue-a",
-            label: "Queue A",
-          },
-          {
-            id: "queue-b",
-            label: "Queue B",
-            defaultExpanded: true,
-            children: [
-              {
-                id: "worker-1",
-                label: "Worker 1",
-              },
-              {
-                id: "worker-2",
-                label: "Worker 2",
-                defaultExpanded: true,
-                children: [
-                  {
-                    id: "retry-orchestrator",
-                    label: "Retry orchestrator",
-                    defaultExpanded: true,
-                    children: [
-                      {
-                        id: "batch-7",
-                        label: "Batch 7",
-                        defaultExpanded: true,
-                        children: [
-                          {
-                            id: "segment-eu",
-                            label: "Segment EU",
-                            defaultExpanded: true,
-                            children: [
-                              {
-                                id: "locale-handoff",
-                                label: "Locale handoff",
-                                defaultExpanded: true,
-                                children: [
-                                  {
-                                    id: "qa-sign-off",
-                                    label: "QA sign-off",
-                                    defaultExpanded: true,
-                                    children: [
-                                      {
-                                        id: "upload-receipt",
-                                        label: "Upload receipt",
-                                      },
-                                    ],
-                                  },
-                                ],
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "always-open",
-    label: "Always open branch",
-    toggleable: false,
-    children: [
-      {
-        id: "reporting",
-        label: "Reporting",
-      },
-      {
-        id: "alerts",
-        label: "Alerts",
-      },
-    ],
-  },
-  {
-    id: "disabled-root",
-    label: "Disabled root",
-    disabled: true,
-    children: [
-      {
-        id: "disabled-child",
-        label: "Disabled child",
-      },
-    ],
-  },
-];
-
-const terminalTree: TreeViewNode[] = [
-  {
-    id: "branch-a",
-    label: "Homepage rollout",
-    defaultExpanded: true,
-    children: [
-      {
-        id: "leaf-a1",
-        label: "QA checklist",
-      },
-      {
-        id: "leaf-a2",
-        label: "Visual sign-off",
-      },
-    ],
-  },
-  {
-    id: "branch-b",
-    label: "Localization batch",
-    defaultExpanded: true,
-    children: [
-      {
-        id: "branch-b1",
-        label: "Spanish review",
-        defaultExpanded: true,
-        children: [
-          {
-            id: "leaf-b1a",
-            label: "Legal approval",
-          },
-          {
-            id: "leaf-b1b",
-            label: "Vendor notes",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "branch-c",
-    label:
-      "Archive delivery for partner toolkits, event screens, and regional backup requests",
-    children: [
-      {
-        id: "leaf-c1",
-        label: "Checksum report",
-      },
-    ],
-  },
-];
-
-const roundedElbowTree: TreeViewNode[] = [
-  {
-    id: "rounded-root",
-    label: "Rounded root",
-    defaultExpanded: true,
-    children: [
-      {
-        id: "straight-branch",
-        label: "Straight branch",
-      },
-      {
-        id: "rounded-branch",
-        label: "Rounded elbow branch",
-        defaultExpanded: true,
-        children: [
-          {
-            id: "rounded-leaf-a",
-            label: "Rounded leaf A",
-          },
-          {
-            id: "rounded-leaf-b",
-            label: "Rounded leaf B",
-          },
-        ],
-      },
-      {
-        id: "rounded-terminal",
-        label: "Terminal branch",
-        defaultExpanded: true,
-        children: [
-          {
-            id: "rounded-terminal-leaf",
-            label: "Single leaf terminal",
-          },
-        ],
-      },
-    ],
-  },
-];
-
-type Scenario = {
-  id: string;
-  title: string;
-  note: string;
-  data: TreeViewNode[];
-  line: {
-    color: string;
-    radius: number;
-    showParentLines: boolean;
-    style: TreeViewLineStyle;
-    width: number;
-  };
-  toggleSize?: number;
-  indent?: number;
-  childGap?: number;
-  rowGap?: number;
-  focusId?: string;
+type ControlsState = {
+  lineWidth: number;
+  lineColor: string;
+  lineRadius: number;
+  toggleSize: number;
+  spacing: number;
+  itemPaddingBlock: number;
+  itemPaddingInlineStart: number;
+  itemPaddingInlineEnd: number;
+  idPrefix: string;
+  animationEnabled: boolean;
+  animationDuration: number;
+  animationEasing: string;
+  animateOpacity: boolean;
+  toggleOpenBackground: string;
+  toggleClosedBackground: string;
+  toggleForeground: string;
+  toggleIconSize: number;
+  useCustomIcons: boolean;
+  openSymbol: string;
+  closedSymbol: string;
 };
 
-const scenarios: Scenario[] = [
-  {
-    id: "rounded-elbows",
-    title: "Rounded elbow reference",
-    note: "Dedicated rounded-L demo. The last child rows here should show obvious curved elbows with no competing trunk segments.",
-    data: roundedElbowTree,
-    line: {
-      color: "#22d3ee",
-      radius: 18,
-      showParentLines: true,
-      style: "solid",
-      width: 2.5,
-    },
-    toggleSize: 22,
-    indent: 32,
-    rowGap: 10,
-    childGap: 8,
-  },
-  {
-    id: "rounded-shown",
-    title: "Rounded parent rails",
-    note: "Parent rails shown, rounded terminal corners, mixed toggleable and always-visible branches.",
-    data: documentationTree,
-    line: {
-      color: "#38bdf8",
-      radius: 12,
-      showParentLines: true,
-      style: "dashed",
-      width: 1.5,
-    },
-    focusId: "routing",
-  },
-  {
-    id: "square-hidden",
-    title: "Hidden parent rails",
-    note: "Parent rails suppressed while direct parent-child joins stay visible.",
-    data: documentationTree,
-    line: {
-      color: "#38bdf8",
-      radius: 0,
-      showParentLines: false,
-      style: "dotted",
-      width: 1.5,
-    },
-  },
-  {
-    id: "terminal-matrix",
-    title: "Terminal branch matrix",
-    note: "Multiple last-child endings on different levels to expose L-corner bugs quickly.",
-    data: terminalTree,
-    line: {
-      color: "#f59e0b",
-      radius: 10,
-      showParentLines: true,
-      style: "solid",
-      width: 2,
-    },
-    toggleSize: 20,
-  },
-  {
-    id: "multiline-rounded",
-    title: "Multi-line labels",
-    note: "Rows with wrapped labels, nested terminals, and varied row heights.",
-    data: multilineTree,
-    line: {
-      color: "#4ade80",
-      radius: 14,
-      showParentLines: true,
-      style: "dashed",
-      width: 1.5,
-    },
-    toggleSize: 34,
-    rowGap: 10,
-  },
-  {
-    id: "wide-toggle",
-    title: "Wide lines and large toggles",
-    note: "Stress test for alignment with thicker strokes, larger toggles, and deeper indentation.",
-    data: mixedTree,
-    line: {
-      color: "#f472b6",
-      radius: 0,
-      showParentLines: true,
-      style: "solid",
-      width: 3,
-    },
-    toggleSize: 42,
-    indent: 34,
-    childGap: 10,
-  },
-  {
-    id: "tight-hidden",
-    title: "Compact hidden rails",
-    note: "Thin lines, smaller toggles, and hidden parent rails for compact layouts.",
-    data: terminalTree,
-    line: {
-      color: "#a78bfa",
-      radius: 0,
-      showParentLines: false,
-      style: "dotted",
-      width: 1,
-    },
-    toggleSize: 10,
-    indent: 24,
-    rowGap: 6,
-    childGap: 4,
-  },
-];
-
 export default function App() {
-  const treeRefs = useRef<Record<string, TreeViewHandle | null>>({});
-  const focusScenario = useMemo(
-    () => scenarios.find((scenario) => scenario.focusId) ?? scenarios[0],
-    [],
-  );
+  const [controls, setControls] = useState<ControlsState>({
+    lineWidth: 1,
+    lineColor: "#ff4d4f",
+    lineRadius: 10,
+    toggleSize: 16,
+    spacing: 4,
+    itemPaddingBlock: 2,
+    itemPaddingInlineStart: 0,
+    itemPaddingInlineEnd: 0,
+    idPrefix: "twig-tree",
+    animationEnabled: true,
+    animationDuration: 220,
+    animationEasing: "ease",
+    animateOpacity: true,
+    toggleOpenBackground: "#16a34a",
+    toggleClosedBackground: "#6b7280",
+    toggleForeground: "#ffffff",
+    toggleIconSize: 10,
+    useCustomIcons: false,
+    openSymbol: "−",
+    closedSymbol: "+",
+  });
 
-  function withTrees(action: (tree: TreeViewHandle) => void) {
-    Object.values(treeRefs.current).forEach((tree) => {
-      if (tree) {
-        action(tree);
-      }
-    });
+  function patchControls(patch: Partial<ControlsState>) {
+    setControls((current) => ({ ...current, ...patch }));
   }
 
-  function renderNode(
-    node: TreeViewNode,
-    hasChildren: boolean,
-    toggleable: boolean,
-  ) {
+  function renderCustomToggleIcon({
+    expanded,
+    size,
+  }: TwigTreeRenderToggleIconArgs) {
+    if (!controls.useCustomIcons) {
+      return undefined;
+    }
+
     return (
-      <div
+      <span
+        aria-hidden="true"
         style={{
-          display: "inline-flex",
-          gap: 10,
-          alignItems: "center",
-          padding: "4px 0",
+          display: "inline-grid",
+          placeItems: "center",
+          width: size,
+          height: size,
+          fontSize: Math.max(10, controls.toggleIconSize),
+          lineHeight: 1,
+          fontWeight: 700,
         }}
       >
-        <span>{node.label}</span>
-        {hasChildren && !toggleable ? (
-          <span
-            style={{
-              fontSize: 12,
-              color: "#7dd3fc",
-              border: "1px solid rgba(125, 211, 252, 0.35)",
-              borderRadius: 999,
-              padding: "2px 8px",
-            }}
-          >
-            always visible
-          </span>
-        ) : null}
-      </div>
-    );
-  }
-
-  function renderToggle(expanded: boolean, size: number) {
-    return (
-      <>
-        <span
-          aria-hidden="true"
-          style={{
-            width: size,
-            height: size,
-            display: "inline-grid",
-            placeItems: "center",
-            borderRadius: 6,
-            background: expanded ? "rgb(22, 78, 99)" : "rgb(51, 65, 85)",
-            color: expanded ? "#7dd3fc" : "#cbd5e1",
-            fontSize: Math.max(11, size * 0.6),
-            lineHeight: 1,
-          }}
-        >
-          {expanded ? "−" : "+"}
-        </span>
-        <span
-          style={{
-            width: size,
-            height: size,
-            display: "inline-grid",
-            placeItems: "center",
-            borderRadius: 6,
-            background: expanded ? "#ec4899" : "rgb(51, 65, 85)",
-            color: expanded ? "#000000" : "#cbd5e1",
-            fontSize: Math.max(11, size * 0.6),
-            lineHeight: 1,
-          }}
-        >
-          {expanded ? "−" : "+"}
-        </span>
-      </>
+        {expanded ? controls.openSymbol : controls.closedSymbol}
+      </span>
     );
   }
 
   return (
-    // simple client-side routing: render Simple when pathname === '/simple'
-    <>
-      {typeof window !== "undefined" &&
-      window.location.pathname === "/simple" ? (
-        <Simple />
-      ) : (
-        <main
+    <main
+      style={{
+        width: "min(1100px, 100%)",
+        margin: "0 auto",
+        padding: 24,
+        display: "grid",
+        gap: 24,
+      }}
+    >
+      <section
+        style={{
+          borderRadius: 16,
+          padding: 20,
+          background: "rgba(2,6,23,0.6)",
+          border: "1px solid rgba(148,163,184,0.12)",
+        }}
+      >
+        <h2 style={{ margin: 0 }}>TwigTree controls</h2>
+        <p style={{ margin: "8px 0 16px", color: "#94a3b8" }}>
+          Change the tree props below. Tree data stays fixed.
+        </p>
+
+        <div
           style={{
-            minHeight: "100vh",
             display: "grid",
-            placeItems: "center",
-            padding: "48px 20px",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: 12,
           }}
         >
-          <section
-            style={{
-              width: "min(1280px, 100%)",
-              borderRadius: 24,
-              padding: 24,
-              background: "rgba(15, 23, 42, 0.82)",
-              border: "1px solid rgba(148, 163, 184, 0.25)",
-              boxShadow: "0 24px 90px rgba(15, 23, 42, 0.35)",
-              backdropFilter: "blur(16px)",
-            }}
-          >
-            <header style={{ marginBottom: 20 }}>
-              <p
-                style={{
-                  margin: 0,
-                  color: "#7dd3fc",
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase",
-                  fontSize: 12,
-                }}
-              >
-                twig-view demo
-              </p>
-              <h1
-                style={{
-                  margin: "8px 0 0",
-                  fontSize: "clamp(2rem, 4vw, 3rem)",
-                }}
-              >
-                Accessible tree view
-              </h1>
-            </header>
-
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 12,
-                marginBottom: 20,
+          <label>
+            Line width
+            <input
+              type="number"
+              min="0.5"
+              step="0.5"
+              value={controls.lineWidth}
+              onChange={(event) => {
+                patchControls({ lineWidth: Number(event.target.value) });
               }}
-            >
-              <button
-                type="button"
-                onClick={() => withTrees((tree) => tree.expandAll())}
-              >
-                Expand all
-              </button>
-              <button
-                type="button"
-                onClick={() => withTrees((tree) => tree.collapseAll())}
-              >
-                Collapse all
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const focusId = focusScenario.focusId;
-                  const tree = treeRefs.current[focusScenario.id];
+            />
+          </label>
+          <label>
+            Line color
+            <input
+              type="color"
+              value={controls.lineColor}
+              onChange={(event) => {
+                patchControls({ lineColor: event.target.value });
+              }}
+            />
+          </label>
+          <label>
+            Line radius
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={controls.lineRadius}
+              onChange={(event) => {
+                patchControls({ lineRadius: Number(event.target.value) });
+              }}
+            />
+          </label>
+          <label>
+            Toggle size
+            <input
+              type="number"
+              min="12"
+              step="1"
+              value={controls.toggleSize}
+              onChange={(event) => {
+                patchControls({ toggleSize: Number(event.target.value) });
+              }}
+            />
+          </label>
+          <label>
+            Toggle icon size
+            <input
+              type="number"
+              min="8"
+              step="1"
+              value={controls.toggleIconSize}
+              onChange={(event) => {
+                patchControls({ toggleIconSize: Number(event.target.value) });
+              }}
+            />
+          </label>
+          <label>
+            Spacing
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={controls.spacing}
+              onChange={(event) => {
+                patchControls({ spacing: Number(event.target.value) });
+              }}
+            />
+          </label>
+          <label>
+            Item padding block
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={controls.itemPaddingBlock}
+              onChange={(event) => {
+                patchControls({
+                  itemPaddingBlock: Number(event.target.value),
+                });
+              }}
+            />
+          </label>
+          <label>
+            Item padding start
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={controls.itemPaddingInlineStart}
+              onChange={(event) => {
+                patchControls({
+                  itemPaddingInlineStart: Number(event.target.value),
+                });
+              }}
+            />
+          </label>
+          <label>
+            Item padding end
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={controls.itemPaddingInlineEnd}
+              onChange={(event) => {
+                patchControls({
+                  itemPaddingInlineEnd: Number(event.target.value),
+                });
+              }}
+            />
+          </label>
+          <label>
+            ID prefix
+            <input
+              type="text"
+              value={controls.idPrefix}
+              onChange={(event) => {
+                patchControls({ idPrefix: event.target.value });
+              }}
+            />
+          </label>
+          <label>
+            Open toggle color
+            <input
+              type="color"
+              value={controls.toggleOpenBackground}
+              onChange={(event) => {
+                patchControls({ toggleOpenBackground: event.target.value });
+              }}
+            />
+          </label>
+          <label>
+            Closed toggle color
+            <input
+              type="color"
+              value={controls.toggleClosedBackground}
+              onChange={(event) => {
+                patchControls({ toggleClosedBackground: event.target.value });
+              }}
+            />
+          </label>
+          <label>
+            Toggle foreground
+            <input
+              type="color"
+              value={controls.toggleForeground}
+              onChange={(event) => {
+                patchControls({ toggleForeground: event.target.value });
+              }}
+            />
+          </label>
+          <label>
+            Animation duration
+            <input
+              type="number"
+              min="0"
+              step="10"
+              value={controls.animationDuration}
+              onChange={(event) => {
+                patchControls({
+                  animationDuration: Number(event.target.value),
+                });
+              }}
+            />
+          </label>
+          <label>
+            Animation easing
+            <input
+              type="text"
+              value={controls.animationEasing}
+              onChange={(event) => {
+                patchControls({ animationEasing: event.target.value });
+              }}
+            />
+          </label>
+          <label>
+            Open icon symbol
+            <input
+              type="text"
+              value={controls.openSymbol}
+              onChange={(event) => {
+                patchControls({ openSymbol: event.target.value || "−" });
+              }}
+            />
+          </label>
+          <label>
+            Closed icon symbol
+            <input
+              type="text"
+              value={controls.closedSymbol}
+              onChange={(event) => {
+                patchControls({ closedSymbol: event.target.value || "+" });
+              }}
+            />
+          </label>
+        </div>
 
-                  if (tree && focusId) {
-                    tree.focus(focusId);
-                  }
-                }}
-              >
-                Focus routing
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  history.pushState(null, "", "/simple");
-                  window.dispatchEvent(new PopStateEvent("popstate"));
-                }}
-              >
-                Simple demo
-              </button>
-            </div>
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 16,
+            marginTop: 16,
+          }}
+        >
+          <label>
+            <input
+              type="checkbox"
+              checked={controls.animationEnabled}
+              onChange={(event) => {
+                patchControls({ animationEnabled: event.target.checked });
+              }}
+            />{" "}
+            Enable animation
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={controls.animateOpacity}
+              onChange={(event) => {
+                patchControls({ animateOpacity: event.target.checked });
+              }}
+            />{" "}
+            Animate opacity
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={controls.useCustomIcons}
+              onChange={(event) => {
+                patchControls({ useCustomIcons: event.target.checked });
+              }}
+            />{" "}
+            Override plus/minus icons
+          </label>
+        </div>
+      </section>
 
-            <div className="demoTreeGrid">
-              {scenarios.map((scenario) => (
-                <section key={scenario.id} className="demoScenarioCard">
-                  <p className="demoTreeLabel">{scenario.title}</p>
-                  <p className="demoTreeNote">{scenario.note}</p>
-                  <TreeView
-                    ref={(tree) => {
-                      treeRefs.current[scenario.id] = tree;
-                    }}
-                    ariaLabel={scenario.title}
-                    childGap={scenario.childGap}
-                    className="demoTree"
-                    data={scenario.data}
-                    indent={scenario.indent}
-                    line={scenario.line}
-                    rowGap={scenario.rowGap}
-                    toggleSize={scenario.toggleSize}
-                    style={
-                      (scenario.id === "wide-toggle"
-                        ? {
-                            ["--tree-toggle-bg"]: "#ec4899",
-                            ["--tree-toggle-foreground"]: "#000000",
-                          }
-                        : {
-                            ["--tree-toggle-bg"]: scenario.line?.color,
-                            ["--tree-toggle-foreground"]: "#ffffff",
-                          }) as unknown as React.CSSProperties
-                    }
-                    renderNode={({ node, hasChildren, toggleable }) =>
-                      renderNode(node, hasChildren, toggleable)
-                    }
-                    {...(scenario.id === "rounded-elbows"
-                      ? {
-                          toggleIcons: {
-                            open: (
-                              <span
-                                style={{
-                                  width: scenario.toggleSize ?? 18,
-                                  height: scenario.toggleSize ?? 18,
-                                  display: "inline-grid",
-                                  placeItems: "center",
-                                }}
-                              >
-                                <svg
-                                  viewBox="0 0 24 24"
-                                  width={scenario.toggleSize ?? 18}
-                                  height={scenario.toggleSize ?? 18}
-                                  aria-hidden
-                                >
-                                  <path
-                                    d="M12 21s-7-4.35-9-7.07C-0.5 9.5 4 4 7.5 6.5 9.5 7.9 12 10 12 10s2.5-2.1 4.5-3.5C20 4 24.5 9.5 21 13.93 19 16.65 12 21 12 21z"
-                                    fill="#ef4444"
-                                  />
-                                </svg>
-                              </span>
-                            ),
-                            closed: (
-                              <span
-                                style={{
-                                  width: scenario.toggleSize ?? 18,
-                                  height: scenario.toggleSize ?? 18,
-                                  display: "inline-grid",
-                                  placeItems: "center",
-                                }}
-                              >
-                                <svg
-                                  viewBox="0 0 24 24"
-                                  width={scenario.toggleSize ?? 18}
-                                  height={scenario.toggleSize ?? 18}
-                                  aria-hidden
-                                >
-                                  <path
-                                    d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
-                                    fill="#facc15"
-                                  />
-                                </svg>
-                              </span>
-                            ),
-                          },
-                        }
-                      : {})}
-                  />
-                </section>
-              ))}
-            </div>
-          </section>
-        </main>
-      )}
-    </>
+      <TwigTree
+        items={twigTreeItems}
+        idPrefix={controls.idPrefix}
+        lineWidth={controls.lineWidth}
+        lineColor={controls.lineColor}
+        lineRadius={controls.lineRadius}
+        toggleSize={controls.toggleSize}
+        spacing={controls.spacing}
+        itemPaddingBlock={controls.itemPaddingBlock}
+        itemPaddingInlineStart={controls.itemPaddingInlineStart}
+        itemPaddingInlineEnd={controls.itemPaddingInlineEnd}
+        animation={{
+          enabled: controls.animationEnabled,
+          duration: controls.animationDuration,
+          easing: controls.animationEasing,
+          animateOpacity: controls.animateOpacity,
+        }}
+        toggle={{
+          openBackground: controls.toggleOpenBackground,
+          closedBackground: controls.toggleClosedBackground,
+          foreground: controls.toggleForeground,
+          iconSize: controls.toggleIconSize,
+        }}
+        renderToggleIcon={
+          controls.useCustomIcons ? renderCustomToggleIcon : undefined
+        }
+      />
+    </main>
   );
 }
