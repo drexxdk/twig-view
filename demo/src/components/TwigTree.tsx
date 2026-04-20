@@ -22,14 +22,6 @@ export type TwigTreeAnimationOptions = {
   animateOpacity?: boolean;
 };
 
-export type TwigTreeRenderToggleIconArgs = {
-  item: TwigTreeItem;
-  id: string;
-  path: number[];
-  expanded: boolean;
-  size: number;
-};
-
 export type TwigTreeElementOptions = {
   className?: string;
   style?: React.CSSProperties;
@@ -88,7 +80,6 @@ type TwigTreeProps = {
   onCloseStart?: (event: TwigTreeToggleEvent) => void;
   onCloseEnd?: (event: TwigTreeToggleEvent) => void;
   toggle?: TwigTreeToggleOptions;
-  renderToggleIcon?: (args: TwigTreeRenderToggleIconArgs) => React.ReactNode;
 };
 
 type NormalizedAnimationOptions = {
@@ -119,7 +110,6 @@ type TwigTreeBranchProps = {
     open: TwigTreeToggleStateOptions;
     closed: TwigTreeToggleStateOptions;
   };
-  renderToggleIcon?: (args: TwigTreeRenderToggleIconArgs) => React.ReactNode;
 };
 
 function joinClassNames(...values: Array<string | undefined>) {
@@ -209,7 +199,6 @@ function TwigTreeBranch({
   onCloseEnd,
   slots,
   toggle,
-  renderToggleIcon,
 }: TwigTreeBranchProps) {
   const hasChildren = Boolean(item.children?.length);
   const [expanded, setExpanded] = useState(Boolean(item.defaultExpanded));
@@ -227,20 +216,13 @@ function TwigTreeBranch({
     [item, path],
   );
   const resolvedToggleState = expanded ? toggle.open : toggle.closed;
-  const toggleIcon = renderToggleIcon
-    ? renderToggleIcon({
-        item,
-        id: eventPayload.id,
-        path,
-        expanded,
-        size: toggle.icon.size,
-      })
-    : (resolvedToggleState.icon ??
-      (expanded ? (
-        <DefaultToggleIcon expanded />
-      ) : (
-        <DefaultToggleIcon expanded={false} />
-      )));
+  const toggleIcon =
+    resolvedToggleState.icon ??
+    (expanded ? (
+      <DefaultToggleIcon expanded />
+    ) : (
+      <DefaultToggleIcon expanded={false} />
+    ));
   const itemOptions = mergeElementOptions(
     slots.item,
     hasChildren ? slots.branch : slots.leaf,
@@ -399,7 +381,6 @@ function TwigTreeBranch({
                 onCloseEnd={onCloseEnd}
                 slots={slots}
                 toggle={toggle}
-                renderToggleIcon={renderToggleIcon}
               />
             );
           })}
@@ -424,7 +405,6 @@ export default function TwigTree({
   onCloseStart,
   onCloseEnd,
   toggle,
-  renderToggleIcon,
 }: TwigTreeProps) {
   const resolvedConnector = useMemo(
     () => ({
@@ -518,7 +498,6 @@ export default function TwigTree({
               onCloseEnd={onCloseEnd}
               slots={resolvedSlots}
               toggle={resolvedToggle}
-              renderToggleIcon={renderToggleIcon}
             />
           );
         })}

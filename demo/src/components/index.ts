@@ -5,7 +5,6 @@ export type {
   TwigTreeElementOptions,
   TwigTreeItem,
   TwigTreeItemLayoutOptions,
-  TwigTreeRenderToggleIconArgs,
   TwigTreeSlotOptions,
   TwigTreeToggleStateOptions,
   TwigTreeToggleOptions,

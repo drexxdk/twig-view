@@ -1,9 +1,5 @@
 import { useState } from "react";
-import {
-  TwigTree,
-  type TwigTreeItem,
-  type TwigTreeRenderToggleIconArgs,
-} from "./components";
+import { TwigTree, type TwigTreeItem } from "./components";
 
 const twigTreeItems: TwigTreeItem[] = [
   {
@@ -86,9 +82,6 @@ type ControlsState = {
   toggleClosedFill: string;
   toggleIconColor: string;
   toggleShadow: string;
-  useCustomIcons: boolean;
-  openSymbol: string;
-  closedSymbol: string;
 };
 
 export default function App() {
@@ -111,50 +104,34 @@ export default function App() {
     toggleClosedFill: "#6b7280",
     toggleIconColor: "#ffffff",
     toggleShadow: "0 8px 20px rgba(15, 23, 42, 0.35)",
-    useCustomIcons: false,
-    openSymbol: "−",
-    closedSymbol: "+",
   });
 
   function patchControls(patch: Partial<ControlsState>) {
     setControls((current) => ({ ...current, ...patch }));
   }
 
-  function renderCustomToggleIcon({
-    expanded,
-    size,
-  }: TwigTreeRenderToggleIconArgs) {
-    if (!controls.useCustomIcons) {
-      return undefined;
-    }
+  const customToggleIconStyle = {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    height: "100%",
+    fontSize: controls.toggleIconSize,
+    lineHeight: 1,
+    fontWeight: 700,
+    textAlign: "center",
+    overflow: "visible",
+  } as const;
 
-    return (
-      <span
-        aria-hidden="true"
-        style={{
-          display: "inline-grid",
-          placeItems: "center",
-          width: size,
-          height: size,
-          fontSize: Math.max(10, controls.toggleIconSize),
-          lineHeight: 1,
-          fontWeight: 700,
-        }}
-      >
-        {expanded ? controls.openSymbol : controls.closedSymbol}
-      </span>
-    );
-  }
+  const customStarIconStyle = {
+    ...customToggleIconStyle,
+    transform: "translateY(-0.08em)",
+  } as const;
 
   return (
     <main
-      className="demoTreePlayground"
       style={
         {
-          "--demo-toggle-open-fill": controls.toggleOpenFill,
-          "--demo-toggle-closed-fill": controls.toggleClosedFill,
-          "--demo-toggle-icon-color": controls.toggleIconColor,
-          "--demo-toggle-shadow": controls.toggleShadow,
           width: "min(1100px, 100%)",
           margin: "0 auto",
           padding: 24,
@@ -173,7 +150,13 @@ export default function App() {
       >
         <h2 style={{ margin: 0 }}>TwigTree controls</h2>
         <p style={{ margin: "8px 0 16px", color: "#94a3b8" }}>
-          Change the tree props below. Tree data stays fixed.
+          Change the shared tree props below. The page renders one tree with the
+          default toggles and one with custom toggle icons.
+        </p>
+        <p style={{ margin: "0 0 16px", color: "#7dd3fc", fontSize: 14 }}>
+          The second demo provides icons directly through{" "}
+          <code>toggle.open.icon</code>
+          and <code>toggle.closed.icon</code>.
         </p>
 
         <div
@@ -369,26 +352,6 @@ export default function App() {
               }}
             />
           </label>
-          <label>
-            Open icon symbol
-            <input
-              type="text"
-              value={controls.openSymbol}
-              onChange={(event) => {
-                patchControls({ openSymbol: event.target.value || "−" });
-              }}
-            />
-          </label>
-          <label>
-            Closed icon symbol
-            <input
-              type="text"
-              value={controls.closedSymbol}
-              onChange={(event) => {
-                patchControls({ closedSymbol: event.target.value || "+" });
-              }}
-            />
-          </label>
         </div>
 
         <div
@@ -419,64 +382,156 @@ export default function App() {
             />{" "}
             Animate opacity
           </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={controls.useCustomIcons}
-              onChange={(event) => {
-                patchControls({ useCustomIcons: event.target.checked });
-              }}
-            />{" "}
-            Override plus/minus icons
-          </label>
         </div>
       </section>
 
-      <TwigTree
-        items={twigTreeItems}
-        idPrefix={controls.idPrefix}
-        connector={{
-          width: controls.lineWidth,
-          color: controls.lineColor,
-          radius: controls.lineRadius,
+      <section
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+          gap: 20,
         }}
-        spacing={controls.spacing}
-        itemLayout={{
-          paddingBlock: controls.itemPaddingBlock,
-          paddingInlineStart: controls.itemPaddingInlineStart,
-          paddingInlineEnd: controls.itemPaddingInlineEnd,
-        }}
-        slots={{
-          tree: {
-            className: "demoTree",
-          },
-        }}
-        animation={{
-          enabled: controls.animationEnabled,
-          duration: controls.animationDuration,
-          easing: controls.animationEasing,
-          animateOpacity: controls.animateOpacity,
-        }}
-        toggle={{
-          size: controls.toggleSize,
-          button: {
-            className: "demoToggleShell",
-          },
-          icon: {
-            size: controls.toggleIconSize,
-            className: "demoToggleGlyph",
-          },
-          open: {
-            className: "demoToggleShellOpen",
-          },
-          closed: {
-            className: "demoToggleShellClosed",
-          },
-        }}
-        renderToggleIcon={
-          controls.useCustomIcons ? renderCustomToggleIcon : undefined
-        }
-      />
+      >
+        <article
+          style={{
+            borderRadius: 16,
+            padding: 20,
+            background: "rgba(2,6,23,0.45)",
+            border: "1px solid rgba(148,163,184,0.12)",
+          }}
+        >
+          <h3 style={{ margin: 0 }}>Default Toggles</h3>
+          <p style={{ margin: "8px 0 16px", color: "#94a3b8" }}>
+            Uses the built-in plus/minus toggle icons.
+          </p>
+          <TwigTree
+            items={twigTreeItems}
+            idPrefix={`${controls.idPrefix}-default`}
+            connector={{
+              width: controls.lineWidth,
+              color: controls.lineColor,
+              radius: controls.lineRadius,
+            }}
+            spacing={controls.spacing}
+            itemLayout={{
+              paddingBlock: controls.itemPaddingBlock,
+              paddingInlineStart: controls.itemPaddingInlineStart,
+              paddingInlineEnd: controls.itemPaddingInlineEnd,
+            }}
+            slots={{
+              tree: {
+                style: {
+                  minHeight: 18,
+                },
+              },
+            }}
+            animation={{
+              enabled: controls.animationEnabled,
+              duration: controls.animationDuration,
+              easing: controls.animationEasing,
+              animateOpacity: controls.animateOpacity,
+            }}
+            toggle={{
+              size: controls.toggleSize,
+              button: {
+                style: {
+                  color: controls.toggleIconColor,
+                  boxShadow: controls.toggleShadow,
+                },
+              },
+              icon: {
+                size: controls.toggleIconSize,
+              },
+              open: {
+                style: {
+                  background: controls.toggleOpenFill,
+                },
+              },
+              closed: {
+                style: {
+                  background: controls.toggleClosedFill,
+                },
+              },
+            }}
+          />
+        </article>
+
+        <article
+          style={{
+            borderRadius: 16,
+            padding: 20,
+            background: "rgba(2,6,23,0.45)",
+            border: "1px solid rgba(148,163,184,0.12)",
+          }}
+        >
+          <h3 style={{ margin: 0 }}>Custom Toggle Icons</h3>
+          <p style={{ margin: "8px 0 16px", color: "#94a3b8" }}>
+            Open uses a yellow star. Closed uses a red heart.
+          </p>
+          <TwigTree
+            items={twigTreeItems}
+            idPrefix={`${controls.idPrefix}-custom`}
+            connector={{
+              width: controls.lineWidth,
+              color: controls.lineColor,
+              radius: controls.lineRadius,
+            }}
+            spacing={controls.spacing}
+            itemLayout={{
+              paddingBlock: controls.itemPaddingBlock,
+              paddingInlineStart: controls.itemPaddingInlineStart,
+              paddingInlineEnd: controls.itemPaddingInlineEnd,
+            }}
+            slots={{
+              tree: {
+                style: {
+                  minHeight: 18,
+                },
+              },
+            }}
+            animation={{
+              enabled: controls.animationEnabled,
+              duration: controls.animationDuration,
+              easing: controls.animationEasing,
+              animateOpacity: controls.animateOpacity,
+            }}
+            toggle={{
+              size: controls.toggleSize,
+              button: {
+                style: {
+                  boxShadow: controls.toggleShadow,
+                  background: "#0f172a",
+                },
+              },
+              icon: {
+                size: controls.toggleIconSize,
+              },
+              open: {
+                style: {
+                  background: "#9a3412",
+                  color: "#facc15",
+                },
+                icon: (
+                  <span aria-hidden="true" style={customStarIconStyle}>
+                    ★
+                  </span>
+                ),
+              },
+              closed: {
+                style: {
+                  background: "#991b1b",
+                  color: "#f87171",
+                },
+                icon: (
+                  <span aria-hidden="true" style={customToggleIconStyle}>
+                    ♥
+                  </span>
+                ),
+              },
+            }}
+          />
+        </article>
+      </section>
     </main>
   );
 }
