@@ -30,28 +30,56 @@ export type TwigTreeRenderToggleIconArgs = {
   size: number;
 };
 
+export type TwigTreeElementOptions = {
+  className?: string;
+  style?: React.CSSProperties;
+};
+
+export type TwigTreeConnectorOptions = {
+  width?: number;
+  color?: string;
+  radius?: number;
+};
+
+export type TwigTreeItemLayoutOptions = {
+  paddingBlock?: number;
+  paddingInlineStart?: number;
+  paddingInlineEnd?: number;
+};
+
+export type TwigTreeToggleStateOptions = TwigTreeElementOptions & {
+  icon?: React.ReactNode;
+};
+
 export type TwigTreeToggleOptions = {
-  openBackground?: string;
-  closedBackground?: string;
-  foreground?: string;
-  iconSize?: number;
-  openIcon?: React.ReactNode;
-  closedIcon?: React.ReactNode;
+  size?: number;
+  button?: TwigTreeElementOptions;
+  icon?: TwigTreeElementOptions & {
+    size?: number;
+  };
+  open?: TwigTreeToggleStateOptions;
+  closed?: TwigTreeToggleStateOptions;
+};
+
+export type TwigTreeSlotOptions = {
+  tree?: TwigTreeElementOptions;
+  item?: TwigTreeElementOptions;
+  branch?: TwigTreeElementOptions;
+  leaf?: TwigTreeElementOptions;
+  row?: TwigTreeElementOptions;
+  branchRow?: TwigTreeElementOptions;
+  leafRow?: TwigTreeElementOptions;
+  label?: TwigTreeElementOptions;
+  children?: TwigTreeElementOptions;
 };
 
 type TwigTreeProps = {
   items: TwigTreeItem[];
-  lineWidth?: number;
-  lineColor?: string;
-  lineRadius?: number;
-  toggleSize?: number;
+  connector?: TwigTreeConnectorOptions;
   spacing?: number;
-  itemPaddingBlock?: number;
-  itemPaddingInlineStart?: number;
-  itemPaddingInlineEnd?: number;
-  className?: string;
+  itemLayout?: TwigTreeItemLayoutOptions;
   idPrefix?: string;
-  style?: React.CSSProperties;
+  slots?: TwigTreeSlotOptions;
   animation?: boolean | TwigTreeAnimationOptions;
   onWillOpen?: (event: TwigTreeToggleEvent) => void;
   onOpenStart?: (event: TwigTreeToggleEvent) => void;
@@ -81,18 +109,35 @@ type TwigTreeBranchProps = {
   onWillClose?: (event: TwigTreeToggleEvent) => void;
   onCloseStart?: (event: TwigTreeToggleEvent) => void;
   onCloseEnd?: (event: TwigTreeToggleEvent) => void;
-  toggle: Required<
-    Pick<
-      TwigTreeToggleOptions,
-      "openBackground" | "closedBackground" | "foreground" | "iconSize"
-    >
-  > &
-    Pick<TwigTreeToggleOptions, "openIcon" | "closedIcon">;
+  slots: Required<TwigTreeSlotOptions>;
+  toggle: {
+    size: number;
+    button: TwigTreeElementOptions;
+    icon: TwigTreeElementOptions & {
+      size: number;
+    };
+    open: TwigTreeToggleStateOptions;
+    closed: TwigTreeToggleStateOptions;
+  };
   renderToggleIcon?: (args: TwigTreeRenderToggleIconArgs) => React.ReactNode;
 };
 
 function joinClassNames(...values: Array<string | undefined>) {
   return values.filter(Boolean).join(" ");
+}
+
+function mergeElementOptions(
+  ...values: Array<TwigTreeElementOptions | undefined>
+): TwigTreeElementOptions {
+  return values.reduce<TwigTreeElementOptions>(
+    (result, value) => ({
+      className: joinClassNames(result.className, value?.className),
+      style: value?.style
+        ? { ...(result.style ?? {}), ...value.style }
+        : result.style,
+    }),
+    {},
+  );
 }
 
 function normalizeAnimation(
@@ -162,6 +207,7 @@ function TwigTreeBranch({
   onWillClose,
   onCloseStart,
   onCloseEnd,
+  slots,
   toggle,
   renderToggleIcon,
 }: TwigTreeBranchProps) {
@@ -180,17 +226,53 @@ function TwigTreeBranch({
     }),
     [item, path],
   );
+  const resolvedToggleState = expanded ? toggle.open : toggle.closed;
   const toggleIcon = renderToggleIcon
     ? renderToggleIcon({
         item,
         id: eventPayload.id,
         path,
         expanded,
-        size: toggle.iconSize,
+        size: toggle.icon.size,
       })
-    : expanded
-      ? (toggle.openIcon ?? <DefaultToggleIcon expanded />)
-      : (toggle.closedIcon ?? <DefaultToggleIcon expanded={false} />);
+    : (resolvedToggleState.icon ??
+      (expanded ? (
+        <DefaultToggleIcon expanded />
+      ) : (
+        <DefaultToggleIcon expanded={false} />
+      )));
+  const itemOptions = mergeElementOptions(
+    slots.item,
+    hasChildren ? slots.branch : slots.leaf,
+  );
+  const rowOptions = mergeElementOptions(
+    slots.row,
+    hasChildren ? slots.branchRow : slots.leafRow,
+  );
+  const labelOptions = slots.label;
+  const childrenOptions = slots.children;
+  const toggleButtonOptions = mergeElementOptions(
+    toggle.button,
+    resolvedToggleState,
+  );
+  const toggleIconOptions = mergeElementOptions(toggle.icon);
+  const toggleGlyphStyle = {
+    width: `${toggle.icon.size}px`,
+    height: `${toggle.icon.size}px`,
+    ...(toggleIconOptions.style ?? {}),
+  };
+  const itemClassName = joinClassNames(itemOptions.className);
+  const rowClassName = joinClassNames(rowOptions.className);
+  const labelClassName = joinClassNames(labelOptions.className);
+  const childrenClassName = joinClassNames(childrenOptions.className);
+  const toggleButtonClassName = joinClassNames(
+    styles.toggleButtonIcon,
+    toggleButtonOptions.className,
+  );
+  const toggleGlyphClassName = joinClassNames(
+    styles.toggleButtonGlyph,
+    toggleIconOptions.className,
+  );
 
   useEffect(() => {
     return () => {
@@ -202,9 +284,18 @@ function TwigTreeBranch({
 
   if (!hasChildren) {
     return (
-      <li>
-        <span className={`${styles.itemRow} ${styles.leafRow}`}>
-          {item.label}
+      <li className={itemClassName} style={itemOptions.style}>
+        <span
+          className={joinClassNames(
+            styles.itemRow,
+            styles.leafRow,
+            rowClassName,
+          )}
+          style={rowOptions.style}
+        >
+          <span className={labelClassName} style={labelOptions.style}>
+            {item.label}
+          </span>
         </span>
       </li>
     );
@@ -255,22 +346,39 @@ function TwigTreeBranch({
   }
 
   return (
-    <li data-expanded={expanded ? "true" : "false"} data-phase={phase}>
+    <li
+      className={itemClassName}
+      style={itemOptions.style}
+      data-expanded={expanded ? "true" : "false"}
+      data-phase={phase}
+    >
       <button
         type="button"
-        className={`${styles.itemRow} ${styles.toggleRow}`}
+        className={joinClassNames(
+          styles.itemRow,
+          styles.toggleRow,
+          rowClassName,
+        )}
         aria-controls={`${domId}-children`}
         aria-expanded={expanded}
         onClick={toggleExpanded}
+        style={rowOptions.style}
       >
-        <i className={styles.toggleButtonIcon}>{toggleIcon}</i>
-        <span>{item.label}</span>
+        <i className={toggleButtonClassName} style={toggleButtonOptions.style}>
+          <span className={toggleGlyphClassName} style={toggleGlyphStyle}>
+            {toggleIcon}
+          </span>
+        </i>
+        <span className={labelClassName} style={labelOptions.style}>
+          {item.label}
+        </span>
       </button>
       <div
-        className={styles.childrenViewport}
+        className={joinClassNames(styles.childrenViewport, childrenClassName)}
         data-animate={animation.enabled ? "true" : "false"}
         data-expanded={expanded ? "true" : "false"}
         id={`${domId}-children`}
+        style={childrenOptions.style}
       >
         <ul>
           {item.children?.map((child, index) => {
@@ -289,6 +397,7 @@ function TwigTreeBranch({
                 onWillClose={onWillClose}
                 onCloseStart={onCloseStart}
                 onCloseEnd={onCloseEnd}
+                slots={slots}
                 toggle={toggle}
                 renderToggleIcon={renderToggleIcon}
               />
@@ -302,17 +411,11 @@ function TwigTreeBranch({
 
 export default function TwigTree({
   items,
-  lineWidth = 1,
-  lineColor = "rgba(255, 0, 0, 0.5)",
-  lineRadius = 10,
-  toggleSize = 16,
+  connector,
   spacing = 4,
-  itemPaddingBlock = 2,
-  itemPaddingInlineStart = 0,
-  itemPaddingInlineEnd = 0,
-  className,
+  itemLayout,
   idPrefix = "twig-tree",
-  style,
+  slots,
   animation,
   onWillOpen,
   onOpenStart,
@@ -323,46 +426,76 @@ export default function TwigTree({
   toggle,
   renderToggleIcon,
 }: TwigTreeProps) {
-  const { lineWidthDpi } = useLineWidthDpi(lineWidth);
+  const resolvedConnector = useMemo(
+    () => ({
+      width: connector?.width ?? 1,
+      color: connector?.color ?? "rgba(255, 0, 0, 0.5)",
+      radius: connector?.radius ?? 10,
+    }),
+    [connector],
+  );
+  const resolvedItemLayout = useMemo(
+    () => ({
+      paddingBlock: itemLayout?.paddingBlock ?? 2,
+      paddingInlineStart: itemLayout?.paddingInlineStart ?? 0,
+      paddingInlineEnd: itemLayout?.paddingInlineEnd ?? 0,
+    }),
+    [itemLayout],
+  );
+  const { lineWidthDpi } = useLineWidthDpi(resolvedConnector.width);
   const resolvedAnimation = useMemo(
     () => normalizeAnimation(animation),
     [animation],
   );
+  const resolvedSlots = useMemo<Required<TwigTreeSlotOptions>>(
+    () => ({
+      tree: slots?.tree ?? {},
+      item: slots?.item ?? {},
+      branch: slots?.branch ?? {},
+      leaf: slots?.leaf ?? {},
+      row: slots?.row ?? {},
+      branchRow: slots?.branchRow ?? {},
+      leafRow: slots?.leafRow ?? {},
+      label: slots?.label ?? {},
+      children: slots?.children ?? {},
+    }),
+    [slots],
+  );
   const resolvedToggle = useMemo(
     () => ({
-      openBackground: toggle?.openBackground ?? "#16a34a",
-      closedBackground: toggle?.closedBackground ?? "#6b7280",
-      foreground: toggle?.foreground ?? "#ffffff",
-      iconSize: toggle?.iconSize ?? Math.max(10, toggleSize * 0.6),
-      openIcon: toggle?.openIcon,
-      closedIcon: toggle?.closedIcon,
+      size: toggle?.size ?? 16,
+      button: toggle?.button ?? {},
+      icon: {
+        size: toggle?.icon?.size ?? Math.max(10, (toggle?.size ?? 16) * 0.6),
+        className: toggle?.icon?.className,
+        style: toggle?.icon?.style,
+      },
+      open: toggle?.open ?? {},
+      closed: toggle?.closed ?? {},
     }),
-    [toggle, toggleSize],
+    [toggle],
   );
+  const treeOptions = mergeElementOptions(resolvedSlots.tree);
 
   return (
     <section
-      className={joinClassNames(styles.tree, className)}
+      className={joinClassNames(styles.tree, treeOptions.className)}
       style={
         {
           "--line-width": `${lineWidthDpi}px`,
-          "--line-color": lineColor,
-          "--line-radius": `${lineRadius}px`,
-          "--toggle-size": `${toggleSize}px`,
+          "--line-color": resolvedConnector.color,
+          "--line-radius": `${resolvedConnector.radius}px`,
+          "--toggle-size": `${resolvedToggle.size}px`,
           "--spacing": `${spacing}px`,
-          "--item-padding-block": `${itemPaddingBlock}px`,
-          "--item-padding-inline-start": `${itemPaddingInlineStart}px`,
-          "--item-padding-inline-end": `${itemPaddingInlineEnd}px`,
-          "--twig-toggle-open-bg": resolvedToggle.openBackground,
-          "--twig-toggle-closed-bg": resolvedToggle.closedBackground,
-          "--twig-toggle-foreground": resolvedToggle.foreground,
-          "--twig-toggle-icon-size": `${resolvedToggle.iconSize}px`,
+          "--item-padding-block": `${resolvedItemLayout.paddingBlock}px`,
+          "--item-padding-inline-start": `${resolvedItemLayout.paddingInlineStart}px`,
+          "--item-padding-inline-end": `${resolvedItemLayout.paddingInlineEnd}px`,
           "--twig-animation-duration": `${resolvedAnimation.duration}ms`,
           "--twig-animation-easing": resolvedAnimation.easing,
           "--twig-animation-opacity": resolvedAnimation.animateOpacity
             ? "1"
             : "0",
-          ...(style ?? {}),
+          ...(treeOptions.style ?? {}),
         } as React.CSSProperties
       }
     >
@@ -383,6 +516,7 @@ export default function TwigTree({
               onWillClose={onWillClose}
               onCloseStart={onCloseStart}
               onCloseEnd={onCloseEnd}
+              slots={resolvedSlots}
               toggle={resolvedToggle}
               renderToggleIcon={renderToggleIcon}
             />

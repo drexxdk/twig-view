@@ -20,6 +20,31 @@ input {
   font: inherit;
 }
 
+.demoTreePlayground {
+  --demo-toggle-open-fill: #16a34a;
+  --demo-toggle-closed-fill: #6b7280;
+  --demo-toggle-icon-color: #ffffff;
+  --demo-toggle-shadow: 0 8px 20px rgba(15, 23, 42, 0.35);
+}
+
+.demoToggleShell {
+  color: var(--demo-toggle-icon-color);
+  box-shadow: var(--demo-toggle-shadow);
+}
+
+.demoToggleShellOpen {
+  background: var(--demo-toggle-open-fill);
+}
+
+.demoToggleShellClosed {
+  background: var(--demo-toggle-closed-fill);
+}
+
+.demoToggleGlyph {
+  display: inline-grid;
+  place-items: center;
+}
+
 .demoTree [data-slot="tree-item"] {
   border-radius: 14px;
 }

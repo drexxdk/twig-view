@@ -81,10 +81,11 @@ type ControlsState = {
   animationDuration: number;
   animationEasing: string;
   animateOpacity: boolean;
-  toggleOpenBackground: string;
-  toggleClosedBackground: string;
-  toggleForeground: string;
   toggleIconSize: number;
+  toggleOpenFill: string;
+  toggleClosedFill: string;
+  toggleIconColor: string;
+  toggleShadow: string;
   useCustomIcons: boolean;
   openSymbol: string;
   closedSymbol: string;
@@ -105,10 +106,11 @@ export default function App() {
     animationDuration: 220,
     animationEasing: "ease",
     animateOpacity: true,
-    toggleOpenBackground: "#16a34a",
-    toggleClosedBackground: "#6b7280",
-    toggleForeground: "#ffffff",
     toggleIconSize: 10,
+    toggleOpenFill: "#16a34a",
+    toggleClosedFill: "#6b7280",
+    toggleIconColor: "#ffffff",
+    toggleShadow: "0 8px 20px rgba(15, 23, 42, 0.35)",
     useCustomIcons: false,
     openSymbol: "−",
     closedSymbol: "+",
@@ -146,13 +148,20 @@ export default function App() {
 
   return (
     <main
-      style={{
-        width: "min(1100px, 100%)",
-        margin: "0 auto",
-        padding: 24,
-        display: "grid",
-        gap: 24,
-      }}
+      className="demoTreePlayground"
+      style={
+        {
+          "--demo-toggle-open-fill": controls.toggleOpenFill,
+          "--demo-toggle-closed-fill": controls.toggleClosedFill,
+          "--demo-toggle-icon-color": controls.toggleIconColor,
+          "--demo-toggle-shadow": controls.toggleShadow,
+          width: "min(1100px, 100%)",
+          margin: "0 auto",
+          padding: 24,
+          display: "grid",
+          gap: 24,
+        } as React.CSSProperties
+      }
     >
       <section
         style={{
@@ -297,32 +306,42 @@ export default function App() {
             />
           </label>
           <label>
-            Open toggle color
+            Open toggle fill
             <input
               type="color"
-              value={controls.toggleOpenBackground}
+              value={controls.toggleOpenFill}
               onChange={(event) => {
-                patchControls({ toggleOpenBackground: event.target.value });
+                patchControls({ toggleOpenFill: event.target.value });
               }}
             />
           </label>
           <label>
-            Closed toggle color
+            Closed toggle fill
             <input
               type="color"
-              value={controls.toggleClosedBackground}
+              value={controls.toggleClosedFill}
               onChange={(event) => {
-                patchControls({ toggleClosedBackground: event.target.value });
+                patchControls({ toggleClosedFill: event.target.value });
               }}
             />
           </label>
           <label>
-            Toggle foreground
+            Toggle icon color
             <input
               type="color"
-              value={controls.toggleForeground}
+              value={controls.toggleIconColor}
               onChange={(event) => {
-                patchControls({ toggleForeground: event.target.value });
+                patchControls({ toggleIconColor: event.target.value });
+              }}
+            />
+          </label>
+          <label>
+            Toggle shadow
+            <input
+              type="text"
+              value={controls.toggleShadow}
+              onChange={(event) => {
+                patchControls({ toggleShadow: event.target.value });
               }}
             />
           </label>
@@ -416,14 +435,22 @@ export default function App() {
       <TwigTree
         items={twigTreeItems}
         idPrefix={controls.idPrefix}
-        lineWidth={controls.lineWidth}
-        lineColor={controls.lineColor}
-        lineRadius={controls.lineRadius}
-        toggleSize={controls.toggleSize}
+        connector={{
+          width: controls.lineWidth,
+          color: controls.lineColor,
+          radius: controls.lineRadius,
+        }}
         spacing={controls.spacing}
-        itemPaddingBlock={controls.itemPaddingBlock}
-        itemPaddingInlineStart={controls.itemPaddingInlineStart}
-        itemPaddingInlineEnd={controls.itemPaddingInlineEnd}
+        itemLayout={{
+          paddingBlock: controls.itemPaddingBlock,
+          paddingInlineStart: controls.itemPaddingInlineStart,
+          paddingInlineEnd: controls.itemPaddingInlineEnd,
+        }}
+        slots={{
+          tree: {
+            className: "demoTree",
+          },
+        }}
         animation={{
           enabled: controls.animationEnabled,
           duration: controls.animationDuration,
@@ -431,10 +458,20 @@ export default function App() {
           animateOpacity: controls.animateOpacity,
         }}
         toggle={{
-          openBackground: controls.toggleOpenBackground,
-          closedBackground: controls.toggleClosedBackground,
-          foreground: controls.toggleForeground,
-          iconSize: controls.toggleIconSize,
+          size: controls.toggleSize,
+          button: {
+            className: "demoToggleShell",
+          },
+          icon: {
+            size: controls.toggleIconSize,
+            className: "demoToggleGlyph",
+          },
+          open: {
+            className: "demoToggleShellOpen",
+          },
+          closed: {
+            className: "demoToggleShellClosed",
+          },
         }}
         renderToggleIcon={
           controls.useCustomIcons ? renderCustomToggleIcon : undefined

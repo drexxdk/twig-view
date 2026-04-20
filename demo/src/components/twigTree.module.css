@@ -10,10 +10,6 @@
   --row-block-size: calc(var(--toggle-size) + (var(--item-padding-block) * 2));
   --branch-indent: calc(var(--toggle-size) + var(--spacing));
   --connector-origin-x: calc(((var(--toggle-size) / 2) + var(--spacing)) * -1);
-  --twig-toggle-open-bg: #16a34a;
-  --twig-toggle-closed-bg: #6b7280;
-  --twig-toggle-foreground: #ffffff;
-  --twig-toggle-icon-size: calc(var(--toggle-size) * 0.6);
 
   width: 100%;
   display: flex;
@@ -28,7 +24,6 @@
     padding-block: var(--item-padding-block);
     padding-inline-start: var(--item-padding-inline-start);
     padding-inline-end: var(--item-padding-inline-end);
-    line-height: 1.2;
   }
 
   .itemRow > span {
@@ -64,25 +59,27 @@
     width: var(--toggle-size);
     height: var(--toggle-size);
     border-radius: 50%;
-    background: var(--twig-toggle-closed-bg);
-    color: var(--twig-toggle-foreground);
     overflow: visible;
     font-style: normal;
   }
 
-  .toggleButtonIcon > * {
+  .toggleButtonGlyph {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     transform-origin: center;
+    display: inline-grid;
+    place-items: center;
     flex: none;
+    line-height: 1;
+    overflow: visible;
   }
 
   .toggleButtonIconSvg {
     display: block;
-    width: var(--twig-toggle-icon-size);
-    height: var(--twig-toggle-icon-size);
+    width: 100%;
+    height: 100%;
   }
 
   .childrenViewport {
@@ -168,10 +165,6 @@
   }
 
   li[data-expanded="true"] > .toggleRow {
-    > .toggleButtonIcon {
-      background: var(--twig-toggle-open-bg);
-    }
-
     &:after {
       content: "";
       position: absolute;
