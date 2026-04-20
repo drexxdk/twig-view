@@ -8,8 +8,6 @@
   --item-padding-inline-start: 0px;
   --item-padding-inline-end: 0px;
   --row-block-size: calc(var(--toggle-size) + (var(--item-padding-block) * 2));
-  --row-half-size: calc(var(--row-block-size) / 2);
-  --row-center-line: calc(var(--row-half-size) - (var(--line-width) / 2));
   --branch-indent: calc(var(--toggle-size) + var(--spacing));
   --connector-origin-x: calc(((var(--toggle-size) / 2) + var(--spacing)) * -1);
 
@@ -22,10 +20,16 @@
     display: inline-flex;
     align-items: center;
     min-height: var(--row-block-size);
+    max-inline-size: 100%;
     padding-block: var(--item-padding-block);
     padding-inline-start: var(--item-padding-inline-start);
     padding-inline-end: var(--item-padding-inline-end);
-    line-height: 1;
+    line-height: 1.2;
+  }
+
+  .itemRow > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   .leafRow {
@@ -61,7 +65,7 @@
             left: var(--connector-origin-x);
             top: 0;
             width: var(--branch-indent);
-            height: var(--row-half-size);
+            height: calc(50% + (var(--line-width) / 2));
             box-sizing: border-box;
             border-left: var(--line-width) solid var(--line-color);
             border-bottom: var(--line-width) solid var(--line-color);
@@ -73,7 +77,7 @@
               content: "";
               position: absolute;
               left: var(--connector-origin-x);
-              top: var(--row-half-size);
+              top: 50%;
               bottom: 0;
               width: var(--line-width);
               background-color: var(--line-color);
@@ -105,7 +109,7 @@
     &:checked + label:after {
       content: "";
       position: absolute;
-      top: var(--row-center-line);
+      top: 50%;
       left: calc((var(--toggle-size) / 2) - (var(--line-width) / 2));
       bottom: 0;
       width: var(--line-width);
@@ -125,6 +129,7 @@
 
     & + label {
       & > i {
+        flex: 0 0 var(--toggle-size);
         width: var(--toggle-size);
         height: var(--toggle-size);
         border-radius: 50%;
