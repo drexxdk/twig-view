@@ -1,4 +1,5 @@
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
+import Simple from "./pages/Simple";
 import TreeView, {
   type TreeViewHandle,
   type TreeViewLineStyle,
@@ -541,163 +542,185 @@ export default function App() {
   }
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        display: "grid",
-        placeItems: "center",
-        padding: "48px 20px",
-      }}
-    >
-      <section
-        style={{
-          width: "min(1280px, 100%)",
-          borderRadius: 24,
-          padding: 24,
-          background: "rgba(15, 23, 42, 0.82)",
-          border: "1px solid rgba(148, 163, 184, 0.25)",
-          boxShadow: "0 24px 90px rgba(15, 23, 42, 0.35)",
-          backdropFilter: "blur(16px)",
-        }}
-      >
-        <header style={{ marginBottom: 20 }}>
-          <p
-            style={{
-              margin: 0,
-              color: "#7dd3fc",
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              fontSize: 12,
-            }}
-          >
-            twig-view demo
-          </p>
-          <h1 style={{ margin: "8px 0 0", fontSize: "clamp(2rem, 4vw, 3rem)" }}>
-            Accessible tree view
-          </h1>
-        </header>
-
-        <div
+    // simple client-side routing: render Simple when pathname === '/simple'
+    <>
+      {typeof window !== "undefined" &&
+      window.location.pathname === "/simple" ? (
+        <Simple />
+      ) : (
+        <main
           style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 12,
-            marginBottom: 20,
+            minHeight: "100vh",
+            display: "grid",
+            placeItems: "center",
+            padding: "48px 20px",
           }}
         >
-          <button
-            type="button"
-            onClick={() => withTrees((tree) => tree.expandAll())}
-          >
-            Expand all
-          </button>
-          <button
-            type="button"
-            onClick={() => withTrees((tree) => tree.collapseAll())}
-          >
-            Collapse all
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              const focusId = focusScenario.focusId;
-              const tree = treeRefs.current[focusScenario.id];
-
-              if (tree && focusId) {
-                tree.focus(focusId);
-              }
+          <section
+            style={{
+              width: "min(1280px, 100%)",
+              borderRadius: 24,
+              padding: 24,
+              background: "rgba(15, 23, 42, 0.82)",
+              border: "1px solid rgba(148, 163, 184, 0.25)",
+              boxShadow: "0 24px 90px rgba(15, 23, 42, 0.35)",
+              backdropFilter: "blur(16px)",
             }}
           >
-            Focus routing
-          </button>
-        </div>
-
-        <div className="demoTreeGrid">
-          {scenarios.map((scenario) => (
-            <section key={scenario.id} className="demoScenarioCard">
-              <p className="demoTreeLabel">{scenario.title}</p>
-              <p className="demoTreeNote">{scenario.note}</p>
-              <TreeView
-                ref={(tree) => {
-                  treeRefs.current[scenario.id] = tree;
+            <header style={{ marginBottom: 20 }}>
+              <p
+                style={{
+                  margin: 0,
+                  color: "#7dd3fc",
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  fontSize: 12,
                 }}
-                ariaLabel={scenario.title}
-                childGap={scenario.childGap}
-                className="demoTree"
-                data={scenario.data}
-                indent={scenario.indent}
-                line={scenario.line}
-                rowGap={scenario.rowGap}
-                toggleSize={scenario.toggleSize}
-                style={
-                  (scenario.id === "wide-toggle"
-                    ? {
-                        ["--tree-toggle-bg"]: "#ec4899",
-                        ["--tree-toggle-foreground"]: "#000000",
-                      }
-                    : {
-                        ["--tree-toggle-bg"]: scenario.line?.color,
-                        ["--tree-toggle-foreground"]: "#ffffff",
-                      }) as unknown as React.CSSProperties
-                }
-                renderNode={({ node, hasChildren, toggleable }) =>
-                  renderNode(node, hasChildren, toggleable)
-                }
-                {...(scenario.id === "rounded-elbows"
-                  ? {
-                      toggleIcons: {
-                        open: (
-                          <span
-                            style={{
-                              width: scenario.toggleSize ?? 18,
-                              height: scenario.toggleSize ?? 18,
-                              display: "inline-grid",
-                              placeItems: "center",
-                            }}
-                          >
-                            <svg
-                              viewBox="0 0 24 24"
-                              width={scenario.toggleSize ?? 18}
-                              height={scenario.toggleSize ?? 18}
-                              aria-hidden
-                            >
-                              <path
-                                d="M12 21s-7-4.35-9-7.07C-0.5 9.5 4 4 7.5 6.5 9.5 7.9 12 10 12 10s2.5-2.1 4.5-3.5C20 4 24.5 9.5 21 13.93 19 16.65 12 21 12 21z"
-                                fill="#ef4444"
-                              />
-                            </svg>
-                          </span>
-                        ),
-                        closed: (
-                          <span
-                            style={{
-                              width: scenario.toggleSize ?? 18,
-                              height: scenario.toggleSize ?? 18,
-                              display: "inline-grid",
-                              placeItems: "center",
-                            }}
-                          >
-                            <svg
-                              viewBox="0 0 24 24"
-                              width={scenario.toggleSize ?? 18}
-                              height={scenario.toggleSize ?? 18}
-                              aria-hidden
-                            >
-                              <path
-                                d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
-                                fill="#facc15"
-                              />
-                            </svg>
-                          </span>
-                        ),
-                      },
+              >
+                twig-view demo
+              </p>
+              <h1
+                style={{
+                  margin: "8px 0 0",
+                  fontSize: "clamp(2rem, 4vw, 3rem)",
+                }}
+              >
+                Accessible tree view
+              </h1>
+            </header>
+
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 12,
+                marginBottom: 20,
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => withTrees((tree) => tree.expandAll())}
+              >
+                Expand all
+              </button>
+              <button
+                type="button"
+                onClick={() => withTrees((tree) => tree.collapseAll())}
+              >
+                Collapse all
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const focusId = focusScenario.focusId;
+                  const tree = treeRefs.current[focusScenario.id];
+
+                  if (tree && focusId) {
+                    tree.focus(focusId);
+                  }
+                }}
+              >
+                Focus routing
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  history.pushState(null, "", "/simple");
+                  window.dispatchEvent(new PopStateEvent("popstate"));
+                }}
+              >
+                Simple demo
+              </button>
+            </div>
+
+            <div className="demoTreeGrid">
+              {scenarios.map((scenario) => (
+                <section key={scenario.id} className="demoScenarioCard">
+                  <p className="demoTreeLabel">{scenario.title}</p>
+                  <p className="demoTreeNote">{scenario.note}</p>
+                  <TreeView
+                    ref={(tree) => {
+                      treeRefs.current[scenario.id] = tree;
+                    }}
+                    ariaLabel={scenario.title}
+                    childGap={scenario.childGap}
+                    className="demoTree"
+                    data={scenario.data}
+                    indent={scenario.indent}
+                    line={scenario.line}
+                    rowGap={scenario.rowGap}
+                    toggleSize={scenario.toggleSize}
+                    style={
+                      (scenario.id === "wide-toggle"
+                        ? {
+                            ["--tree-toggle-bg"]: "#ec4899",
+                            ["--tree-toggle-foreground"]: "#000000",
+                          }
+                        : {
+                            ["--tree-toggle-bg"]: scenario.line?.color,
+                            ["--tree-toggle-foreground"]: "#ffffff",
+                          }) as unknown as React.CSSProperties
                     }
-                  : {})}
-              />
-            </section>
-          ))}
-        </div>
-      </section>
-    </main>
+                    renderNode={({ node, hasChildren, toggleable }) =>
+                      renderNode(node, hasChildren, toggleable)
+                    }
+                    {...(scenario.id === "rounded-elbows"
+                      ? {
+                          toggleIcons: {
+                            open: (
+                              <span
+                                style={{
+                                  width: scenario.toggleSize ?? 18,
+                                  height: scenario.toggleSize ?? 18,
+                                  display: "inline-grid",
+                                  placeItems: "center",
+                                }}
+                              >
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  width={scenario.toggleSize ?? 18}
+                                  height={scenario.toggleSize ?? 18}
+                                  aria-hidden
+                                >
+                                  <path
+                                    d="M12 21s-7-4.35-9-7.07C-0.5 9.5 4 4 7.5 6.5 9.5 7.9 12 10 12 10s2.5-2.1 4.5-3.5C20 4 24.5 9.5 21 13.93 19 16.65 12 21 12 21z"
+                                    fill="#ef4444"
+                                  />
+                                </svg>
+                              </span>
+                            ),
+                            closed: (
+                              <span
+                                style={{
+                                  width: scenario.toggleSize ?? 18,
+                                  height: scenario.toggleSize ?? 18,
+                                  display: "inline-grid",
+                                  placeItems: "center",
+                                }}
+                              >
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  width={scenario.toggleSize ?? 18}
+                                  height={scenario.toggleSize ?? 18}
+                                  aria-hidden
+                                >
+                                  <path
+                                    d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
+                                    fill="#facc15"
+                                  />
+                                </svg>
+                              </span>
+                            ),
+                          },
+                        }
+                      : {})}
+                  />
+                </section>
+              ))}
+            </div>
+          </section>
+        </main>
+      )}
+    </>
   );
 }
