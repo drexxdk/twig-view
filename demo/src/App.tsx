@@ -70,8 +70,6 @@ type ControlsState = {
   toggleSize: number;
   spacing: number;
   itemPaddingBlock: number;
-  itemPaddingInlineStart: number;
-  itemPaddingInlineEnd: number;
   idPrefix: string;
   animationEnabled: boolean;
   animationDuration: number;
@@ -82,7 +80,231 @@ type ControlsState = {
   toggleClosedFill: string;
   toggleIconColor: string;
   toggleShadow: string;
+  useCustomDemoToggles: boolean;
 };
+
+const panelStyle = {
+  borderRadius: 20,
+  padding: 20,
+  background: "linear-gradient(180deg, rgba(15,23,42,0.84), rgba(2,6,23,0.72))",
+  border: "1px solid rgba(148,163,184,0.14)",
+  boxShadow: "0 24px 60px rgba(2, 6, 23, 0.28)",
+} as const;
+
+const groupGridStyle = {
+  display: "grid",
+  gap: 12,
+  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+} as const;
+
+const fieldLabelStyle = {
+  display: "grid",
+  gap: 6,
+  fontSize: 14,
+  color: "#cbd5e1",
+} as const;
+
+const inputStyle = {
+  width: "100%",
+  minHeight: 40,
+  borderRadius: 10,
+  border: "1px solid rgba(148,163,184,0.18)",
+  background: "rgba(15,23,42,0.9)",
+  color: "#e2e8f0",
+  padding: "0 12px",
+} as const;
+
+const sectionTitleStyle = {
+  margin: 0,
+  fontSize: 16,
+  color: "#f8fafc",
+} as const;
+
+const sectionTextStyle = {
+  margin: "6px 0 0",
+  fontSize: 13,
+  color: "#94a3b8",
+  lineHeight: 1.5,
+} as const;
+
+function NumberField({
+  label,
+  value,
+  min,
+  max,
+  step,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max?: number;
+  step: number;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <label style={fieldLabelStyle}>
+      <span>
+        {label}
+        <span
+          style={{
+            marginLeft: 8,
+            color: "#7dd3fc",
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
+          {value}
+        </span>
+      </span>
+      <input
+        style={{ accentColor: "#38bdf8" }}
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(event) => {
+          onChange(Number(event.target.value));
+        }}
+      />
+    </label>
+  );
+}
+
+function ColorField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label style={fieldLabelStyle}>
+      <span>{label}</span>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "48px minmax(0, 1fr)",
+          gap: 8,
+          alignItems: "center",
+        }}
+      >
+        <input
+          style={{
+            width: 48,
+            height: 40,
+            borderRadius: 10,
+            border: "1px solid rgba(148,163,184,0.18)",
+            background: "transparent",
+            padding: 4,
+          }}
+          type="color"
+          value={value}
+          onChange={(event) => {
+            onChange(event.target.value);
+          }}
+        />
+        <input
+          style={inputStyle}
+          type="text"
+          value={value}
+          onChange={(event) => {
+            onChange(event.target.value);
+          }}
+        />
+      </div>
+    </label>
+  );
+}
+
+function TextField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label style={fieldLabelStyle}>
+      <span>{label}</span>
+      <input
+        style={inputStyle}
+        type="text"
+        value={value}
+        onChange={(event) => {
+          onChange(event.target.value);
+        }}
+      />
+    </label>
+  );
+}
+
+function CheckboxField({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <label
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        minHeight: 40,
+        fontSize: 14,
+        color: "#cbd5e1",
+      }}
+    >
+      <input
+        style={{ accentColor: "#38bdf8" }}
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => {
+          onChange(event.target.checked);
+        }}
+      />
+      <span>{label}</span>
+    </label>
+  );
+}
+
+function ControlSection({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section
+      className="demoControlSection"
+      style={{
+        display: "grid",
+        gap: 14,
+        padding: 16,
+        borderRadius: 16,
+        background: "rgba(15,23,42,0.46)",
+        border: "1px solid rgba(148,163,184,0.1)",
+      }}
+    >
+      <header>
+        <h3 style={sectionTitleStyle}>{title}</h3>
+        <p style={sectionTextStyle}>{description}</p>
+      </header>
+      {children}
+    </section>
+  );
+}
 
 export default function App() {
   const [controls, setControls] = useState<ControlsState>({
@@ -92,8 +314,6 @@ export default function App() {
     toggleSize: 16,
     spacing: 4,
     itemPaddingBlock: 2,
-    itemPaddingInlineStart: 0,
-    itemPaddingInlineEnd: 0,
     idPrefix: "twig-tree",
     animationEnabled: true,
     animationDuration: 220,
@@ -104,6 +324,7 @@ export default function App() {
     toggleClosedFill: "#6b7280",
     toggleIconColor: "#ffffff",
     toggleShadow: "0 8px 20px rgba(15, 23, 42, 0.35)",
+    useCustomDemoToggles: false,
   });
 
   function patchControls(patch: Partial<ControlsState>) {
@@ -128,8 +349,69 @@ export default function App() {
     transform: "translateY(-0.08em)",
   } as const;
 
+  const customToggleEnabled = controls.useCustomDemoToggles;
+
+  const treeToggle = customToggleEnabled
+    ? {
+        size: controls.toggleSize,
+        button: {
+          style: {
+            boxShadow: controls.toggleShadow,
+            background: "#0f172a",
+          },
+        },
+        icon: {
+          size: controls.toggleIconSize,
+        },
+        open: {
+          style: {
+            background: "#facc15",
+            color: "#9a3412",
+          },
+          icon: (
+            <span aria-hidden="true" style={customStarIconStyle}>
+              ★
+            </span>
+          ),
+        },
+        closed: {
+          style: {
+            background: "#f87171",
+            color: "#991b1b",
+          },
+          icon: (
+            <span aria-hidden="true" style={customToggleIconStyle}>
+              ♥
+            </span>
+          ),
+        },
+      }
+    : {
+        size: controls.toggleSize,
+        button: {
+          style: {
+            color: controls.toggleIconColor,
+            boxShadow: controls.toggleShadow,
+          },
+        },
+        icon: {
+          size: controls.toggleIconSize,
+        },
+        open: {
+          style: {
+            background: controls.toggleOpenFill,
+          },
+        },
+        closed: {
+          style: {
+            background: controls.toggleClosedFill,
+          },
+        },
+      };
+
   return (
     <main
+      className="demoShell"
       style={
         {
           width: "min(1100px, 100%)",
@@ -140,398 +422,293 @@ export default function App() {
         } as React.CSSProperties
       }
     >
-      <section
-        style={{
-          borderRadius: 16,
-          padding: 20,
-          background: "rgba(2,6,23,0.6)",
-          border: "1px solid rgba(148,163,184,0.12)",
-        }}
-      >
-        <h2 style={{ margin: 0 }}>TwigTree controls</h2>
-        <p style={{ margin: "8px 0 16px", color: "#94a3b8" }}>
-          Change the shared tree props below. The page renders one tree with the
-          default toggles and one with custom toggle icons.
-        </p>
-        <p style={{ margin: "0 0 16px", color: "#7dd3fc", fontSize: 14 }}>
-          The second demo provides icons directly through{" "}
-          <code>toggle.open.icon</code>
-          and <code>toggle.closed.icon</code>.
-        </p>
-
-        <div
+      <div className="demoWorkspace">
+        <section
+          className="demoPanel demoPreviewPanel"
           style={{
+            ...panelStyle,
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
             gap: 12,
           }}
         >
-          <label>
-            Line width
-            <input
-              type="number"
-              min="0.5"
-              step="0.5"
-              value={controls.lineWidth}
-              onChange={(event) => {
-                patchControls({ lineWidth: Number(event.target.value) });
-              }}
-            />
-          </label>
-          <label>
-            Line color
-            <input
-              type="color"
-              value={controls.lineColor}
-              onChange={(event) => {
-                patchControls({ lineColor: event.target.value });
-              }}
-            />
-          </label>
-          <label>
-            Line radius
-            <input
-              type="number"
-              min="0"
-              step="1"
-              value={controls.lineRadius}
-              onChange={(event) => {
-                patchControls({ lineRadius: Number(event.target.value) });
-              }}
-            />
-          </label>
-          <label>
-            Toggle size
-            <input
-              type="number"
-              min="12"
-              step="1"
-              value={controls.toggleSize}
-              onChange={(event) => {
-                patchControls({ toggleSize: Number(event.target.value) });
-              }}
-            />
-          </label>
-          <label>
-            Toggle icon size
-            <input
-              type="number"
-              min="8"
-              step="1"
-              value={controls.toggleIconSize}
-              onChange={(event) => {
-                patchControls({ toggleIconSize: Number(event.target.value) });
-              }}
-            />
-          </label>
-          <label>
-            Spacing
-            <input
-              type="number"
-              min="0"
-              step="1"
-              value={controls.spacing}
-              onChange={(event) => {
-                patchControls({ spacing: Number(event.target.value) });
-              }}
-            />
-          </label>
-          <label>
-            Item padding block
-            <input
-              type="number"
-              min="0"
-              step="1"
-              value={controls.itemPaddingBlock}
-              onChange={(event) => {
-                patchControls({
-                  itemPaddingBlock: Number(event.target.value),
-                });
-              }}
-            />
-          </label>
-          <label>
-            Item padding start
-            <input
-              type="number"
-              min="0"
-              step="1"
-              value={controls.itemPaddingInlineStart}
-              onChange={(event) => {
-                patchControls({
-                  itemPaddingInlineStart: Number(event.target.value),
-                });
-              }}
-            />
-          </label>
-          <label>
-            Item padding end
-            <input
-              type="number"
-              min="0"
-              step="1"
-              value={controls.itemPaddingInlineEnd}
-              onChange={(event) => {
-                patchControls({
-                  itemPaddingInlineEnd: Number(event.target.value),
-                });
-              }}
-            />
-          </label>
-          <label>
-            ID prefix
-            <input
-              type="text"
-              value={controls.idPrefix}
-              onChange={(event) => {
-                patchControls({ idPrefix: event.target.value });
-              }}
-            />
-          </label>
-          <label>
-            Open toggle fill
-            <input
-              type="color"
-              value={controls.toggleOpenFill}
-              onChange={(event) => {
-                patchControls({ toggleOpenFill: event.target.value });
-              }}
-            />
-          </label>
-          <label>
-            Closed toggle fill
-            <input
-              type="color"
-              value={controls.toggleClosedFill}
-              onChange={(event) => {
-                patchControls({ toggleClosedFill: event.target.value });
-              }}
-            />
-          </label>
-          <label>
-            Toggle icon color
-            <input
-              type="color"
-              value={controls.toggleIconColor}
-              onChange={(event) => {
-                patchControls({ toggleIconColor: event.target.value });
-              }}
-            />
-          </label>
-          <label>
-            Toggle shadow
-            <input
-              type="text"
-              value={controls.toggleShadow}
-              onChange={(event) => {
-                patchControls({ toggleShadow: event.target.value });
-              }}
-            />
-          </label>
-          <label>
-            Animation duration
-            <input
-              type="number"
-              min="0"
-              step="10"
-              value={controls.animationDuration}
-              onChange={(event) => {
-                patchControls({
-                  animationDuration: Number(event.target.value),
-                });
-              }}
-            />
-          </label>
-          <label>
-            Animation easing
-            <input
-              type="text"
-              value={controls.animationEasing}
-              onChange={(event) => {
-                patchControls({ animationEasing: event.target.value });
-              }}
-            />
-          </label>
-        </div>
+          <div className="demoPanelHeader" style={{ display: "grid", gap: 4 }}>
+            <h3 style={{ margin: 0 }}>
+              {customToggleEnabled
+                ? "TwigTree with custom demo toggles"
+                : "TwigTree with default toggles"}
+            </h3>
+            <p style={{ margin: 0, color: "#94a3b8" }}>
+              {customToggleEnabled
+                ? "The tree is using the preset star and heart icons so you can quickly test custom toggle rendering."
+                : "The tree is using the built-in plus and minus icons so you can inspect the default component behavior."}
+            </p>
+          </div>
 
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 16,
-            marginTop: 16,
-          }}
-        >
-          <label>
-            <input
-              type="checkbox"
-              checked={controls.animationEnabled}
-              onChange={(event) => {
-                patchControls({ animationEnabled: event.target.checked });
+          <div className="demoPreviewTree">
+            <TwigTree
+              items={twigTreeItems}
+              idPrefix={controls.idPrefix}
+              connector={{
+                width: controls.lineWidth,
+                color: controls.lineColor,
+                radius: controls.lineRadius,
               }}
-            />{" "}
-            Enable animation
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={controls.animateOpacity}
-              onChange={(event) => {
-                patchControls({ animateOpacity: event.target.checked });
+              spacing={controls.spacing}
+              itemLayout={{
+                paddingBlock: controls.itemPaddingBlock,
               }}
-            />{" "}
-            Animate opacity
-          </label>
-        </div>
-      </section>
+              slots={{
+                tree: {
+                  style: {
+                    minHeight: 18,
+                  },
+                },
+              }}
+              animation={{
+                enabled: controls.animationEnabled,
+                duration: controls.animationDuration,
+                easing: controls.animationEasing,
+                animateOpacity: controls.animateOpacity,
+              }}
+              toggle={treeToggle}
+            />
+          </div>
+        </section>
 
-      <section
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-          gap: 20,
-        }}
-      >
-        <article
-          style={{
-            borderRadius: 16,
-            padding: 20,
-            background: "rgba(2,6,23,0.45)",
-            border: "1px solid rgba(148,163,184,0.12)",
-          }}
-        >
-          <h3 style={{ margin: 0 }}>Default Toggles</h3>
-          <p style={{ margin: "8px 0 16px", color: "#94a3b8" }}>
-            Uses the built-in plus/minus toggle icons.
-          </p>
-          <TwigTree
-            items={twigTreeItems}
-            idPrefix={`${controls.idPrefix}-default`}
-            connector={{
-              width: controls.lineWidth,
-              color: controls.lineColor,
-              radius: controls.lineRadius,
-            }}
-            spacing={controls.spacing}
-            itemLayout={{
-              paddingBlock: controls.itemPaddingBlock,
-              paddingInlineStart: controls.itemPaddingInlineStart,
-              paddingInlineEnd: controls.itemPaddingInlineEnd,
-            }}
-            slots={{
-              tree: {
-                style: {
-                  minHeight: 18,
-                },
-              },
-            }}
-            animation={{
-              enabled: controls.animationEnabled,
-              duration: controls.animationDuration,
-              easing: controls.animationEasing,
-              animateOpacity: controls.animateOpacity,
-            }}
-            toggle={{
-              size: controls.toggleSize,
-              button: {
-                style: {
-                  color: controls.toggleIconColor,
-                  boxShadow: controls.toggleShadow,
-                },
-              },
-              icon: {
-                size: controls.toggleIconSize,
-              },
-              open: {
-                style: {
-                  background: controls.toggleOpenFill,
-                },
-              },
-              closed: {
-                style: {
-                  background: controls.toggleClosedFill,
-                },
-              },
-            }}
-          />
-        </article>
+        <section className="demoPanel demoControlsPanel" style={panelStyle}>
+          <div className="demoPanelHeader">
+            <h2 style={{ margin: 0 }}>TwigTree controls</h2>
+            <p style={{ margin: "8px 0 0", color: "#94a3b8" }}>
+              Everything below updates the same tree. On larger screens the
+              controls and example stay visible together so you can tune the
+              component without bouncing up and down the page.
+            </p>
+          </div>
 
-        <article
-          style={{
-            borderRadius: 16,
-            padding: 20,
-            background: "rgba(2,6,23,0.45)",
-            border: "1px solid rgba(148,163,184,0.12)",
-          }}
-        >
-          <h3 style={{ margin: 0 }}>Custom Toggle Icons</h3>
-          <p style={{ margin: "8px 0 16px", color: "#94a3b8" }}>
-            Open uses a yellow star. Closed uses a red heart.
-          </p>
-          <TwigTree
-            items={twigTreeItems}
-            idPrefix={`${controls.idPrefix}-custom`}
-            connector={{
-              width: controls.lineWidth,
-              color: controls.lineColor,
-              radius: controls.lineRadius,
-            }}
-            spacing={controls.spacing}
-            itemLayout={{
-              paddingBlock: controls.itemPaddingBlock,
-              paddingInlineStart: controls.itemPaddingInlineStart,
-              paddingInlineEnd: controls.itemPaddingInlineEnd,
-            }}
-            slots={{
-              tree: {
-                style: {
-                  minHeight: 18,
-                },
-              },
-            }}
-            animation={{
-              enabled: controls.animationEnabled,
-              duration: controls.animationDuration,
-              easing: controls.animationEasing,
-              animateOpacity: controls.animateOpacity,
-            }}
-            toggle={{
-              size: controls.toggleSize,
-              button: {
-                style: {
-                  boxShadow: controls.toggleShadow,
-                  background: "#0f172a",
-                },
-              },
-              icon: {
-                size: controls.toggleIconSize,
-              },
-              open: {
-                style: {
-                  background: "#9a3412",
-                  color: "#facc15",
-                },
-                icon: (
-                  <span aria-hidden="true" style={customStarIconStyle}>
-                    ★
-                  </span>
-                ),
-              },
-              closed: {
-                style: {
-                  background: "#991b1b",
-                  color: "#f87171",
-                },
-                icon: (
-                  <span aria-hidden="true" style={customToggleIconStyle}>
-                    ♥
-                  </span>
-                ),
-              },
-            }}
-          />
-        </article>
-      </section>
+          <div className="demoControlsGrid">
+            <ControlSection
+              title="Demo mode"
+              description="Choose which toggle preset the example uses."
+            >
+              <div
+                style={{
+                  display: "grid",
+                  gap: 12,
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 10,
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <strong style={{ color: "#f8fafc", fontSize: 14 }}>
+                    {customToggleEnabled ? "Custom preset" : "Default preset"}
+                  </strong>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      patchControls({
+                        useCustomDemoToggles: !customToggleEnabled,
+                      });
+                    }}
+                    style={{
+                      minHeight: 42,
+                      padding: "0 16px",
+                      borderRadius: 999,
+                      border: customToggleEnabled
+                        ? "1px solid rgba(251,191,36,0.42)"
+                        : "1px solid rgba(148,163,184,0.18)",
+                      background: customToggleEnabled
+                        ? "linear-gradient(135deg, rgba(154,52,18,0.95), rgba(153,27,27,0.95))"
+                        : "rgba(15,23,42,0.9)",
+                      color: "#f8fafc",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {customToggleEnabled ? "Use default" : "Use custom"}
+                  </button>
+                </div>
+
+                <span style={{ color: "#94a3b8", fontSize: 13 }}>
+                  {customToggleEnabled
+                    ? "Star and heart icons"
+                    : "Built-in plus and minus icons"}
+                </span>
+              </div>
+            </ControlSection>
+
+            <ControlSection
+              title="Tree layout"
+              description="These settings affect the overall row rhythm and the generated id prefix used by the demo tree."
+            >
+              <div style={groupGridStyle}>
+                <NumberField
+                  label="Spacing"
+                  value={controls.spacing}
+                  min={0}
+                  max={24}
+                  step={1}
+                  onChange={(value) => {
+                    patchControls({ spacing: value });
+                  }}
+                />
+                <NumberField
+                  label="Row padding"
+                  value={controls.itemPaddingBlock}
+                  min={0}
+                  max={16}
+                  step={1}
+                  onChange={(value) => {
+                    patchControls({ itemPaddingBlock: value });
+                  }}
+                />
+                <TextField
+                  label="ID prefix"
+                  value={controls.idPrefix}
+                  onChange={(value) => {
+                    patchControls({ idPrefix: value });
+                  }}
+                />
+              </div>
+            </ControlSection>
+
+            <ControlSection
+              title="Connectors"
+              description="Everything related to the tree lines is grouped here: thickness, color, and the elbow radius."
+            >
+              <div style={groupGridStyle}>
+                <NumberField
+                  label="Line width"
+                  value={controls.lineWidth}
+                  min={0.5}
+                  max={6}
+                  step={0.5}
+                  onChange={(value) => {
+                    patchControls({ lineWidth: value });
+                  }}
+                />
+                <NumberField
+                  label="Line radius"
+                  value={controls.lineRadius}
+                  min={0}
+                  max={24}
+                  step={1}
+                  onChange={(value) => {
+                    patchControls({ lineRadius: value });
+                  }}
+                />
+                <ColorField
+                  label="Line color"
+                  value={controls.lineColor}
+                  onChange={(value) => {
+                    patchControls({ lineColor: value });
+                  }}
+                />
+              </div>
+            </ControlSection>
+
+            <ControlSection
+              title="Toggles"
+              description="Size and general styling for the toggle button. The color fields apply to the default toggle mode, while the custom preset keeps its own demo colors."
+            >
+              <div style={groupGridStyle}>
+                <NumberField
+                  label="Toggle size"
+                  value={controls.toggleSize}
+                  min={12}
+                  max={36}
+                  step={1}
+                  onChange={(value) => {
+                    patchControls({ toggleSize: value });
+                  }}
+                />
+                <NumberField
+                  label="Icon size"
+                  value={controls.toggleIconSize}
+                  min={8}
+                  max={28}
+                  step={1}
+                  onChange={(value) => {
+                    patchControls({ toggleIconSize: value });
+                  }}
+                />
+                <ColorField
+                  label="Open fill"
+                  value={controls.toggleOpenFill}
+                  onChange={(value) => {
+                    patchControls({ toggleOpenFill: value });
+                  }}
+                />
+                <ColorField
+                  label="Closed fill"
+                  value={controls.toggleClosedFill}
+                  onChange={(value) => {
+                    patchControls({ toggleClosedFill: value });
+                  }}
+                />
+                <ColorField
+                  label="Icon color"
+                  value={controls.toggleIconColor}
+                  onChange={(value) => {
+                    patchControls({ toggleIconColor: value });
+                  }}
+                />
+                <TextField
+                  label="Toggle shadow"
+                  value={controls.toggleShadow}
+                  onChange={(value) => {
+                    patchControls({ toggleShadow: value });
+                  }}
+                />
+              </div>
+            </ControlSection>
+
+            <ControlSection
+              title="Animation"
+              description="Turn branch animation on or off and tune the timing when you want to inspect motion behavior."
+            >
+              <div style={groupGridStyle}>
+                <CheckboxField
+                  label="Enable animation"
+                  checked={controls.animationEnabled}
+                  onChange={(value) => {
+                    patchControls({ animationEnabled: value });
+                  }}
+                />
+                <CheckboxField
+                  label="Animate opacity"
+                  checked={controls.animateOpacity}
+                  onChange={(value) => {
+                    patchControls({ animateOpacity: value });
+                  }}
+                />
+                <NumberField
+                  label="Duration"
+                  value={controls.animationDuration}
+                  min={0}
+                  max={800}
+                  step={20}
+                  onChange={(value) => {
+                    patchControls({ animationDuration: value });
+                  }}
+                />
+                <TextField
+                  label="Easing"
+                  value={controls.animationEasing}
+                  onChange={(value) => {
+                    patchControls({ animationEasing: value });
+                  }}
+                />
+              </div>
+            </ControlSection>
+          </div>
+        </section>
+      </div>
     </main>
   );
 }

@@ -35,8 +35,6 @@ export type TwigTreeConnectorOptions = {
 
 export type TwigTreeItemLayoutOptions = {
   paddingBlock?: number;
-  paddingInlineStart?: number;
-  paddingInlineEnd?: number;
 };
 
 export type TwigTreeToggleStateOptions = TwigTreeElementOptions & {
@@ -417,8 +415,6 @@ export default function TwigTree({
   const resolvedItemLayout = useMemo(
     () => ({
       paddingBlock: itemLayout?.paddingBlock ?? 2,
-      paddingInlineStart: itemLayout?.paddingInlineStart ?? 0,
-      paddingInlineEnd: itemLayout?.paddingInlineEnd ?? 0,
     }),
     [itemLayout],
   );
@@ -468,8 +464,6 @@ export default function TwigTree({
           "--toggle-size": `${resolvedToggle.size}px`,
           "--spacing": `${spacing}px`,
           "--item-padding-block": `${resolvedItemLayout.paddingBlock}px`,
-          "--item-padding-inline-start": `${resolvedItemLayout.paddingInlineStart}px`,
-          "--item-padding-inline-end": `${resolvedItemLayout.paddingInlineEnd}px`,
           "--twig-animation-duration": `${resolvedAnimation.duration}ms`,
           "--twig-animation-easing": resolvedAnimation.easing,
           "--twig-animation-opacity": resolvedAnimation.animateOpacity

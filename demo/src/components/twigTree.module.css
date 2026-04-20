@@ -5,8 +5,6 @@
   --line-color: rgba(255, 0, 0, 0.5);
   --line-radius: 0px;
   --item-padding-block: 2px;
-  --item-padding-inline-start: 0px;
-  --item-padding-inline-end: 0px;
   --row-block-size: calc(var(--toggle-size) + (var(--item-padding-block) * 2));
   --branch-indent: calc(var(--toggle-size) + var(--spacing));
   --connector-origin-x: calc(((var(--toggle-size) / 2) + var(--spacing)) * -1);
@@ -22,8 +20,6 @@
     min-height: var(--row-block-size);
     max-inline-size: 100%;
     padding-block: var(--item-padding-block);
-    padding-inline-start: var(--item-padding-inline-start);
-    padding-inline-end: var(--item-padding-inline-end);
   }
 
   .itemRow > span {
@@ -32,9 +28,7 @@
   }
 
   .leafRow {
-    padding-inline-start: calc(
-      var(--item-padding-inline-start) + var(--branch-indent)
-    );
+    padding-inline-start: var(--branch-indent);
   }
 
   .toggleRow {
@@ -42,6 +36,7 @@
     position: relative;
     z-index: 2;
     gap: 4px;
+    padding: var(--item-padding-block) 0;
     cursor: pointer;
     border: 0;
     background: none;
