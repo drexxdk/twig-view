@@ -545,16 +545,7 @@ export default function App() {
           }}
         >
           <div className="demoPanelHeader" style={{ display: "grid", gap: 4 }}>
-            <h3 style={{ margin: 0 }}>
-              {customToggleEnabled
-                ? "TwigTree with custom demo toggles"
-                : "TwigTree with default toggles"}
-            </h3>
-            <p style={{ margin: 0, color: "#94a3b8" }}>
-              {customToggleEnabled
-                ? "The tree is using the preset star and heart icons so you can quickly test custom toggle rendering."
-                : "The tree is using the built-in plus and minus icons so you can inspect the default component behavior. This demo also includes disabled items, a right-side subtree enable toggle, and a lazy-loaded branch."}
-            </p>
+            <h3 style={{ margin: 0 }}>TwigTree </h3>
           </div>
 
           <div className="demoPreviewTree">
