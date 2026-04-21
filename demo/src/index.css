@@ -34,18 +34,25 @@ input {
   overflow: hidden;
 }
 
-.demoPanelHeader {
-  display: grid;
-  gap: 8px;
-}
-
 .demoControlsGrid {
   display: grid;
-  gap: 16px;
+  gap: 14px;
 }
 
 .demoControlSection {
   min-width: 0;
+}
+
+.demoControlSectionWide {
+  grid-column: 1 / -1;
+}
+
+.demoControlSection h3 {
+  line-height: 1.2;
+}
+
+.demoControlSection p {
+  max-width: 56ch;
 }
 
 .demoPreviewTree {
@@ -99,6 +106,7 @@ input {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .demoControlSectionWide,
   .demoControlSection:first-child {
     grid-column: 1 / -1;
   }

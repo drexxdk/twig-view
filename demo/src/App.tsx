@@ -20,7 +20,10 @@ type ControlsState = {
   toggleLabelGap: number;
   spacing: number;
   itemPaddingBlock: number;
-  useDefaultStyles: boolean;
+  useDefaultDisabledStyles: boolean;
+  useDefaultFocusStyles: boolean;
+  useDefaultActionStyles: boolean;
+  useDefaultStatusStyles: boolean;
   idPrefix: string;
   animationEnabled: boolean;
   animationDuration: number;
@@ -36,7 +39,7 @@ type ControlsState = {
 
 const panelStyle = {
   borderRadius: 20,
-  padding: 20,
+  padding: 18,
   background: "linear-gradient(180deg, rgba(15,23,42,0.84), rgba(2,6,23,0.72))",
   border: "1px solid rgba(148,163,184,0.14)",
   boxShadow: "0 24px 60px rgba(2, 6, 23, 0.28)",
@@ -44,8 +47,8 @@ const panelStyle = {
 
 const groupGridStyle = {
   display: "grid",
-  gap: 12,
-  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+  gap: 10,
+  gridTemplateColumns: "repeat(auto-fit, minmax(156px, 1fr))",
 } as const;
 
 const fieldLabelStyle = {
@@ -230,19 +233,25 @@ function CheckboxField({
 function ControlSection({
   title,
   description,
+  wide = false,
   children,
 }: {
   title: string;
   description: string;
+  wide?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <section
-      className="demoControlSection"
+      className={
+        wide
+          ? "demoControlSection demoControlSectionWide"
+          : "demoControlSection"
+      }
       style={{
         display: "grid",
-        gap: 14,
-        padding: 16,
+        gap: 12,
+        padding: 14,
         borderRadius: 16,
         background: "rgba(15,23,42,0.46)",
         border: "1px solid rgba(148,163,184,0.1)",
@@ -281,7 +290,10 @@ export default function App() {
     toggleLabelGap: 4,
     spacing: 4,
     itemPaddingBlock: 2,
-    useDefaultStyles: true,
+    useDefaultDisabledStyles: true,
+    useDefaultFocusStyles: true,
+    useDefaultActionStyles: true,
+    useDefaultStatusStyles: true,
     idPrefix: "twig-tree",
     animationEnabled: true,
     animationDuration: 220,
@@ -297,6 +309,15 @@ export default function App() {
 
   function patchControls(patch: Partial<ControlsState>) {
     setControls((current) => ({ ...current, ...patch }));
+  }
+
+  function patchAllDefaultStyles(value: boolean) {
+    patchControls({
+      useDefaultDisabledStyles: value,
+      useDefaultFocusStyles: value,
+      useDefaultActionStyles: value,
+      useDefaultStatusStyles: value,
+    });
   }
 
   const customToggleIconStyle = {
@@ -433,6 +454,11 @@ export default function App() {
   );
 
   const customToggleEnabled = controls.useCustomDemoToggles;
+  const allDefaultStylesEnabled =
+    controls.useDefaultDisabledStyles &&
+    controls.useDefaultFocusStyles &&
+    controls.useDefaultActionStyles &&
+    controls.useDefaultStatusStyles;
 
   const treeToggle = customToggleEnabled
     ? {
@@ -544,7 +570,10 @@ export default function App() {
               itemLayout={{
                 paddingBlock: controls.itemPaddingBlock,
               }}
-              useDefaultStyles={controls.useDefaultStyles}
+              useDefaultDisabledStyles={controls.useDefaultDisabledStyles}
+              useDefaultFocusStyles={controls.useDefaultFocusStyles}
+              useDefaultActionStyles={controls.useDefaultActionStyles}
+              useDefaultStatusStyles={controls.useDefaultStatusStyles}
               ariaLabel="TwigTree demo"
               slots={{
                 tree: {
@@ -565,75 +594,10 @@ export default function App() {
         </section>
 
         <section className="demoPanel demoControlsPanel" style={panelStyle}>
-          <div className="demoPanelHeader">
-            <h2 style={{ margin: 0 }}>TwigTree controls</h2>
-            <p style={{ margin: "8px 0 0", color: "#94a3b8" }}>
-              Everything below updates the same tree. On larger screens the
-              controls and example stay visible together so you can tune the
-              component without bouncing up and down the page.
-            </p>
-          </div>
-
           <div className="demoControlsGrid">
             <ControlSection
-              title="Demo mode"
-              description="Choose which toggle preset the example uses."
-            >
-              <div
-                style={{
-                  display: "grid",
-                  gap: 12,
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: 10,
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <strong style={{ color: "#f8fafc", fontSize: 14 }}>
-                    {customToggleEnabled ? "Custom preset" : "Default preset"}
-                  </strong>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      patchControls({
-                        useCustomDemoToggles: !customToggleEnabled,
-                      });
-                    }}
-                    style={{
-                      minHeight: 42,
-                      padding: "0 16px",
-                      borderRadius: 999,
-                      border: customToggleEnabled
-                        ? "1px solid rgba(251,191,36,0.42)"
-                        : "1px solid rgba(148,163,184,0.18)",
-                      background: customToggleEnabled
-                        ? "linear-gradient(135deg, rgba(154,52,18,0.95), rgba(153,27,27,0.95))"
-                        : "rgba(15,23,42,0.9)",
-                      color: "#f8fafc",
-                      fontWeight: 700,
-                      cursor: "pointer",
-                    }}
-                  >
-                    {customToggleEnabled ? "Use default" : "Use custom"}
-                  </button>
-                </div>
-
-                <span style={{ color: "#94a3b8", fontSize: 13 }}>
-                  {customToggleEnabled
-                    ? "Star and heart icons"
-                    : "Built-in plus and minus icons"}
-                </span>
-              </div>
-            </ControlSection>
-
-            <ControlSection
               title="Tree layout"
-              description="These settings affect the overall row rhythm, default component styling, and the generated id prefix used by the demo tree."
+              description="Tune row rhythm and the generated id prefix without mixing them into the styling controls."
             >
               <div style={groupGridStyle}>
                 <NumberField
@@ -656,18 +620,61 @@ export default function App() {
                     patchControls({ itemPaddingBlock: value });
                   }}
                 />
-                <CheckboxField
-                  label="Use default component styling"
-                  checked={controls.useDefaultStyles}
-                  onChange={(value) => {
-                    patchControls({ useDefaultStyles: value });
-                  }}
-                />
                 <TextField
                   label="ID prefix"
                   value={controls.idPrefix}
                   onChange={(value) => {
                     patchControls({ idPrefix: value });
+                  }}
+                />
+              </div>
+            </ControlSection>
+
+            <ControlSection
+              title="Default styles"
+              description="Inspect the built-in style layers separately so disabled, focus, action, and status visuals can be tested independently. The demo toggle preset also lives here now."
+            >
+              <div style={groupGridStyle}>
+                <CheckboxField
+                  label="Custom toggle icons"
+                  checked={controls.useCustomDemoToggles}
+                  onChange={(value) => {
+                    patchControls({ useCustomDemoToggles: value });
+                  }}
+                />
+                <CheckboxField
+                  label="Enable all default styles"
+                  checked={allDefaultStylesEnabled}
+                  onChange={(value) => {
+                    patchAllDefaultStyles(value);
+                  }}
+                />
+                <CheckboxField
+                  label="Disabled styles"
+                  checked={controls.useDefaultDisabledStyles}
+                  onChange={(value) => {
+                    patchControls({ useDefaultDisabledStyles: value });
+                  }}
+                />
+                <CheckboxField
+                  label="Focus styles"
+                  checked={controls.useDefaultFocusStyles}
+                  onChange={(value) => {
+                    patchControls({ useDefaultFocusStyles: value });
+                  }}
+                />
+                <CheckboxField
+                  label="Action styles"
+                  checked={controls.useDefaultActionStyles}
+                  onChange={(value) => {
+                    patchControls({ useDefaultActionStyles: value });
+                  }}
+                />
+                <CheckboxField
+                  label="Status styles"
+                  checked={controls.useDefaultStatusStyles}
+                  onChange={(value) => {
+                    patchControls({ useDefaultStatusStyles: value });
                   }}
                 />
               </div>
@@ -709,8 +716,48 @@ export default function App() {
             </ControlSection>
 
             <ControlSection
+              title="Animation"
+              description="Turn branch animation on or off and tune the timing when you want to inspect motion behavior."
+            >
+              <div style={groupGridStyle}>
+                <CheckboxField
+                  label="Enable animation"
+                  checked={controls.animationEnabled}
+                  onChange={(value) => {
+                    patchControls({ animationEnabled: value });
+                  }}
+                />
+                <CheckboxField
+                  label="Animate opacity"
+                  checked={controls.animateOpacity}
+                  onChange={(value) => {
+                    patchControls({ animateOpacity: value });
+                  }}
+                />
+                <NumberField
+                  label="Duration"
+                  value={controls.animationDuration}
+                  min={0}
+                  max={800}
+                  step={20}
+                  onChange={(value) => {
+                    patchControls({ animationDuration: value });
+                  }}
+                />
+                <TextField
+                  label="Easing"
+                  value={controls.animationEasing}
+                  onChange={(value) => {
+                    patchControls({ animationEasing: value });
+                  }}
+                />
+              </div>
+            </ControlSection>
+
+            <ControlSection
               title="Toggles"
               description="Size, roundness, spacing, and general styling for the toggle button. The color fields apply to the default toggle mode, while the custom preset keeps its own demo colors."
+              wide
             >
               <div style={groupGridStyle}>
                 <NumberField
@@ -779,45 +826,6 @@ export default function App() {
                   value={controls.toggleShadow}
                   onChange={(value) => {
                     patchControls({ toggleShadow: value });
-                  }}
-                />
-              </div>
-            </ControlSection>
-
-            <ControlSection
-              title="Animation"
-              description="Turn branch animation on or off and tune the timing when you want to inspect motion behavior."
-            >
-              <div style={groupGridStyle}>
-                <CheckboxField
-                  label="Enable animation"
-                  checked={controls.animationEnabled}
-                  onChange={(value) => {
-                    patchControls({ animationEnabled: value });
-                  }}
-                />
-                <CheckboxField
-                  label="Animate opacity"
-                  checked={controls.animateOpacity}
-                  onChange={(value) => {
-                    patchControls({ animateOpacity: value });
-                  }}
-                />
-                <NumberField
-                  label="Duration"
-                  value={controls.animationDuration}
-                  min={0}
-                  max={800}
-                  step={20}
-                  onChange={(value) => {
-                    patchControls({ animationDuration: value });
-                  }}
-                />
-                <TextField
-                  label="Easing"
-                  value={controls.animationEasing}
-                  onChange={(value) => {
-                    patchControls({ animationEasing: value });
                   }}
                 />
               </div>
