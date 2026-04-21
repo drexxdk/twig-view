@@ -15,6 +15,17 @@
   display: flex;
   flex-direction: column;
 
+  &[data-default-styles="true"] {
+    .itemDisabled {
+      opacity: 0.5;
+    }
+
+    .statusRow {
+      color: #94a3b8;
+      font-style: italic;
+    }
+  }
+
   .itemRow {
     --child-elbow-width: calc(var(--branch-indent) + (var(--line-width) / 2));
 
@@ -65,17 +76,8 @@
     text-align: left;
   }
 
-  .toggleRow:disabled {
+  .toggleRow[data-disabled="true"] {
     cursor: not-allowed;
-  }
-
-  .itemDisabled {
-    opacity: 0.5;
-  }
-
-  .statusRow {
-    color: #94a3b8;
-    font-style: italic;
   }
 
   .trailingContent {
@@ -84,6 +86,61 @@
     flex: 0 0 auto;
     display: inline-flex;
     align-items: center;
+  }
+
+  li[role="treeitem"] {
+    &:focus-visible {
+      outline: none;
+    }
+
+    &:focus-visible > .leafRowShell {
+      box-shadow: inset 0 0 0 2px currentColor;
+      border-radius: calc(var(--toggle-size) / 2 + 6px);
+    }
+
+    &[data-interactive-focus-target="label"]:focus-visible > .leafRowShell,
+    &[data-interactive-focus-target="trailing"]:focus-visible > .leafRowShell {
+      box-shadow: none;
+    }
+
+    &[data-interactive-focus-target="label"]:focus-visible
+      > .leafRowShell
+      > .labelContent
+      :is(
+        a[href],
+        button:not([disabled]),
+        input:not([disabled]),
+        select:not([disabled]),
+        textarea:not([disabled]),
+        [role="button"],
+        [role="link"],
+        [tabindex]:not([tabindex="-1"])
+      ),
+    &[data-interactive-focus-target="trailing"]:focus-visible
+      > .leafRowShell
+      > .trailingContent
+      :is(
+        a[href],
+        button:not([disabled]),
+        input:not([disabled]),
+        select:not([disabled]),
+        textarea:not([disabled]),
+        [role="button"],
+        [role="link"],
+        [tabindex]:not([tabindex="-1"])
+      ) {
+      outline: 2px solid currentColor;
+      outline-offset: 4px;
+    }
+
+    &:focus-visible > .branchRowShell > .toggleRow > .toggleButton:after {
+      content: "";
+      position: absolute;
+      inset: -4px;
+      border-radius: inherit;
+      box-shadow: 0 0 0 2px currentColor;
+      pointer-events: none;
+    }
   }
 
   .toggleButton {

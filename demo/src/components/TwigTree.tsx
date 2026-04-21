@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import styles from "./twigTree.module.css";
 import useLineWidthDpi from "../utils/useLineWidthDpi";
 
@@ -74,8 +80,10 @@ type TwigTreeProps = {
   connector?: TwigTreeConnectorOptions;
   spacing?: number;
   itemLayout?: TwigTreeItemLayoutOptions;
+  useDefaultStyles?: boolean;
   useDefaultDisabledStyles?: boolean;
   idPrefix?: string;
+  ariaLabel?: string;
   slots?: TwigTreeSlotOptions;
   animation?: boolean | TwigTreeAnimationOptions;
   onWillOpen?: (event: TwigTreeToggleEvent) => void;
@@ -98,6 +106,9 @@ type TwigTreeBranchProps = {
   item: TwigTreeItem;
   path: number[];
   domId: string;
+  treeItemId: string;
+  parentTreeItemId?: string;
+  level: number;
   animation: NormalizedAnimationOptions;
   onWillOpen?: (event: TwigTreeToggleEvent) => void;
   onOpenStart?: (event: TwigTreeToggleEvent) => void;
@@ -106,7 +117,33 @@ type TwigTreeBranchProps = {
   onCloseStart?: (event: TwigTreeToggleEvent) => void;
   onCloseEnd?: (event: TwigTreeToggleEvent) => void;
   slots: Required<TwigTreeSlotOptions>;
-  useDefaultDisabledStyles: boolean;
+  activeTreeItemId: string | null;
+  onTreeItemFocus: (treeItemId: string) => void;
+  onTreeItemKeyDown: (
+    event: React.KeyboardEvent<HTMLElement>,
+    options: {
+      treeItemId: string;
+      parentTreeItemId?: string;
+      canExpand: boolean;
+      expanded: boolean;
+      disabled: boolean;
+      focusFirstChild: () => void;
+      toggleExpanded: () => void;
+    },
+  ) => void;
+  onTreeItemDescendantKeyDownCapture: (
+    event: React.KeyboardEvent<HTMLElement>,
+    options: {
+      treeItemId: string;
+      parentTreeItemId?: string;
+      canExpand: boolean;
+      expanded: boolean;
+      disabled: boolean;
+      focusFirstChild: () => void;
+      toggleExpanded: () => void;
+    },
+  ) => void;
+  useDefaultStyles: boolean;
   toggle: {
     size: number;
     radius: string;
@@ -167,6 +204,127 @@ function normalizeAnimation(
   };
 }
 
+function isVisibleTreeItem(element: HTMLElement) {
+  return !element.closest(`.${styles.childrenViewport}[data-expanded="false"]`);
+}
+
+function hasNavigableDescendant(element: HTMLElement) {
+  return Boolean(
+    element.querySelector(
+      [
+        "a[href]",
+        "button:not([disabled])",
+        "input:not([disabled])",
+        "select:not([disabled])",
+        "textarea:not([disabled])",
+        '[role="button"]',
+        '[role="link"]',
+        '[tabindex]:not([tabindex="-1"])',
+      ].join(", "),
+    ),
+  );
+}
+
+function isNavigableTreeItem(element: HTMLElement) {
+  return (
+    isVisibleTreeItem(element) &&
+    element.dataset.disabled !== "true" &&
+    (element.dataset.navigable === "true" || hasNavigableDescendant(element))
+  );
+}
+
+function hasInteractiveTreeContent(node: React.ReactNode): boolean {
+  if (node === null || node === undefined || typeof node === "boolean") {
+    return false;
+  }
+
+  if (Array.isArray(node)) {
+    return node.some(hasInteractiveTreeContent);
+  }
+
+  if (!React.isValidElement(node)) {
+    return false;
+  }
+
+  const { children, href, onClick, role, tabIndex } = node.props as Record<
+    string,
+    unknown
+  >;
+
+  if (
+    (typeof node.type === "string" &&
+      ["a", "button", "input", "select", "textarea"].includes(node.type)) ||
+    typeof href === "string" ||
+    typeof onClick === "function" ||
+    role === "button" ||
+    role === "link" ||
+    (typeof tabIndex === "number" && tabIndex >= 0)
+  ) {
+    return true;
+  }
+
+  return hasInteractiveTreeContent(children as React.ReactNode);
+}
+
+function shouldHandleDescendantTreeNavigation(
+  event: React.KeyboardEvent<HTMLElement>,
+) {
+  if (event.target === event.currentTarget) {
+    return true;
+  }
+
+  if (
+    ![
+      "ArrowDown",
+      "ArrowUp",
+      "Home",
+      "End",
+      "ArrowLeft",
+      "ArrowRight",
+    ].includes(event.key)
+  ) {
+    return false;
+  }
+
+  const target = event.target;
+
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
+  if (target.isContentEditable) {
+    return false;
+  }
+
+  if (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+function scheduleTreeFocusMove(callback: () => void) {
+  window.setTimeout(callback, 0);
+}
+
+function getActivatableDescendantLink(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) {
+    return null;
+  }
+
+  const link = target.closest<HTMLElement>('a[href], [role="link"]');
+
+  if (!(link instanceof HTMLElement)) {
+    return null;
+  }
+
+  return link;
+}
+
 function DefaultToggleIcon({ expanded }: { expanded: boolean }) {
   return (
     <svg
@@ -198,6 +356,9 @@ function TwigTreeBranch({
   item,
   path,
   domId,
+  treeItemId,
+  parentTreeItemId,
+  level,
   animation,
   onWillOpen,
   onOpenStart,
@@ -206,7 +367,11 @@ function TwigTreeBranch({
   onCloseStart,
   onCloseEnd,
   slots,
-  useDefaultDisabledStyles,
+  activeTreeItemId,
+  onTreeItemFocus,
+  onTreeItemKeyDown,
+  onTreeItemDescendantKeyDownCapture,
+  useDefaultStyles,
   toggle,
 }: TwigTreeBranchProps) {
   const [loadedChildren, setLoadedChildren] = useState<
@@ -263,6 +428,17 @@ function TwigTreeBranch({
   const rowClassName = joinClassNames(rowOptions.className);
   const labelClassName = joinClassNames(labelOptions.className);
   const childrenClassName = joinClassNames(childrenOptions.className);
+  const isFocusable = activeTreeItemId === treeItemId;
+  const labelHasInteractiveContent = hasInteractiveTreeContent(item.label);
+  const trailingHasInteractiveContent = hasInteractiveTreeContent(
+    item.trailing,
+  );
+  const isTreeItemNavigable =
+    !item.disabled &&
+    (canExpand || labelHasInteractiveContent || trailingHasInteractiveContent);
+  const labelId = `${domId}-label`;
+  const treeItemAriaDisabled =
+    item.disabled && !item.trailing ? "true" : undefined;
   const rowShellClassName = joinClassNames(
     styles.itemRow,
     canExpand ? styles.branchRowShell : styles.leafRowShell,
@@ -335,29 +511,90 @@ function TwigTreeBranch({
   if (!canExpand) {
     return (
       <li
+        role="treeitem"
         className={itemClassName}
         style={itemOptions.style}
+        id={treeItemId}
+        tabIndex={isFocusable ? 0 : -1}
+        aria-level={level}
+        aria-labelledby={labelId}
+        aria-disabled={treeItemAriaDisabled}
+        data-treeitem-id={treeItemId}
+        data-parent-treeitem-id={parentTreeItemId}
+        data-navigable={isTreeItemNavigable ? "true" : "false"}
+        data-level={level}
         data-disabled={item.disabled ? "true" : "false"}
+        data-interactive-focus-target={
+          labelHasInteractiveContent
+            ? "label"
+            : trailingHasInteractiveContent
+              ? "trailing"
+              : "none"
+        }
+        onFocus={() => {
+          onTreeItemFocus(treeItemId);
+        }}
+        onKeyDown={(event) => {
+          onTreeItemKeyDown(event, {
+            treeItemId,
+            parentTreeItemId,
+            canExpand: false,
+            expanded: false,
+            disabled: Boolean(item.disabled),
+            focusFirstChild: () => {},
+            toggleExpanded: () => {},
+          });
+        }}
       >
         <span
           className={rowShellClassName}
           style={rowOptions.style}
           data-disabled={item.disabled ? "true" : "false"}
+          onClick={() => {
+            focusCurrentTreeItem();
+          }}
         >
           <span
+            id={labelId}
             className={joinClassNames(
               styles.labelContent,
-              item.disabled && useDefaultDisabledStyles
+              item.disabled && useDefaultStyles
                 ? styles.itemDisabled
                 : undefined,
               labelClassName,
             )}
             style={labelOptions.style}
+            onKeyDownCapture={(event) => {
+              onTreeItemDescendantKeyDownCapture(event, {
+                treeItemId,
+                parentTreeItemId,
+                canExpand: false,
+                expanded: false,
+                disabled: Boolean(item.disabled),
+                focusFirstChild: () => {},
+                toggleExpanded: () => {},
+              });
+            }}
           >
             {item.label}
           </span>
           {item.trailing ? (
-            <span className={styles.trailingContent}>{item.trailing}</span>
+            <span
+              className={styles.trailingContent}
+              onKeyDownCapture={(event) => {
+                onTreeItemDescendantKeyDownCapture(event, {
+                  treeItemId,
+                  parentTreeItemId,
+                  canExpand: false,
+                  expanded: false,
+                  disabled: Boolean(item.disabled),
+                  focusFirstChild: () => {},
+                  toggleExpanded: () => {},
+                });
+              }}
+            >
+              {item.trailing}
+            </span>
           ) : null}
         </span>
       </li>
@@ -413,50 +650,150 @@ function TwigTreeBranch({
     schedulePhaseEnd("open");
   }
 
+  function focusFirstChild() {
+    const root = document.getElementById(`${domId}-children`);
+    const nextItem = root?.querySelector<HTMLElement>('[role="treeitem"]');
+
+    if (!nextItem || !isNavigableTreeItem(nextItem)) {
+      return;
+    }
+
+    nextItem.focus();
+  }
+
+  function focusCurrentTreeItem() {
+    const currentItem = document.getElementById(treeItemId);
+
+    if (!(currentItem instanceof HTMLElement)) {
+      return;
+    }
+
+    currentItem.focus();
+  }
+
   return (
     <li
+      role="treeitem"
       className={itemClassName}
       style={itemOptions.style}
+      id={treeItemId}
+      tabIndex={isFocusable ? 0 : -1}
+      aria-level={level}
+      aria-labelledby={labelId}
+      aria-disabled={treeItemAriaDisabled}
+      aria-expanded={canExpand ? expanded : undefined}
+      data-treeitem-id={treeItemId}
+      data-parent-treeitem-id={parentTreeItemId}
+      data-navigable={!item.disabled ? "true" : "false"}
       data-expanded={expanded ? "true" : "false"}
       data-phase={phase}
+      data-level={level}
       data-disabled={item.disabled ? "true" : "false"}
+      onFocus={() => {
+        onTreeItemFocus(treeItemId);
+      }}
+      onKeyDown={(event) => {
+        onTreeItemKeyDown(event, {
+          treeItemId,
+          parentTreeItemId,
+          canExpand,
+          expanded,
+          disabled: Boolean(item.disabled),
+          focusFirstChild,
+          toggleExpanded,
+        });
+      }}
     >
       <div
         className={rowShellClassName}
         style={rowOptions.style}
         data-disabled={item.disabled ? "true" : "false"}
       >
-        <button
-          type="button"
-          className={joinClassNames(
-            styles.toggleRow,
-            item.disabled && useDefaultDisabledStyles
-              ? styles.itemDisabled
-              : undefined,
-          )}
-          aria-controls={`${domId}-children`}
-          aria-expanded={expanded}
-          aria-busy={isLoading}
-          disabled={item.disabled}
-          onClick={toggleExpanded}
-        >
-          <i
-            className={toggleButtonClassName}
-            style={toggleButtonOptions.style}
+        {canExpand ? (
+          <div
+            className={joinClassNames(
+              styles.toggleRow,
+              item.disabled && useDefaultStyles
+                ? styles.itemDisabled
+                : undefined,
+            )}
+            aria-hidden="true"
+            data-disabled={item.disabled ? "true" : "false"}
+            onClick={() => {
+              focusCurrentTreeItem();
+              toggleExpanded();
+            }}
           >
-            <span className={toggleGlyphClassName} style={toggleGlyphStyle}>
-              {toggleIcon}
+            <i
+              className={toggleButtonClassName}
+              style={toggleButtonOptions.style}
+            >
+              <span className={toggleGlyphClassName} style={toggleGlyphStyle}>
+                {toggleIcon}
+              </span>
+            </i>
+            <span
+              id={labelId}
+              className={joinClassNames(styles.labelContent, labelClassName)}
+              style={labelOptions.style}
+              onKeyDownCapture={(event) => {
+                onTreeItemDescendantKeyDownCapture(event, {
+                  treeItemId,
+                  parentTreeItemId,
+                  canExpand,
+                  expanded,
+                  disabled: Boolean(item.disabled),
+                  focusFirstChild,
+                  toggleExpanded,
+                });
+              }}
+            >
+              {item.label}
             </span>
-          </i>
+          </div>
+        ) : (
           <span
-            className={joinClassNames(styles.labelContent, labelClassName)}
+            id={labelId}
+            className={joinClassNames(
+              styles.labelContent,
+              item.disabled && useDefaultStyles
+                ? styles.itemDisabled
+                : undefined,
+              labelClassName,
+            )}
             style={labelOptions.style}
+            onKeyDownCapture={(event) => {
+              onTreeItemDescendantKeyDownCapture(event, {
+                treeItemId,
+                parentTreeItemId,
+                canExpand,
+                expanded,
+                disabled: Boolean(item.disabled),
+                focusFirstChild,
+                toggleExpanded,
+              });
+            }}
           >
             {item.label}
           </span>
-        </button>
+        )}
         {item.trailing ? (
-          <span className={styles.trailingContent}>{item.trailing}</span>
+          <span
+            className={styles.trailingContent}
+            onKeyDownCapture={(event) => {
+              onTreeItemDescendantKeyDownCapture(event, {
+                treeItemId,
+                parentTreeItemId,
+                canExpand,
+                expanded,
+                disabled: Boolean(item.disabled),
+                focusFirstChild,
+                toggleExpanded,
+              });
+            }}
+          >
+            {item.trailing}
+          </span>
         ) : null}
       </div>
       <div
@@ -467,27 +804,21 @@ function TwigTreeBranch({
         aria-busy={isLoading}
         style={childrenOptions.style}
       >
-        <ul>
+        <ul role="group">
           {isLoading ? (
-            <li>
+            <li role="none">
               <span
-                className={joinClassNames(
-                  styles.itemRow,
-                  styles.leafRow,
-                  styles.statusRow,
-                )}
+                className={joinClassNames(styles.itemRow, styles.statusRow)}
+                role="status"
               >
                 <span>{item.loadingLabel ?? "Loading..."}</span>
               </span>
             </li>
           ) : loadError ? (
-            <li>
+            <li role="none">
               <span
-                className={joinClassNames(
-                  styles.itemRow,
-                  styles.leafRow,
-                  styles.statusRow,
-                )}
+                className={joinClassNames(styles.itemRow, styles.statusRow)}
+                role="status"
               >
                 <span>Unable to load items</span>
               </span>
@@ -502,6 +833,9 @@ function TwigTreeBranch({
                   item={child}
                   path={[...path, index]}
                   domId={`${domId}-${childId}`}
+                  treeItemId={`${domId}-${childId}`}
+                  parentTreeItemId={treeItemId}
+                  level={level + 1}
                   animation={animation}
                   onWillOpen={onWillOpen}
                   onOpenStart={onOpenStart}
@@ -510,7 +844,13 @@ function TwigTreeBranch({
                   onCloseStart={onCloseStart}
                   onCloseEnd={onCloseEnd}
                   slots={slots}
-                  useDefaultDisabledStyles={useDefaultDisabledStyles}
+                  activeTreeItemId={activeTreeItemId}
+                  onTreeItemFocus={onTreeItemFocus}
+                  onTreeItemKeyDown={onTreeItemKeyDown}
+                  onTreeItemDescendantKeyDownCapture={
+                    onTreeItemDescendantKeyDownCapture
+                  }
+                  useDefaultStyles={useDefaultStyles}
                   toggle={toggle}
                 />
               );
@@ -527,8 +867,10 @@ export default function TwigTree({
   connector,
   spacing = 4,
   itemLayout,
-  useDefaultDisabledStyles = false,
+  useDefaultStyles,
+  useDefaultDisabledStyles,
   idPrefix = "twig-tree",
+  ariaLabel = "Tree",
   slots,
   animation,
   onWillOpen,
@@ -539,6 +881,8 @@ export default function TwigTree({
   onCloseEnd,
   toggle,
 }: TwigTreeProps) {
+  const treeRef = useRef<HTMLElement | null>(null);
+  const [activeTreeItemId, setActiveTreeItemId] = useState<string | null>(null);
   const resolvedConnector = useMemo(
     () => ({
       width: connector?.width ?? 1,
@@ -558,6 +902,8 @@ export default function TwigTree({
     () => normalizeAnimation(animation),
     [animation],
   );
+  const resolvedUseDefaultStyles =
+    useDefaultStyles ?? useDefaultDisabledStyles ?? false;
   const resolvedSlots = useMemo<Required<TwigTreeSlotOptions>>(
     () => ({
       tree: slots?.tree ?? {},
@@ -596,9 +942,264 @@ export default function TwigTree({
   );
   const treeOptions = mergeElementOptions(resolvedSlots.tree);
 
+  const focusTreeItemById = useCallback((treeItemId: string) => {
+    const root = treeRef.current;
+
+    if (!root) {
+      return;
+    }
+
+    const nextItem = root.querySelector<HTMLElement>(
+      `[data-treeitem-id="${treeItemId}"]`,
+    );
+
+    if (!nextItem || !isNavigableTreeItem(nextItem)) {
+      return;
+    }
+
+    nextItem.focus();
+  }, []);
+
+  const getVisibleTreeItems = useCallback(() => {
+    const root = treeRef.current;
+
+    if (!root) {
+      return [] as HTMLElement[];
+    }
+
+    return Array.from(
+      root.querySelectorAll<HTMLElement>('[role="treeitem"]'),
+    ).filter(isNavigableTreeItem);
+  }, []);
+
+  const getOrderedVisibleTreeItems = useCallback(() => {
+    const root = treeRef.current;
+
+    if (!root) {
+      return [] as HTMLElement[];
+    }
+
+    return Array.from(
+      root.querySelectorAll<HTMLElement>('[role="treeitem"]'),
+    ).filter(isVisibleTreeItem);
+  }, []);
+
+  const focusRelativeTreeItem = useCallback(
+    (treeItemId: string, offset: number) => {
+      const visibleItems = getVisibleTreeItems();
+
+      const currentIndex = visibleItems.findIndex(
+        (element) => element.dataset.treeitemId === treeItemId,
+      );
+
+      if (currentIndex >= 0) {
+        const nextIndex = currentIndex + offset;
+
+        if (nextIndex < 0 || nextIndex >= visibleItems.length) {
+          return;
+        }
+
+        visibleItems[nextIndex]?.focus();
+        return;
+      }
+
+      const orderedVisibleItems = getOrderedVisibleTreeItems();
+      const orderedCurrentIndex = orderedVisibleItems.findIndex(
+        (element) => element.dataset.treeitemId === treeItemId,
+      );
+
+      if (orderedCurrentIndex < 0) {
+        return;
+      }
+
+      for (
+        let index = orderedCurrentIndex + offset;
+        index >= 0 && index < orderedVisibleItems.length;
+        index += offset
+      ) {
+        const nextElement = orderedVisibleItems[index];
+
+        if (nextElement && isNavigableTreeItem(nextElement)) {
+          nextElement.focus();
+          return;
+        }
+      }
+    },
+    [getOrderedVisibleTreeItems, getVisibleTreeItems],
+  );
+
+  const onTreeItemFocus = useCallback((treeItemId: string) => {
+    setActiveTreeItemId(treeItemId);
+  }, []);
+
+  const handleTreeItemNavigation = useCallback(
+    (
+      key: string,
+      options: {
+        treeItemId: string;
+        parentTreeItemId?: string;
+        canExpand: boolean;
+        expanded: boolean;
+        disabled: boolean;
+        focusFirstChild: () => void;
+        toggleExpanded: () => void;
+      },
+    ) => {
+      switch (key) {
+        case "ArrowDown":
+          scheduleTreeFocusMove(() => {
+            focusRelativeTreeItem(options.treeItemId, 1);
+          });
+          return true;
+        case "ArrowUp":
+          scheduleTreeFocusMove(() => {
+            focusRelativeTreeItem(options.treeItemId, -1);
+          });
+          return true;
+        case "Home":
+          scheduleTreeFocusMove(() => {
+            getVisibleTreeItems()[0]?.focus();
+          });
+          return true;
+        case "End":
+          scheduleTreeFocusMove(() => {
+            const visibleItems = getVisibleTreeItems();
+            visibleItems[visibleItems.length - 1]?.focus();
+          });
+          return true;
+        case "ArrowRight":
+          if (!options.canExpand) {
+            return true;
+          }
+
+          if (!options.expanded) {
+            options.toggleExpanded();
+            return true;
+          }
+
+          scheduleTreeFocusMove(() => {
+            options.focusFirstChild();
+          });
+          return true;
+        case "ArrowLeft":
+          if (options.canExpand && options.expanded) {
+            options.toggleExpanded();
+            return true;
+          }
+
+          if (options.parentTreeItemId) {
+            scheduleTreeFocusMove(() => {
+              focusTreeItemById(options.parentTreeItemId!);
+            });
+          }
+
+          return true;
+        case "Enter":
+        case " ":
+          if (!options.canExpand) {
+            return false;
+          }
+
+          options.toggleExpanded();
+          return true;
+        default:
+          return false;
+      }
+    },
+    [focusRelativeTreeItem, focusTreeItemById, getVisibleTreeItems],
+  );
+
+  const onTreeItemKeyDown = useCallback(
+    (
+      event: React.KeyboardEvent<HTMLElement>,
+      options: {
+        treeItemId: string;
+        parentTreeItemId?: string;
+        canExpand: boolean;
+        expanded: boolean;
+        disabled: boolean;
+        focusFirstChild: () => void;
+        toggleExpanded: () => void;
+      },
+    ) => {
+      if (event.target !== event.currentTarget) {
+        return;
+      }
+
+      if (handleTreeItemNavigation(event.key, options)) {
+        event.preventDefault();
+      }
+    },
+    [handleTreeItemNavigation],
+  );
+
+  const onTreeItemDescendantKeyDownCapture = useCallback(
+    (
+      event: React.KeyboardEvent<HTMLElement>,
+      options: {
+        treeItemId: string;
+        parentTreeItemId?: string;
+        canExpand: boolean;
+        expanded: boolean;
+        disabled: boolean;
+        focusFirstChild: () => void;
+        toggleExpanded: () => void;
+      },
+    ) => {
+      if (event.key === " ") {
+        const activatableLink = getActivatableDescendantLink(event.target);
+
+        if (activatableLink) {
+          event.preventDefault();
+          event.stopPropagation();
+          activatableLink.click();
+          return;
+        }
+      }
+
+      if (!shouldHandleDescendantTreeNavigation(event)) {
+        return;
+      }
+
+      if (event.target === event.currentTarget) {
+        return;
+      }
+
+      if (handleTreeItemNavigation(event.key, options)) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    },
+    [handleTreeItemNavigation],
+  );
+
+  useEffect(() => {
+    const visibleItems = getVisibleTreeItems();
+
+    if (visibleItems.length === 0) {
+      return;
+    }
+
+    if (!activeTreeItemId) {
+      setActiveTreeItemId(visibleItems[0].dataset.treeitemId ?? null);
+      return;
+    }
+
+    const currentItem = visibleItems.find(
+      (element) => element.dataset.treeitemId === activeTreeItemId,
+    );
+
+    if (!currentItem) {
+      setActiveTreeItemId(visibleItems[0].dataset.treeitemId ?? null);
+    }
+  }, [activeTreeItemId, getVisibleTreeItems, items]);
+
   return (
     <section
+      ref={treeRef}
       className={joinClassNames(styles.tree, treeOptions.className)}
+      data-default-styles={resolvedUseDefaultStyles ? "true" : "false"}
+      data-theme={resolvedUseDefaultStyles ? "default" : "minimal"}
       style={
         {
           "--line-width": `${lineWidthDpi}px`,
@@ -618,16 +1219,19 @@ export default function TwigTree({
         } as React.CSSProperties
       }
     >
-      <ul>
+      <ul role="tree" aria-label={ariaLabel}>
         {items.map((item, index) => {
           const itemId = item.id ?? `${index}`;
+          const treeItemId = `${idPrefix}-${itemId}`;
 
           return (
             <TwigTreeBranch
               key={itemId}
               item={item}
               path={[index]}
-              domId={`${idPrefix}-${itemId}`}
+              domId={treeItemId}
+              treeItemId={treeItemId}
+              level={1}
               animation={resolvedAnimation}
               onWillOpen={onWillOpen}
               onOpenStart={onOpenStart}
@@ -636,7 +1240,13 @@ export default function TwigTree({
               onCloseStart={onCloseStart}
               onCloseEnd={onCloseEnd}
               slots={resolvedSlots}
-              useDefaultDisabledStyles={useDefaultDisabledStyles}
+              activeTreeItemId={activeTreeItemId}
+              onTreeItemFocus={onTreeItemFocus}
+              onTreeItemKeyDown={onTreeItemKeyDown}
+              onTreeItemDescendantKeyDownCapture={
+                onTreeItemDescendantKeyDownCapture
+              }
+              useDefaultStyles={resolvedUseDefaultStyles}
               toggle={resolvedToggle}
             />
           );

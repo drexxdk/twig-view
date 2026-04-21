@@ -16,7 +16,7 @@ type ControlsState = {
   toggleLabelGap: number;
   spacing: number;
   itemPaddingBlock: number;
-  useDefaultDisabledStyles: boolean;
+  useDefaultStyles: boolean;
   idPrefix: string;
   animationEnabled: boolean;
   animationDuration: number;
@@ -264,7 +264,7 @@ export default function App() {
     toggleLabelGap: 4,
     spacing: 4,
     itemPaddingBlock: 2,
-    useDefaultDisabledStyles: true,
+    useDefaultStyles: true,
     idPrefix: "twig-tree",
     animationEnabled: true,
     animationDuration: 220,
@@ -336,6 +336,45 @@ export default function App() {
           {
             id: "test-3-1",
             label: "test 3.1",
+          },
+          {
+            id: "test-3-action-button",
+            label: (
+              <button
+                type="button"
+                onClick={() => {
+                  window.alert("Demo action button clicked");
+                }}
+                style={{
+                  border: "1px solid rgba(96, 165, 250, 0.35)",
+                  background: "rgba(37, 99, 235, 0.16)",
+                  color: "#dbeafe",
+                  padding: "4px 10px",
+                  borderRadius: 999,
+                  font: "inherit",
+                  cursor: "pointer",
+                }}
+              >
+                test 3 action button
+              </button>
+            ),
+          },
+          {
+            id: "test-3-action-link",
+            label: (
+              <a
+                href="https://example.com"
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  color: "#7dd3fc",
+                  textDecoration: "underline",
+                  textUnderlineOffset: 3,
+                }}
+              >
+                test 3 action link
+              </a>
+            ),
           },
           {
             id: "test-3-2",
@@ -545,7 +584,8 @@ export default function App() {
               itemLayout={{
                 paddingBlock: controls.itemPaddingBlock,
               }}
-              useDefaultDisabledStyles={controls.useDefaultDisabledStyles}
+              useDefaultStyles={controls.useDefaultStyles}
+              ariaLabel="TwigTree demo"
               slots={{
                 tree: {
                   style: {
@@ -633,7 +673,7 @@ export default function App() {
 
             <ControlSection
               title="Tree layout"
-              description="These settings affect the overall row rhythm, disabled fallback styling, and the generated id prefix used by the demo tree."
+              description="These settings affect the overall row rhythm, default component styling, and the generated id prefix used by the demo tree."
             >
               <div style={groupGridStyle}>
                 <NumberField
@@ -657,10 +697,10 @@ export default function App() {
                   }}
                 />
                 <CheckboxField
-                  label="Use default disabled styling"
-                  checked={controls.useDefaultDisabledStyles}
+                  label="Use default component styling"
+                  checked={controls.useDefaultStyles}
                   onChange={(value) => {
-                    patchControls({ useDefaultDisabledStyles: value });
+                    patchControls({ useDefaultStyles: value });
                   }}
                 />
                 <TextField
