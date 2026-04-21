@@ -14,4 +14,4 @@ export type {
   TwigTreeToggleStateOptions,
   TwigTreeToggleOptions,
   TwigTreeToggleEvent,
-} from "./TwigTree";
+} from "./TwigTree.types";
