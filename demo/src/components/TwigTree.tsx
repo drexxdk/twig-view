@@ -5,8 +5,12 @@ import useLineWidthDpi from "../utils/useLineWidthDpi";
 export type TwigTreeItem = {
   id?: string;
   label: React.ReactNode;
+  trailing?: React.ReactNode;
   children?: TwigTreeItem[];
   defaultExpanded?: boolean;
+  disabled?: boolean;
+  loadChildren?: () => Promise<TwigTreeItem[]>;
+  loadingLabel?: React.ReactNode;
 };
 
 export type TwigTreeToggleEvent = {
@@ -43,6 +47,8 @@ export type TwigTreeToggleStateOptions = TwigTreeElementOptions & {
 
 export type TwigTreeToggleOptions = {
   size?: number;
+  radius?: number | string;
+  labelGap?: number | string;
   button?: TwigTreeElementOptions;
   icon?: TwigTreeElementOptions & {
     size?: number;
@@ -68,6 +74,7 @@ type TwigTreeProps = {
   connector?: TwigTreeConnectorOptions;
   spacing?: number;
   itemLayout?: TwigTreeItemLayoutOptions;
+  useDefaultDisabledStyles?: boolean;
   idPrefix?: string;
   slots?: TwigTreeSlotOptions;
   animation?: boolean | TwigTreeAnimationOptions;
@@ -99,8 +106,11 @@ type TwigTreeBranchProps = {
   onCloseStart?: (event: TwigTreeToggleEvent) => void;
   onCloseEnd?: (event: TwigTreeToggleEvent) => void;
   slots: Required<TwigTreeSlotOptions>;
+  useDefaultDisabledStyles: boolean;
   toggle: {
     size: number;
+    radius: string;
+    labelGap: string;
     button: TwigTreeElementOptions;
     icon: TwigTreeElementOptions & {
       size: number;
@@ -196,14 +206,22 @@ function TwigTreeBranch({
   onCloseStart,
   onCloseEnd,
   slots,
+  useDefaultDisabledStyles,
   toggle,
 }: TwigTreeBranchProps) {
-  const hasChildren = Boolean(item.children?.length);
+  const [loadedChildren, setLoadedChildren] = useState<
+    TwigTreeItem[] | undefined
+  >(item.children);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [expanded, setExpanded] = useState(Boolean(item.defaultExpanded));
   const [phase, setPhase] = useState<"open" | "closed" | "opening" | "closing">(
     item.defaultExpanded ? "open" : "closed",
   );
   const timeoutRef = useRef<number | null>(null);
+  const resolvedChildren = loadedChildren ?? item.children;
+  const hasChildren = Boolean(resolvedChildren?.length);
+  const canExpand = hasChildren || Boolean(item.loadChildren);
 
   const eventPayload = useMemo<TwigTreeToggleEvent>(
     () => ({
@@ -223,11 +241,11 @@ function TwigTreeBranch({
     ));
   const itemOptions = mergeElementOptions(
     slots.item,
-    hasChildren ? slots.branch : slots.leaf,
+    canExpand ? slots.branch : slots.leaf,
   );
   const rowOptions = mergeElementOptions(
     slots.row,
-    hasChildren ? slots.branchRow : slots.leafRow,
+    canExpand ? slots.branchRow : slots.leafRow,
   );
   const labelOptions = slots.label;
   const childrenOptions = slots.children;
@@ -245,8 +263,13 @@ function TwigTreeBranch({
   const rowClassName = joinClassNames(rowOptions.className);
   const labelClassName = joinClassNames(labelOptions.className);
   const childrenClassName = joinClassNames(childrenOptions.className);
+  const rowShellClassName = joinClassNames(
+    styles.itemRow,
+    canExpand ? styles.branchRowShell : styles.leafRowShell,
+    rowClassName,
+  );
   const toggleButtonClassName = joinClassNames(
-    styles.toggleButtonIcon,
+    styles.toggleButton,
     toggleButtonOptions.className,
   );
   const toggleGlyphClassName = joinClassNames(
@@ -262,20 +285,80 @@ function TwigTreeBranch({
     };
   }, []);
 
-  if (!hasChildren) {
+  useEffect(() => {
+    setLoadedChildren(item.children);
+  }, [item.children]);
+
+  useEffect(() => {
+    if (
+      !expanded ||
+      !item.loadChildren ||
+      loadedChildren !== undefined ||
+      loadError
+    ) {
+      return;
+    }
+
+    let cancelled = false;
+
+    setIsLoading(true);
+
+    item
+      .loadChildren()
+      .then((nextChildren) => {
+        if (cancelled) {
+          return;
+        }
+
+        setLoadedChildren(nextChildren);
+      })
+      .catch(() => {
+        if (cancelled) {
+          return;
+        }
+
+        setLoadError(true);
+      })
+      .finally(() => {
+        if (cancelled) {
+          return;
+        }
+
+        setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [expanded, item.loadChildren, loadedChildren, loadError]);
+
+  if (!canExpand) {
     return (
-      <li className={itemClassName} style={itemOptions.style}>
+      <li
+        className={itemClassName}
+        style={itemOptions.style}
+        data-disabled={item.disabled ? "true" : "false"}
+      >
         <span
-          className={joinClassNames(
-            styles.itemRow,
-            styles.leafRow,
-            rowClassName,
-          )}
+          className={rowShellClassName}
           style={rowOptions.style}
+          data-disabled={item.disabled ? "true" : "false"}
         >
-          <span className={labelClassName} style={labelOptions.style}>
+          <span
+            className={joinClassNames(
+              styles.labelContent,
+              item.disabled && useDefaultDisabledStyles
+                ? styles.itemDisabled
+                : undefined,
+              labelClassName,
+            )}
+            style={labelOptions.style}
+          >
             {item.label}
           </span>
+          {item.trailing ? (
+            <span className={styles.trailingContent}>{item.trailing}</span>
+          ) : null}
         </span>
       </li>
     );
@@ -309,6 +392,10 @@ function TwigTreeBranch({
   }
 
   function toggleExpanded() {
+    if (item.disabled) {
+      return;
+    }
+
     if (expanded) {
       onWillClose?.(eventPayload);
       onCloseStart?.(eventPayload);
@@ -320,6 +407,7 @@ function TwigTreeBranch({
 
     onWillOpen?.(eventPayload);
     onOpenStart?.(eventPayload);
+    setLoadError(false);
     setExpanded(true);
     setPhase(animation.enabled ? "opening" : "open");
     schedulePhaseEnd("open");
@@ -331,57 +419,103 @@ function TwigTreeBranch({
       style={itemOptions.style}
       data-expanded={expanded ? "true" : "false"}
       data-phase={phase}
+      data-disabled={item.disabled ? "true" : "false"}
     >
-      <button
-        type="button"
-        className={joinClassNames(
-          styles.itemRow,
-          styles.toggleRow,
-          rowClassName,
-        )}
-        aria-controls={`${domId}-children`}
-        aria-expanded={expanded}
-        onClick={toggleExpanded}
+      <div
+        className={rowShellClassName}
         style={rowOptions.style}
+        data-disabled={item.disabled ? "true" : "false"}
       >
-        <i className={toggleButtonClassName} style={toggleButtonOptions.style}>
-          <span className={toggleGlyphClassName} style={toggleGlyphStyle}>
-            {toggleIcon}
+        <button
+          type="button"
+          className={joinClassNames(
+            styles.toggleRow,
+            item.disabled && useDefaultDisabledStyles
+              ? styles.itemDisabled
+              : undefined,
+          )}
+          aria-controls={`${domId}-children`}
+          aria-expanded={expanded}
+          aria-busy={isLoading}
+          disabled={item.disabled}
+          onClick={toggleExpanded}
+        >
+          <i
+            className={toggleButtonClassName}
+            style={toggleButtonOptions.style}
+          >
+            <span className={toggleGlyphClassName} style={toggleGlyphStyle}>
+              {toggleIcon}
+            </span>
+          </i>
+          <span
+            className={joinClassNames(styles.labelContent, labelClassName)}
+            style={labelOptions.style}
+          >
+            {item.label}
           </span>
-        </i>
-        <span className={labelClassName} style={labelOptions.style}>
-          {item.label}
-        </span>
-      </button>
+        </button>
+        {item.trailing ? (
+          <span className={styles.trailingContent}>{item.trailing}</span>
+        ) : null}
+      </div>
       <div
         className={joinClassNames(styles.childrenViewport, childrenClassName)}
         data-animate={animation.enabled ? "true" : "false"}
         data-expanded={expanded ? "true" : "false"}
         id={`${domId}-children`}
+        aria-busy={isLoading}
         style={childrenOptions.style}
       >
         <ul>
-          {item.children?.map((child, index) => {
-            const childId = child.id ?? [...path, index].join("-");
+          {isLoading ? (
+            <li>
+              <span
+                className={joinClassNames(
+                  styles.itemRow,
+                  styles.leafRow,
+                  styles.statusRow,
+                )}
+              >
+                <span>{item.loadingLabel ?? "Loading..."}</span>
+              </span>
+            </li>
+          ) : loadError ? (
+            <li>
+              <span
+                className={joinClassNames(
+                  styles.itemRow,
+                  styles.leafRow,
+                  styles.statusRow,
+                )}
+              >
+                <span>Unable to load items</span>
+              </span>
+            </li>
+          ) : (
+            resolvedChildren?.map((child, index) => {
+              const childId = child.id ?? [...path, index].join("-");
 
-            return (
-              <TwigTreeBranch
-                key={childId}
-                item={child}
-                path={[...path, index]}
-                domId={`${domId}-${childId}`}
-                animation={animation}
-                onWillOpen={onWillOpen}
-                onOpenStart={onOpenStart}
-                onOpenEnd={onOpenEnd}
-                onWillClose={onWillClose}
-                onCloseStart={onCloseStart}
-                onCloseEnd={onCloseEnd}
-                slots={slots}
-                toggle={toggle}
-              />
-            );
-          })}
+              return (
+                <TwigTreeBranch
+                  key={childId}
+                  item={child}
+                  path={[...path, index]}
+                  domId={`${domId}-${childId}`}
+                  animation={animation}
+                  onWillOpen={onWillOpen}
+                  onOpenStart={onOpenStart}
+                  onOpenEnd={onOpenEnd}
+                  onWillClose={onWillClose}
+                  onCloseStart={onCloseStart}
+                  onCloseEnd={onCloseEnd}
+                  slots={slots}
+                  useDefaultDisabledStyles={useDefaultDisabledStyles}
+                  toggle={toggle}
+                />
+              );
+            })
+          )}
         </ul>
       </div>
     </li>
@@ -393,6 +527,7 @@ export default function TwigTree({
   connector,
   spacing = 4,
   itemLayout,
+  useDefaultDisabledStyles = false,
   idPrefix = "twig-tree",
   slots,
   animation,
@@ -440,6 +575,14 @@ export default function TwigTree({
   const resolvedToggle = useMemo(
     () => ({
       size: toggle?.size ?? 16,
+      radius:
+        typeof toggle?.radius === "number"
+          ? `${toggle.radius}%`
+          : (toggle?.radius ?? "50%"),
+      labelGap:
+        typeof toggle?.labelGap === "number"
+          ? `${toggle.labelGap}px`
+          : (toggle?.labelGap ?? "4px"),
       button: toggle?.button ?? {},
       icon: {
         size: toggle?.icon?.size ?? Math.max(10, (toggle?.size ?? 16) * 0.6),
@@ -462,6 +605,8 @@ export default function TwigTree({
           "--line-color": resolvedConnector.color,
           "--line-radius": `${resolvedConnector.radius}px`,
           "--toggle-size": `${resolvedToggle.size}px`,
+          "--toggle-radius": resolvedToggle.radius,
+          "--toggle-label-gap": resolvedToggle.labelGap,
           "--spacing": `${spacing}px`,
           "--item-padding-block": `${resolvedItemLayout.paddingBlock}px`,
           "--twig-animation-duration": `${resolvedAnimation.duration}ms`,
@@ -491,6 +636,7 @@ export default function TwigTree({
               onCloseStart={onCloseStart}
               onCloseEnd={onCloseEnd}
               slots={resolvedSlots}
+              useDefaultDisabledStyles={useDefaultDisabledStyles}
               toggle={resolvedToggle}
             />
           );

@@ -1,75 +1,22 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { TwigTree, type TwigTreeItem } from "./components";
 
-const twigTreeItems: TwigTreeItem[] = [
-  {
-    id: "test-1",
-    label: "test 1",
-  },
-  {
-    id: "test-2",
-    label: "test 2",
-  },
-  {
-    id: "test-3",
-    label: "test 3",
-    defaultExpanded: true,
-    children: [
-      {
-        id: "test-3-1",
-        label: "test 3.1",
-      },
-      {
-        id: "test-3-2",
-        label: "test 3.2",
-        children: [
-          {
-            id: "test-3-2-1",
-            label: "test 3.2.1",
-          },
-          {
-            id: "test-3-2-2",
-            label: "test 3.2.2",
-          },
-          {
-            id: "test-3-2-3",
-            label: "test 3.2.3",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "test-4",
-    label: "test 4",
-  },
-  {
-    id: "test-5",
-    label: "test 5",
-    children: [
-      {
-        id: "test-5-1",
-        label: "test 5.1",
-      },
-      {
-        id: "test-5-2",
-        label: "test 5.2",
-      },
-      {
-        id: "test-5-3",
-        label: "test 5.3",
-      },
-    ],
-  },
-];
+function delay(ms: number) {
+  return new Promise<void>((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
 
 type ControlsState = {
   lineWidth: number;
   lineColor: string;
   lineRadius: number;
   toggleSize: number;
+  toggleRadius: number;
+  toggleLabelGap: number;
   spacing: number;
   itemPaddingBlock: number;
+  useDefaultDisabledStyles: boolean;
   idPrefix: string;
   animationEnabled: boolean;
   animationDuration: number;
@@ -307,21 +254,25 @@ function ControlSection({
 }
 
 export default function App() {
+  const [managedBranchEnabled, setManagedBranchEnabled] = useState(false);
   const [controls, setControls] = useState<ControlsState>({
     lineWidth: 1,
     lineColor: "#ff4d4f",
     lineRadius: 10,
     toggleSize: 16,
+    toggleRadius: 50,
+    toggleLabelGap: 4,
     spacing: 4,
     itemPaddingBlock: 2,
+    useDefaultDisabledStyles: true,
     idPrefix: "twig-tree",
     animationEnabled: true,
     animationDuration: 220,
     animationEasing: "ease",
     animateOpacity: true,
     toggleIconSize: 10,
-    toggleOpenFill: "#16a34a",
-    toggleClosedFill: "#6b7280",
+    toggleOpenFill: "#2563eb",
+    toggleClosedFill: "#1d4ed8",
     toggleIconColor: "#ffffff",
     toggleShadow: "0 8px 20px rgba(15, 23, 42, 0.35)",
     useCustomDemoToggles: false,
@@ -349,11 +300,146 @@ export default function App() {
     transform: "translateY(-0.08em)",
   } as const;
 
+  const branchToggleStyle = {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 8,
+    padding: "4px 10px",
+    borderRadius: 999,
+    background: managedBranchEnabled
+      ? "rgba(37,99,235,0.18)"
+      : "rgba(148,163,184,0.12)",
+    border: managedBranchEnabled
+      ? "1px solid rgba(96,165,250,0.35)"
+      : "1px solid rgba(148,163,184,0.18)",
+    color: "#cbd5e1",
+    fontSize: 12,
+    fontWeight: 600,
+  } as const;
+
+  const twigTreeItems = useMemo<TwigTreeItem[]>(
+    () => [
+      {
+        id: "test-1",
+        label: "test 1",
+      },
+      {
+        id: "test-2",
+        label: "test 2 (disabled)",
+        disabled: true,
+      },
+      {
+        id: "test-3",
+        label: "test 3",
+        defaultExpanded: true,
+        children: [
+          {
+            id: "test-3-1",
+            label: "test 3.1",
+          },
+          {
+            id: "test-3-2",
+            label: "test 3.2",
+            children: [
+              {
+                id: "test-3-2-1",
+                label: "test 3.2.1",
+              },
+              {
+                id: "test-3-2-2",
+                label: "test 3.2.2",
+              },
+              {
+                id: "test-3-2-3",
+                label: "test 3.2.3",
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "test-4",
+        label: "managed branch",
+        defaultExpanded: true,
+        disabled: !managedBranchEnabled,
+        trailing: (
+          <label style={branchToggleStyle}>
+            <input
+              type="checkbox"
+              checked={managedBranchEnabled}
+              onChange={(event) => {
+                setManagedBranchEnabled(event.target.checked);
+              }}
+              aria-label="Enable managed branch"
+            />
+            <span>{managedBranchEnabled ? "Enabled" : "Disabled"}</span>
+          </label>
+        ),
+        children: [
+          {
+            id: "test-4-1",
+            label: "test 4.1",
+            disabled: !managedBranchEnabled,
+          },
+          {
+            id: "test-4-2",
+            label: "test 4.2",
+            disabled: !managedBranchEnabled,
+            children: [
+              {
+                id: "test-4-2-1",
+                label: "test 4.2.1",
+                disabled: !managedBranchEnabled,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "test-5",
+        label: "test 5 (lazy)",
+        loadingLabel: "Loading test 5 children...",
+        loadChildren: async () => {
+          await delay(700);
+
+          return [
+            {
+              id: "test-5-1",
+              label: "test 5.1",
+            },
+            {
+              id: "test-5-2",
+              label: "test 5.2 (disabled)",
+              disabled: true,
+            },
+            {
+              id: "test-5-3",
+              label: "test 5.3",
+              children: [
+                {
+                  id: "test-5-3-1",
+                  label: "test 5.3.1",
+                },
+                {
+                  id: "test-5-3-2",
+                  label: "test 5.3.2",
+                },
+              ],
+            },
+          ];
+        },
+      },
+    ],
+    [branchToggleStyle, managedBranchEnabled],
+  );
+
   const customToggleEnabled = controls.useCustomDemoToggles;
 
   const treeToggle = customToggleEnabled
     ? {
         size: controls.toggleSize,
+        radius: `${controls.toggleRadius}%`,
+        labelGap: controls.toggleLabelGap,
         button: {
           style: {
             boxShadow: controls.toggleShadow,
@@ -388,6 +474,8 @@ export default function App() {
       }
     : {
         size: controls.toggleSize,
+        radius: `${controls.toggleRadius}%`,
+        labelGap: controls.toggleLabelGap,
         button: {
           style: {
             color: controls.toggleIconColor,
@@ -440,7 +528,7 @@ export default function App() {
             <p style={{ margin: 0, color: "#94a3b8" }}>
               {customToggleEnabled
                 ? "The tree is using the preset star and heart icons so you can quickly test custom toggle rendering."
-                : "The tree is using the built-in plus and minus icons so you can inspect the default component behavior."}
+                : "The tree is using the built-in plus and minus icons so you can inspect the default component behavior. This demo also includes disabled items, a right-side subtree enable toggle, and a lazy-loaded branch."}
             </p>
           </div>
 
@@ -457,6 +545,7 @@ export default function App() {
               itemLayout={{
                 paddingBlock: controls.itemPaddingBlock,
               }}
+              useDefaultDisabledStyles={controls.useDefaultDisabledStyles}
               slots={{
                 tree: {
                   style: {
@@ -544,7 +633,7 @@ export default function App() {
 
             <ControlSection
               title="Tree layout"
-              description="These settings affect the overall row rhythm and the generated id prefix used by the demo tree."
+              description="These settings affect the overall row rhythm, disabled fallback styling, and the generated id prefix used by the demo tree."
             >
               <div style={groupGridStyle}>
                 <NumberField
@@ -565,6 +654,13 @@ export default function App() {
                   step={1}
                   onChange={(value) => {
                     patchControls({ itemPaddingBlock: value });
+                  }}
+                />
+                <CheckboxField
+                  label="Use default disabled styling"
+                  checked={controls.useDefaultDisabledStyles}
+                  onChange={(value) => {
+                    patchControls({ useDefaultDisabledStyles: value });
                   }}
                 />
                 <TextField
@@ -614,7 +710,7 @@ export default function App() {
 
             <ControlSection
               title="Toggles"
-              description="Size and general styling for the toggle button. The color fields apply to the default toggle mode, while the custom preset keeps its own demo colors."
+              description="Size, roundness, spacing, and general styling for the toggle button. The color fields apply to the default toggle mode, while the custom preset keeps its own demo colors."
             >
               <div style={groupGridStyle}>
                 <NumberField
@@ -625,6 +721,26 @@ export default function App() {
                   step={1}
                   onChange={(value) => {
                     patchControls({ toggleSize: value });
+                  }}
+                />
+                <NumberField
+                  label="Toggle radius"
+                  value={controls.toggleRadius}
+                  min={0}
+                  max={50}
+                  step={1}
+                  onChange={(value) => {
+                    patchControls({ toggleRadius: value });
+                  }}
+                />
+                <NumberField
+                  label="Toggle gap"
+                  value={controls.toggleLabelGap}
+                  min={0}
+                  max={24}
+                  step={1}
+                  onChange={(value) => {
+                    patchControls({ toggleLabelGap: value });
                   }}
                 />
                 <NumberField

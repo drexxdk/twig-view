@@ -99,8 +99,7 @@ input {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .demoControlSection:first-child,
-  .demoControlSection:last-child {
+  .demoControlSection:first-child {
     grid-column: 1 / -1;
   }
 }

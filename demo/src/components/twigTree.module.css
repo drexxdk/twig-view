@@ -1,5 +1,7 @@
 .tree {
   --toggle-size: 16px;
+  --toggle-radius: 50%;
+  --toggle-label-gap: 4px;
   --spacing: 4px;
   --line-width: 1px;
   --line-color: rgba(255, 0, 0, 0.5);
@@ -14,28 +16,46 @@
   flex-direction: column;
 
   .itemRow {
+    --child-elbow-width: calc(var(--branch-indent) + (var(--line-width) / 2));
+
     position: relative;
     display: inline-flex;
     align-items: center;
+    gap: 12px;
     min-height: var(--row-block-size);
     max-inline-size: 100%;
+    width: 100%;
     padding-block: var(--item-padding-block);
   }
 
-  .itemRow > span {
+  .labelContent {
     min-width: 0;
     overflow-wrap: anywhere;
   }
 
-  .leafRow {
+  .leafRowShell {
     padding-inline-start: var(--branch-indent);
   }
 
+  .branchRowShell,
+  .leafRowShell {
+    justify-content: space-between;
+  }
+
+  .branchRowShell {
+    --child-elbow-width: calc(
+      (var(--toggle-size) / 2) + var(--spacing) + (var(--line-width) / 2)
+    );
+  }
+
   .toggleRow {
-    width: 100%;
+    flex: 1 1 auto;
+    min-width: 0;
     position: relative;
     z-index: 2;
-    gap: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--toggle-label-gap);
     padding: var(--item-padding-block) 0;
     cursor: pointer;
     border: 0;
@@ -45,7 +65,28 @@
     text-align: left;
   }
 
-  .toggleButtonIcon {
+  .toggleRow:disabled {
+    cursor: not-allowed;
+  }
+
+  .itemDisabled {
+    opacity: 0.5;
+  }
+
+  .statusRow {
+    color: #94a3b8;
+    font-style: italic;
+  }
+
+  .trailingContent {
+    position: relative;
+    z-index: 3;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .toggleButton {
     position: relative;
     z-index: 1;
     display: inline-grid;
@@ -53,7 +94,7 @@
     flex: 0 0 var(--toggle-size);
     width: var(--toggle-size);
     height: var(--toggle-size);
-    border-radius: 50%;
+    border-radius: var(--toggle-radius);
     overflow: visible;
     font-style: normal;
   }
@@ -123,7 +164,7 @@
             z-index: 0;
             left: calc(var(--connector-origin-x) - (var(--line-width) / 2));
             top: 0;
-            width: calc(var(--branch-indent) + (var(--line-width) / 2));
+            width: var(--child-elbow-width);
             height: calc(50% + (var(--line-width) / 2));
             box-sizing: border-box;
             border-left: var(--line-width) solid var(--line-color);
@@ -159,12 +200,12 @@
     }
   }
 
-  li[data-expanded="true"] > .toggleRow {
+  li[data-expanded="true"] > .branchRowShell {
     &:after {
       content: "";
       position: absolute;
       z-index: 0;
-      top: 50%;
+      top: calc(50% + (var(--toggle-size) / 2));
       left: calc((var(--toggle-size) / 2) - (var(--line-width) / 2));
       bottom: 0;
       width: var(--line-width);
