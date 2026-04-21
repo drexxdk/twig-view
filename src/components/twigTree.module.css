@@ -15,11 +15,13 @@
   display: flex;
   flex-direction: column;
 
-  &[data-default-styles="true"] {
+  &[data-default-disabled-styles="true"] {
     .itemDisabled {
       opacity: 0.5;
     }
+  }
 
+  &[data-default-status-styles="true"] {
     .statusRow {
       color: #94a3b8;
       font-style: italic;
@@ -42,6 +44,37 @@
   .labelContent {
     min-width: 0;
     overflow-wrap: anywhere;
+  }
+
+  .itemAction {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .statusRow {
+    padding-inline-start: var(--branch-indent);
+  }
+
+  &[data-default-action-styles="true"] {
+    .itemAction {
+      padding: 3px 8px;
+      border: 0;
+      border-radius: 10px;
+      background: none;
+      color: inherit;
+      font: inherit;
+      line-height: 1.35;
+      text-align: left;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .itemAction:disabled,
+    .itemAction[aria-disabled="true"] {
+      cursor: not-allowed;
+    }
   }
 
   .leafRowShell {
@@ -88,7 +121,7 @@
     align-items: center;
   }
 
-  li[role="treeitem"] {
+  &[data-default-focus-styles="true"] li[role="treeitem"] {
     &:focus-visible {
       outline: none;
     }
@@ -107,6 +140,7 @@
       > .leafRowShell
       > .labelContent
       :is(
+        .itemAction,
         a[href],
         button:not([disabled]),
         input:not([disabled]),
@@ -120,6 +154,7 @@
       > .leafRowShell
       > .trailingContent
       :is(
+        .itemAction,
         a[href],
         button:not([disabled]),
         input:not([disabled]),
@@ -129,8 +164,8 @@
         [role="link"],
         [tabindex]:not([tabindex="-1"])
       ) {
-      outline: 2px solid currentColor;
-      outline-offset: 4px;
+      box-shadow: 0 0 0 2px currentColor;
+      border-radius: 10px;
     }
 
     &:focus-visible > .branchRowShell > .toggleRow > .toggleButton:after {

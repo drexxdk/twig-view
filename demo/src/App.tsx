@@ -1,5 +1,9 @@
 import { useMemo, useState } from "react";
-import { TwigTree, type TwigTreeItem } from "./components";
+import {
+  TwigTree,
+  type TwigTreeButtonItem,
+  type TwigTreeItem,
+} from "../../src/components";
 
 function delay(ms: number) {
   return new Promise<void>((resolve) => {
@@ -253,6 +257,19 @@ function ControlSection({
   );
 }
 
+function createDemoButtonItem(
+  id: string,
+  label: React.ReactNode,
+  disabled = false,
+): TwigTreeButtonItem {
+  return {
+    id,
+    label,
+    disabled,
+    onClickCallback: () => {},
+  };
+}
+
 export default function App() {
   const [managedBranchEnabled, setManagedBranchEnabled] = useState(false);
   const [controls, setControls] = useState<ControlsState>({
@@ -300,98 +317,58 @@ export default function App() {
     transform: "translateY(-0.08em)",
   } as const;
 
-  const branchToggleStyle = {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 8,
-    padding: "4px 10px",
-    borderRadius: 999,
-    background: managedBranchEnabled
-      ? "rgba(37,99,235,0.18)"
-      : "rgba(148,163,184,0.12)",
-    border: managedBranchEnabled
-      ? "1px solid rgba(96,165,250,0.35)"
-      : "1px solid rgba(148,163,184,0.18)",
-    color: "#cbd5e1",
-    fontSize: 12,
-    fontWeight: 600,
-  } as const;
+  const branchToggleStyle = useMemo(
+    () =>
+      ({
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
+        padding: "4px 10px",
+        borderRadius: 999,
+        background: managedBranchEnabled
+          ? "rgba(37,99,235,0.18)"
+          : "rgba(148,163,184,0.12)",
+        border: managedBranchEnabled
+          ? "1px solid rgba(96,165,250,0.35)"
+          : "1px solid rgba(148,163,184,0.18)",
+        color: "#cbd5e1",
+        fontSize: 12,
+        fontWeight: 600,
+      }) as const,
+    [managedBranchEnabled],
+  );
 
   const twigTreeItems = useMemo<TwigTreeItem[]>(
     () => [
-      {
-        id: "test-1",
-        label: "test 1",
-      },
-      {
-        id: "test-2",
-        label: "test 2 (disabled)",
-        disabled: true,
-      },
+      createDemoButtonItem("test-1", "test 1"),
+      createDemoButtonItem("test-2", "test 2 (disabled)", true),
       {
         id: "test-3",
         label: "test 3",
         defaultExpanded: true,
         children: [
-          {
-            id: "test-3-1",
-            label: "test 3.1",
-          },
+          createDemoButtonItem("test-3-1", "test 3.1"),
           {
             id: "test-3-action-button",
-            label: (
-              <button
-                type="button"
-                onClick={() => {
-                  window.alert("Demo action button clicked");
-                }}
-                style={{
-                  border: "1px solid rgba(96, 165, 250, 0.35)",
-                  background: "rgba(37, 99, 235, 0.16)",
-                  color: "#dbeafe",
-                  padding: "4px 10px",
-                  borderRadius: 999,
-                  font: "inherit",
-                  cursor: "pointer",
-                }}
-              >
-                test 3 action button
-              </button>
-            ),
+            label: "test 3 action button",
+            onClickCallback: () => {
+              window.alert("Demo action button clicked");
+            },
           },
           {
             id: "test-3-action-link",
-            label: (
-              <a
-                href="https://example.com"
-                target="_blank"
-                rel="noreferrer"
-                style={{
-                  color: "#7dd3fc",
-                  textDecoration: "underline",
-                  textUnderlineOffset: 3,
-                }}
-              >
-                test 3 action link
-              </a>
-            ),
+            label: "test 3 action link",
+            href: "https://example.com",
+            target: "_blank",
+            rel: "noreferrer",
           },
           {
             id: "test-3-2",
             label: "test 3.2",
             children: [
-              {
-                id: "test-3-2-1",
-                label: "test 3.2.1",
-              },
-              {
-                id: "test-3-2-2",
-                label: "test 3.2.2",
-              },
-              {
-                id: "test-3-2-3",
-                label: "test 3.2.3",
-              },
+              createDemoButtonItem("test-3-2-1", "test 3.2.1"),
+              createDemoButtonItem("test-3-2-2", "test 3.2.2"),
+              createDemoButtonItem("test-3-2-3", "test 3.2.3"),
             ],
           },
         ],
@@ -415,21 +392,17 @@ export default function App() {
           </label>
         ),
         children: [
-          {
-            id: "test-4-1",
-            label: "test 4.1",
-            disabled: !managedBranchEnabled,
-          },
+          createDemoButtonItem("test-4-1", "test 4.1", !managedBranchEnabled),
           {
             id: "test-4-2",
             label: "test 4.2",
             disabled: !managedBranchEnabled,
             children: [
-              {
-                id: "test-4-2-1",
-                label: "test 4.2.1",
-                disabled: !managedBranchEnabled,
-              },
+              createDemoButtonItem(
+                "test-4-2-1",
+                "test 4.2.1",
+                !managedBranchEnabled,
+              ),
             ],
           },
         ],
@@ -442,27 +415,14 @@ export default function App() {
           await delay(700);
 
           return [
-            {
-              id: "test-5-1",
-              label: "test 5.1",
-            },
-            {
-              id: "test-5-2",
-              label: "test 5.2 (disabled)",
-              disabled: true,
-            },
+            createDemoButtonItem("test-5-1", "test 5.1"),
+            createDemoButtonItem("test-5-2", "test 5.2 (disabled)", true),
             {
               id: "test-5-3",
               label: "test 5.3",
               children: [
-                {
-                  id: "test-5-3-1",
-                  label: "test 5.3.1",
-                },
-                {
-                  id: "test-5-3-2",
-                  label: "test 5.3.2",
-                },
+                createDemoButtonItem("test-5-3-1", "test 5.3.1"),
+                createDemoButtonItem("test-5-3-2", "test 5.3.2"),
               ],
             },
           ];

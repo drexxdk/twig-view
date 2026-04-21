@@ -8,15 +8,66 @@ import React, {
 import styles from "./twigTree.module.css";
 import useLineWidthDpi from "../utils/useLineWidthDpi";
 
-export type TwigTreeItem = {
+type TwigTreeItemBase = {
   id?: string;
   label: React.ReactNode;
   trailing?: React.ReactNode;
+  disabled?: boolean;
+};
+
+export type TwigTreeBranchItem = TwigTreeItemBase & {
   children?: TwigTreeItem[];
   defaultExpanded?: boolean;
-  disabled?: boolean;
   loadChildren?: () => Promise<TwigTreeItem[]>;
   loadingLabel?: React.ReactNode;
+  href?: never;
+  target?: never;
+  rel?: never;
+  onClickCallback?: never;
+};
+
+export type TwigTreeLinkItem = TwigTreeItemBase & {
+  href: string;
+  target?: React.HTMLAttributeAnchorTarget;
+  rel?: string;
+  onClickCallback?: never;
+  children?: never;
+  defaultExpanded?: never;
+  loadChildren?: never;
+  loadingLabel?: never;
+};
+
+export type TwigTreeButtonItem = TwigTreeItemBase & {
+  onClickCallback: React.MouseEventHandler<HTMLButtonElement>;
+  href?: never;
+  target?: never;
+  rel?: never;
+  children?: never;
+  defaultExpanded?: never;
+  loadChildren?: never;
+  loadingLabel?: never;
+};
+
+export type TwigTreeItem =
+  | TwigTreeBranchItem
+  | TwigTreeLinkItem
+  | TwigTreeButtonItem;
+
+export type TwigTreeLinkComponentProps = {
+  id?: string;
+  href: string;
+  target?: React.HTMLAttributeAnchorTarget;
+  rel?: string;
+  tabIndex?: number;
+  className?: string;
+  style?: React.CSSProperties;
+  onClick?: React.MouseEventHandler<HTMLElement>;
+  children: React.ReactNode;
+  "aria-disabled"?: React.AriaAttributes["aria-disabled"];
+};
+
+export type TwigTreeComponentsOptions = {
+  link?: React.ElementType<TwigTreeLinkComponentProps>;
 };
 
 export type TwigTreeToggleEvent = {
@@ -72,6 +123,7 @@ export type TwigTreeSlotOptions = {
   branchRow?: TwigTreeElementOptions;
   leafRow?: TwigTreeElementOptions;
   label?: TwigTreeElementOptions;
+  action?: TwigTreeElementOptions;
   children?: TwigTreeElementOptions;
 };
 
@@ -82,6 +134,9 @@ type TwigTreeProps = {
   itemLayout?: TwigTreeItemLayoutOptions;
   useDefaultStyles?: boolean;
   useDefaultDisabledStyles?: boolean;
+  useDefaultFocusStyles?: boolean;
+  useDefaultActionStyles?: boolean;
+  useDefaultStatusStyles?: boolean;
   idPrefix?: string;
   ariaLabel?: string;
   slots?: TwigTreeSlotOptions;
@@ -93,6 +148,7 @@ type TwigTreeProps = {
   onCloseStart?: (event: TwigTreeToggleEvent) => void;
   onCloseEnd?: (event: TwigTreeToggleEvent) => void;
   toggle?: TwigTreeToggleOptions;
+  components?: TwigTreeComponentsOptions;
 };
 
 type NormalizedAnimationOptions = {
@@ -127,6 +183,8 @@ type TwigTreeBranchProps = {
       canExpand: boolean;
       expanded: boolean;
       disabled: boolean;
+      hasAction: boolean;
+      activateAction: () => void;
       focusFirstChild: () => void;
       toggleExpanded: () => void;
     },
@@ -139,11 +197,19 @@ type TwigTreeBranchProps = {
       canExpand: boolean;
       expanded: boolean;
       disabled: boolean;
+      hasAction: boolean;
+      activateAction: () => void;
       focusFirstChild: () => void;
       toggleExpanded: () => void;
     },
   ) => void;
-  useDefaultStyles: boolean;
+  defaultStyles: {
+    disabled: boolean;
+    focus: boolean;
+    action: boolean;
+    status: boolean;
+  };
+  linkComponent: React.ElementType<TwigTreeLinkComponentProps>;
   toggle: {
     size: number;
     radius: string;
@@ -202,6 +268,14 @@ function normalizeAnimation(
     easing: animation.easing ?? "ease",
     animateOpacity: animation.animateOpacity ?? true,
   };
+}
+
+function isLinkItem(item: TwigTreeItem): item is TwigTreeLinkItem {
+  return "href" in item;
+}
+
+function isButtonItem(item: TwigTreeItem): item is TwigTreeButtonItem {
+  return "onClickCallback" in item;
 }
 
 function isVisibleTreeItem(element: HTMLElement) {
@@ -371,7 +445,8 @@ function TwigTreeBranch({
   onTreeItemFocus,
   onTreeItemKeyDown,
   onTreeItemDescendantKeyDownCapture,
-  useDefaultStyles,
+  defaultStyles,
+  linkComponent: LinkComponent,
   toggle,
 }: TwigTreeBranchProps) {
   const [loadedChildren, setLoadedChildren] = useState<
@@ -384,9 +459,10 @@ function TwigTreeBranch({
     item.defaultExpanded ? "open" : "closed",
   );
   const timeoutRef = useRef<number | null>(null);
+  const loadChildren = item.loadChildren;
   const resolvedChildren = loadedChildren ?? item.children;
   const hasChildren = Boolean(resolvedChildren?.length);
-  const canExpand = hasChildren || Boolean(item.loadChildren);
+  const canExpand = hasChildren || Boolean(loadChildren);
 
   const eventPayload = useMemo<TwigTreeToggleEvent>(
     () => ({
@@ -413,6 +489,7 @@ function TwigTreeBranch({
     canExpand ? slots.branchRow : slots.leafRow,
   );
   const labelOptions = slots.label;
+  const actionOptions = slots.action;
   const childrenOptions = slots.children;
   const toggleButtonOptions = mergeElementOptions(
     toggle.button,
@@ -429,14 +506,18 @@ function TwigTreeBranch({
   const labelClassName = joinClassNames(labelOptions.className);
   const childrenClassName = joinClassNames(childrenOptions.className);
   const isFocusable = activeTreeItemId === treeItemId;
-  const labelHasInteractiveContent = hasInteractiveTreeContent(item.label);
+  const isLinkActionItem = isLinkItem(item);
+  const isButtonActionItem = isButtonItem(item);
+  const hasPrimaryAction = isLinkActionItem || isButtonActionItem;
+  const labelHasInteractiveContent = hasPrimaryAction;
   const trailingHasInteractiveContent = hasInteractiveTreeContent(
     item.trailing,
   );
   const isTreeItemNavigable =
     !item.disabled &&
-    (canExpand || labelHasInteractiveContent || trailingHasInteractiveContent);
+    (canExpand || hasPrimaryAction || trailingHasInteractiveContent);
   const labelId = `${domId}-label`;
+  const actionId = `${domId}-action`;
   const treeItemAriaDisabled =
     item.disabled && !item.trailing ? "true" : undefined;
   const rowShellClassName = joinClassNames(
@@ -453,6 +534,69 @@ function TwigTreeBranch({
     toggleIconOptions.className,
   );
 
+  function clickPrimaryAction() {
+    if (!hasPrimaryAction || item.disabled) {
+      return;
+    }
+
+    const actionElement = document.getElementById(actionId);
+
+    if (!(actionElement instanceof HTMLElement)) {
+      return;
+    }
+
+    actionElement.click();
+  }
+
+  function renderLeafAction() {
+    const actionClassName = joinClassNames(
+      styles.itemAction,
+      item.disabled && defaultStyles.disabled ? styles.itemDisabled : undefined,
+      actionOptions.className,
+    );
+    const actionStyle = actionOptions.style;
+
+    if (isLinkActionItem) {
+      return (
+        <LinkComponent
+          id={actionId}
+          href={item.href}
+          target={item.target ?? "_self"}
+          rel={item.rel}
+          tabIndex={-1}
+          className={actionClassName}
+          style={actionStyle}
+          aria-disabled={item.disabled ? true : undefined}
+          onClick={(event: React.MouseEvent<HTMLElement>) => {
+            if (item.disabled) {
+              event.preventDefault();
+            }
+          }}
+        >
+          {item.label}
+        </LinkComponent>
+      );
+    }
+
+    if (isButtonActionItem) {
+      return (
+        <button
+          id={actionId}
+          type="button"
+          className={actionClassName}
+          tabIndex={-1}
+          style={actionStyle}
+          disabled={item.disabled}
+          onClick={item.onClickCallback}
+        >
+          {item.label}
+        </button>
+      );
+    }
+
+    return item.label;
+  }
+
   useEffect(() => {
     return () => {
       if (timeoutRef.current !== null) {
@@ -468,7 +612,7 @@ function TwigTreeBranch({
   useEffect(() => {
     if (
       !expanded ||
-      !item.loadChildren ||
+      !loadChildren ||
       loadedChildren !== undefined ||
       loadError
     ) {
@@ -479,8 +623,7 @@ function TwigTreeBranch({
 
     setIsLoading(true);
 
-    item
-      .loadChildren()
+    loadChildren()
       .then((nextChildren) => {
         if (cancelled) {
           return;
@@ -506,7 +649,7 @@ function TwigTreeBranch({
     return () => {
       cancelled = true;
     };
-  }, [expanded, item.loadChildren, loadedChildren, loadError]);
+  }, [expanded, loadChildren, loadedChildren, loadError]);
 
   if (!canExpand) {
     return (
@@ -541,6 +684,8 @@ function TwigTreeBranch({
             canExpand: false,
             expanded: false,
             disabled: Boolean(item.disabled),
+            hasAction: hasPrimaryAction,
+            activateAction: clickPrimaryAction,
             focusFirstChild: () => {},
             toggleExpanded: () => {},
           });
@@ -558,7 +703,7 @@ function TwigTreeBranch({
             id={labelId}
             className={joinClassNames(
               styles.labelContent,
-              item.disabled && useDefaultStyles
+              item.disabled && defaultStyles.disabled
                 ? styles.itemDisabled
                 : undefined,
               labelClassName,
@@ -571,12 +716,14 @@ function TwigTreeBranch({
                 canExpand: false,
                 expanded: false,
                 disabled: Boolean(item.disabled),
+                hasAction: hasPrimaryAction,
+                activateAction: clickPrimaryAction,
                 focusFirstChild: () => {},
                 toggleExpanded: () => {},
               });
             }}
           >
-            {item.label}
+            {renderLeafAction()}
           </span>
           {item.trailing ? (
             <span
@@ -588,6 +735,8 @@ function TwigTreeBranch({
                   canExpand: false,
                   expanded: false,
                   disabled: Boolean(item.disabled),
+                  hasAction: hasPrimaryAction,
+                  activateAction: clickPrimaryAction,
                   focusFirstChild: () => {},
                   toggleExpanded: () => {},
                 });
@@ -699,6 +848,8 @@ function TwigTreeBranch({
           canExpand,
           expanded,
           disabled: Boolean(item.disabled),
+          hasAction: false,
+          activateAction: () => {},
           focusFirstChild,
           toggleExpanded,
         });
@@ -713,7 +864,7 @@ function TwigTreeBranch({
           <div
             className={joinClassNames(
               styles.toggleRow,
-              item.disabled && useDefaultStyles
+              item.disabled && defaultStyles.disabled
                 ? styles.itemDisabled
                 : undefined,
             )}
@@ -743,6 +894,8 @@ function TwigTreeBranch({
                   canExpand,
                   expanded,
                   disabled: Boolean(item.disabled),
+                  hasAction: false,
+                  activateAction: () => {},
                   focusFirstChild,
                   toggleExpanded,
                 });
@@ -756,7 +909,7 @@ function TwigTreeBranch({
             id={labelId}
             className={joinClassNames(
               styles.labelContent,
-              item.disabled && useDefaultStyles
+              item.disabled && defaultStyles.disabled
                 ? styles.itemDisabled
                 : undefined,
               labelClassName,
@@ -769,6 +922,8 @@ function TwigTreeBranch({
                 canExpand,
                 expanded,
                 disabled: Boolean(item.disabled),
+                hasAction: false,
+                activateAction: () => {},
                 focusFirstChild,
                 toggleExpanded,
               });
@@ -787,6 +942,8 @@ function TwigTreeBranch({
                 canExpand,
                 expanded,
                 disabled: Boolean(item.disabled),
+                hasAction: false,
+                activateAction: () => {},
                 focusFirstChild,
                 toggleExpanded,
               });
@@ -850,7 +1007,8 @@ function TwigTreeBranch({
                   onTreeItemDescendantKeyDownCapture={
                     onTreeItemDescendantKeyDownCapture
                   }
-                  useDefaultStyles={useDefaultStyles}
+                  defaultStyles={defaultStyles}
+                  linkComponent={LinkComponent}
                   toggle={toggle}
                 />
               );
@@ -869,6 +1027,9 @@ export default function TwigTree({
   itemLayout,
   useDefaultStyles,
   useDefaultDisabledStyles,
+  useDefaultFocusStyles,
+  useDefaultActionStyles,
+  useDefaultStatusStyles,
   idPrefix = "twig-tree",
   ariaLabel = "Tree",
   slots,
@@ -880,6 +1041,7 @@ export default function TwigTree({
   onCloseStart,
   onCloseEnd,
   toggle,
+  components,
 }: TwigTreeProps) {
   const treeRef = useRef<HTMLElement | null>(null);
   const [activeTreeItemId, setActiveTreeItemId] = useState<string | null>(null);
@@ -904,6 +1066,21 @@ export default function TwigTree({
   );
   const resolvedUseDefaultStyles =
     useDefaultStyles ?? useDefaultDisabledStyles ?? false;
+  const resolvedDefaultStyles = useMemo(
+    () => ({
+      disabled: useDefaultStyles ?? useDefaultDisabledStyles ?? false,
+      focus: useDefaultStyles ?? useDefaultFocusStyles ?? false,
+      action: useDefaultStyles ?? useDefaultActionStyles ?? false,
+      status: useDefaultStyles ?? useDefaultStatusStyles ?? false,
+    }),
+    [
+      useDefaultActionStyles,
+      useDefaultDisabledStyles,
+      useDefaultFocusStyles,
+      useDefaultStatusStyles,
+      useDefaultStyles,
+    ],
+  );
   const resolvedSlots = useMemo<Required<TwigTreeSlotOptions>>(
     () => ({
       tree: slots?.tree ?? {},
@@ -914,6 +1091,7 @@ export default function TwigTree({
       branchRow: slots?.branchRow ?? {},
       leafRow: slots?.leafRow ?? {},
       label: slots?.label ?? {},
+      action: slots?.action ?? {},
       children: slots?.children ?? {},
     }),
     [slots],
@@ -939,6 +1117,12 @@ export default function TwigTree({
       closed: toggle?.closed ?? {},
     }),
     [toggle],
+  );
+  const resolvedComponents = useMemo<Required<TwigTreeComponentsOptions>>(
+    () => ({
+      link: components?.link ?? "a",
+    }),
+    [components],
   );
   const treeOptions = mergeElementOptions(resolvedSlots.tree);
 
@@ -1041,6 +1225,8 @@ export default function TwigTree({
         canExpand: boolean;
         expanded: boolean;
         disabled: boolean;
+        hasAction: boolean;
+        activateAction: () => void;
         focusFirstChild: () => void;
         toggleExpanded: () => void;
       },
@@ -1096,6 +1282,11 @@ export default function TwigTree({
           return true;
         case "Enter":
         case " ":
+          if (options.hasAction) {
+            options.activateAction();
+            return true;
+          }
+
           if (!options.canExpand) {
             return false;
           }
@@ -1118,6 +1309,8 @@ export default function TwigTree({
         canExpand: boolean;
         expanded: boolean;
         disabled: boolean;
+        hasAction: boolean;
+        activateAction: () => void;
         focusFirstChild: () => void;
         toggleExpanded: () => void;
       },
@@ -1142,6 +1335,8 @@ export default function TwigTree({
         canExpand: boolean;
         expanded: boolean;
         disabled: boolean;
+        hasAction: boolean;
+        activateAction: () => void;
         focusFirstChild: () => void;
         toggleExpanded: () => void;
       },
@@ -1199,6 +1394,16 @@ export default function TwigTree({
       ref={treeRef}
       className={joinClassNames(styles.tree, treeOptions.className)}
       data-default-styles={resolvedUseDefaultStyles ? "true" : "false"}
+      data-default-disabled-styles={
+        resolvedDefaultStyles.disabled ? "true" : "false"
+      }
+      data-default-focus-styles={resolvedDefaultStyles.focus ? "true" : "false"}
+      data-default-action-styles={
+        resolvedDefaultStyles.action ? "true" : "false"
+      }
+      data-default-status-styles={
+        resolvedDefaultStyles.status ? "true" : "false"
+      }
       data-theme={resolvedUseDefaultStyles ? "default" : "minimal"}
       style={
         {
@@ -1246,7 +1451,8 @@ export default function TwigTree({
               onTreeItemDescendantKeyDownCapture={
                 onTreeItemDescendantKeyDownCapture
               }
-              useDefaultStyles={resolvedUseDefaultStyles}
+              defaultStyles={resolvedDefaultStyles}
+              linkComponent={resolvedComponents.link}
               toggle={resolvedToggle}
             />
           );
