@@ -622,56 +622,6 @@ export default function App() {
             </ControlSection>
 
             <ControlSection
-              title="Default styles"
-              description="Inspect the built-in style layers separately so disabled, focus, action, and status visuals can be tested independently. The demo toggle preset also lives here now."
-            >
-              <div style={groupGridStyle}>
-                <CheckboxField
-                  label="Custom toggle icons"
-                  checked={controls.useCustomDemoToggles}
-                  onChange={(value) => {
-                    patchControls({ useCustomDemoToggles: value });
-                  }}
-                />
-                <CheckboxField
-                  label="Enable all default styles"
-                  checked={allDefaultStylesEnabled}
-                  onChange={(value) => {
-                    patchAllDefaultStyles(value);
-                  }}
-                />
-                <CheckboxField
-                  label="Disabled styles"
-                  checked={controls.useDefaultDisabledStyles}
-                  onChange={(value) => {
-                    patchControls({ useDefaultDisabledStyles: value });
-                  }}
-                />
-                <CheckboxField
-                  label="Focus styles"
-                  checked={controls.useDefaultFocusStyles}
-                  onChange={(value) => {
-                    patchControls({ useDefaultFocusStyles: value });
-                  }}
-                />
-                <CheckboxField
-                  label="Action styles"
-                  checked={controls.useDefaultActionStyles}
-                  onChange={(value) => {
-                    patchControls({ useDefaultActionStyles: value });
-                  }}
-                />
-                <CheckboxField
-                  label="Status styles"
-                  checked={controls.useDefaultStatusStyles}
-                  onChange={(value) => {
-                    patchControls({ useDefaultStatusStyles: value });
-                  }}
-                />
-              </div>
-            </ControlSection>
-
-            <ControlSection
               title="Connectors"
               description="Everything related to the tree lines is grouped here: thickness, color, and the elbow radius."
             >
@@ -740,6 +690,56 @@ export default function App() {
                   value={controls.animationEasing}
                   onChange={(value) => {
                     patchControls({ animationEasing: value });
+                  }}
+                />
+              </div>
+            </ControlSection>
+
+            <ControlSection
+              title="Default styles"
+              description="Inspect the built-in style layers separately so disabled, focus, action, and status visuals can be tested independently. The demo toggle preset also lives here now."
+            >
+              <div style={groupGridStyle}>
+                <CheckboxField
+                  label="Custom toggle icons"
+                  checked={controls.useCustomDemoToggles}
+                  onChange={(value) => {
+                    patchControls({ useCustomDemoToggles: value });
+                  }}
+                />
+                <CheckboxField
+                  label="Enable all default styles"
+                  checked={allDefaultStylesEnabled}
+                  onChange={(value) => {
+                    patchAllDefaultStyles(value);
+                  }}
+                />
+                <CheckboxField
+                  label="Disabled styles"
+                  checked={controls.useDefaultDisabledStyles}
+                  onChange={(value) => {
+                    patchControls({ useDefaultDisabledStyles: value });
+                  }}
+                />
+                <CheckboxField
+                  label="Focus styles"
+                  checked={controls.useDefaultFocusStyles}
+                  onChange={(value) => {
+                    patchControls({ useDefaultFocusStyles: value });
+                  }}
+                />
+                <CheckboxField
+                  label="Action styles"
+                  checked={controls.useDefaultActionStyles}
+                  onChange={(value) => {
+                    patchControls({ useDefaultActionStyles: value });
+                  }}
+                />
+                <CheckboxField
+                  label="Status styles"
+                  checked={controls.useDefaultStatusStyles}
+                  onChange={(value) => {
+                    patchControls({ useDefaultStatusStyles: value });
                   }}
                 />
               </div>

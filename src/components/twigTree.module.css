@@ -9,6 +9,7 @@
   --item-padding-block: 2px;
   --row-block-size: calc(var(--toggle-size) + (var(--item-padding-block) * 2));
   --branch-indent: calc(var(--toggle-size) + var(--spacing));
+  --label-offset: calc(var(--toggle-size) + var(--toggle-label-gap));
   --connector-origin-x: calc(((var(--toggle-size) / 2) + var(--spacing)) * -1);
 
   width: 100%;
@@ -54,7 +55,7 @@
   }
 
   .statusRow {
-    padding-inline-start: var(--branch-indent);
+    padding-inline-start: var(--label-offset);
   }
 
   &[data-default-action-styles="true"] {
@@ -71,6 +72,11 @@
       cursor: pointer;
     }
 
+    .toggleRow > .labelContent {
+      padding-inline: 8px;
+      line-height: 1.35;
+    }
+
     .itemAction:disabled,
     .itemAction[aria-disabled="true"] {
       cursor: not-allowed;
@@ -78,7 +84,7 @@
   }
 
   .leafRowShell {
-    padding-inline-start: var(--branch-indent);
+    padding-inline-start: var(--label-offset);
   }
 
   .branchRowShell,
