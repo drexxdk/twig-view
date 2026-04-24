@@ -136,7 +136,6 @@ export default function TwigTreeBranch({
   function renderLeafAction() {
     const actionClassName = joinClassNames(
       styles.itemAction,
-      item.disabled && defaultStyles.disabled ? styles.itemDisabled : undefined,
       actionOptions.className,
     );
     const actionStyle = actionOptions.style;

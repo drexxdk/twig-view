@@ -12,6 +12,19 @@
     .itemDisabled {
       opacity: 0.5;
     }
+
+    li[data-disabled="true"] {
+      > .childrenViewport > ul > li > .itemRow:before,
+      > .childrenViewport > ul > li:not(:last-child):after {
+        opacity: 0.5;
+      }
+    }
+
+    li[data-disabled="true"][data-phase="open"] > .branchRowShell:after,
+    li[data-disabled="true"][data-phase="opening"] > .branchRowShell:after,
+    li[data-disabled="true"][data-phase="closing"] > .branchRowShell:after {
+      opacity: 0.5;
+    }
   }
 
   &[data-default-status-styles="true"] {
