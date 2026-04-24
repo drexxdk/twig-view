@@ -365,7 +365,8 @@ export default function App() {
       createDemoButtonItem("test-2", "test 2 (disabled)", true),
       {
         id: "test-3",
-        label: "test 3",
+        label:
+          "test 3 waejoiewga iojgew ijowaeg ijoaegw ijwaegj iijoegw aijoagew ijoaegw jioaweg ",
         defaultExpanded: true,
         children: [
           createDemoButtonItem("test-3-1", "test 3.1"),
