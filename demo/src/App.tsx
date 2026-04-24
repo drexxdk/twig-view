@@ -82,7 +82,6 @@ const sectionTextStyle = {
   lineHeight: 1.5,
 } as const;
 
-const DEMO_URL = "https://drexxdk.github.io/twig-view/";
 const GITHUB_URL = "https://github.com/drexxdk/twig-view";
 const NPM_URL = "https://www.npmjs.com/package/twig-view";
 const INSTALL_COMMAND = "npm install twig-view";
@@ -560,45 +559,14 @@ export default function App() {
         } as React.CSSProperties
       }
     >
-      <header className="siteHeader">
-        <div className="siteHeaderInner">
-          <a className="brandLink" href={DEMO_URL}>
-            twig-view
-          </a>
-          <nav className="siteNav" aria-label="Primary">
-            <a className="navLink" href="#features">
-              Features
-            </a>
-            <a
-              className="navLink"
-              href={GITHUB_URL}
-              target="_blank"
-              rel="noreferrer"
-            >
-              GitHub
-            </a>
-            <a
-              className="navLink"
-              href={NPM_URL}
-              target="_blank"
-              rel="noreferrer"
-            >
-              npm
-            </a>
-          </nav>
-        </div>
-      </header>
-
-      <div className="pageContent">
-        <section className="heroSection">
-          <div className="heroCopy">
+      <section className="heroBand" aria-label="Introduction">
+        <div className="heroInner">
+          <div className="heroLead">
             <p className="heroEyebrow">Accessible React tree view</p>
-            <h1 className="heroTitle">
-              Tree UI for React, without the usual rebuild.
-            </h1>
+            <h1 className="heroTitle">Accessible tree UI for React</h1>
             <p className="heroBody">
-              Accessible branches, configurable connectors, custom toggles, and
-              lazy loading in one component.
+              ARIA-ready branches, configurable connectors, custom toggles, and
+              lazy loading.
             </p>
 
             <div className="heroActions">
@@ -608,7 +576,7 @@ export default function App() {
                 target="_blank"
                 rel="noreferrer"
               >
-                GitHub
+                View on GitHub
               </a>
               <a
                 className="heroButton heroButtonSecondary"
@@ -616,7 +584,7 @@ export default function App() {
                 target="_blank"
                 rel="noreferrer"
               >
-                npm
+                Open npm package
               </a>
             </div>
 
@@ -625,63 +593,11 @@ export default function App() {
               <code>{INSTALL_COMMAND}</code>
             </div>
           </div>
+        </div>
+      </section>
 
-          <aside className="heroShowcase" aria-label="Highlights">
-            <div className="heroShowcasePanel">
-              <span className="heroShowcaseKicker">What ships</span>
-              <div className="heroMetricGrid">
-                <div className="heroMetricCard">
-                  <strong>ARIA tree</strong>
-                  <span>
-                    Keyboard movement, focus management, and branch semantics
-                  </span>
-                </div>
-                <div className="heroMetricCard">
-                  <strong>Connector controls</strong>
-                  <span>
-                    Width, radius, spacing, and color all stay configurable
-                  </span>
-                </div>
-                <div className="heroMetricCard">
-                  <strong>Lazy branches</strong>
-                  <span>
-                    Load children on demand without changing your tree model
-                  </span>
-                </div>
-                <div className="heroMetricCard">
-                  <strong>npm package</strong>
-                  <span>Published under the same package name: twig-view</span>
-                </div>
-              </div>
-            </div>
-          </aside>
-        </section>
-
-        <section className="sectionBlock" id="features">
-          <div className="sectionIntro">
-            <p className="sectionKicker">Why twig-view</p>
-            <h2 className="sectionHeading">
-              Built for the hard parts of tree UIs.
-            </h2>
-          </div>
-          <div className="cardGrid">
-            {featureCards.map((card) => (
-              <article key={card.title} className="infoCard">
-                <h3 className="infoCardTitle">{card.title}</h3>
-                <p className="infoCardBody">{card.body}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="sectionBlock" id="playground">
-          <div className="sectionIntro">
-            <p className="sectionKicker">Live playground</p>
-            <h2 className="sectionHeading">
-              Preview on the left. Controls on the right.
-            </h2>
-          </div>
-
+      <div className="pageContent">
+        <section className="playgroundSection" id="playground">
           <div className="demoWorkspace">
             <section
               className="demoPanel demoPreviewPanel"
@@ -696,9 +612,6 @@ export default function App() {
                   <p className="demoPanelEyebrow">Preview</p>
                   <h3 style={{ margin: 0 }}>TwigTree</h3>
                 </div>
-                <a href={GITHUB_URL} target="_blank" rel="noreferrer">
-                  Source
-                </a>
               </div>
 
               <div className="demoPreviewTree">
@@ -743,9 +656,6 @@ export default function App() {
                   <p className="demoPanelEyebrow">Controls</p>
                   <h3 style={{ margin: 0 }}>Tune behavior and visuals</h3>
                 </div>
-                <a href={NPM_URL} target="_blank" rel="noreferrer">
-                  npm
-                </a>
               </div>
 
               <div className="demoControlsGrid">
@@ -986,6 +896,23 @@ export default function App() {
                 </ControlSection>
               </div>
             </section>
+          </div>
+        </section>
+
+        <section className="sectionBlock" id="features">
+          <div className="sectionIntro">
+            <p className="sectionKicker">Why twig-view</p>
+            <h2 className="sectionHeading">
+              Built for the hard parts of tree UIs.
+            </h2>
+          </div>
+          <div className="cardGrid">
+            {featureCards.map((card) => (
+              <article key={card.title} className="infoCard">
+                <h3 className="infoCardTitle">{card.title}</h3>
+                <p className="infoCardBody">{card.body}</p>
+              </article>
+            ))}
           </div>
         </section>
       </div>
