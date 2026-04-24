@@ -283,7 +283,7 @@ export default function App() {
   const [managedBranchEnabled, setManagedBranchEnabled] = useState(false);
   const [controls, setControls] = useState<ControlsState>({
     lineWidth: 1,
-    lineColor: "#ff4d4f",
+    lineColor: "#ffffff",
     lineRadius: 10,
     toggleSize: 16,
     toggleRadius: 50,

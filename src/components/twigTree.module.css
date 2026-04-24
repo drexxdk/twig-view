@@ -177,9 +177,9 @@
     &:focus-visible > .branchRowShell > .toggleRow > .toggleButton:after {
       content: "";
       position: absolute;
-      inset: -4px;
+      inset: 0;
       border-radius: inherit;
-      box-shadow: 0 0 0 2px currentColor;
+      box-shadow: inset 0 0 0 2px currentColor;
       pointer-events: none;
     }
   }
