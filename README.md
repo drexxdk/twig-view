@@ -65,7 +65,7 @@ export function Example() {
       ariaLabel="Documentation tree"
       connector={{ color: "#22c55e", radius: 12, width: 1.5 }}
       spacing={4}
-      itemLayout={{ paddingBlock: 2 }}
+      itemLayout={{ gap: 4 }}
       animation={{ duration: 220, easing: "ease", animateOpacity: true }}
       toggle={{
         size: 16,
@@ -101,7 +101,7 @@ Use stable `id` values when items can move or rerender dynamically.
 - `ariaLabel`: accessible label for the tree root
 - `connector`: line `width`, `color`, and `radius`
 - `spacing`: horizontal distance between levels
-- `itemLayout`: currently supports `paddingBlock`
+- `itemLayout`: supports `gap` for vertical spacing between items and branches. `paddingBlock` is still accepted as a backward-compatible alias.
 - `toggle`: default toggle size, radius, gap, icon, and open/closed element options
 - `animation`: `enabled`, `duration`, `easing`, and `animateOpacity`
 - `slots`: element-level `className` / `style` hooks for `tree`, `item`, `branch`, `leaf`, `row`, `branchRow`, `leafRow`, `label`, `action`, and `children`

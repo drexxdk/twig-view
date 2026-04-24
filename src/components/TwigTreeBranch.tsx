@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import DefaultToggle from "./DefaultToggle";
 import styles from "./twigTree.module.css";
 import {
@@ -48,6 +54,7 @@ export default function TwigTreeBranch({
     item.defaultExpanded ? "open" : "closed",
   );
   const timeoutRef = useRef<number | null>(null);
+  const rowShellRef = useRef<HTMLElement | null>(null);
   const loadChildren = item.loadChildren;
   const resolvedChildren = loadedChildren ?? item.children;
   const hasChildren = Boolean(resolvedChildren?.length);
@@ -112,12 +119,22 @@ export default function TwigTreeBranch({
   );
   const toggleButtonClassName = joinClassNames(
     styles.toggleButton,
+    item.disabled && defaultStyles.disabled
+      ? styles.toggleButtonDisabled
+      : undefined,
     toggleButtonOptions.className,
   );
   const toggleGlyphClassName = joinClassNames(
     styles.toggleButtonGlyph,
     toggleIconOptions.className,
   );
+  const [rowCenterOffset, setRowCenterOffset] = useState<number | null>(null);
+  const itemStyle = {
+    ...(itemOptions.style ?? {}),
+    ...(rowCenterOffset !== null
+      ? { ["--row-center-offset" as const]: `${rowCenterOffset}px` }
+      : {}),
+  } as React.CSSProperties;
 
   function clickPrimaryAction() {
     if (!hasPrimaryAction || item.disabled) {
@@ -188,6 +205,37 @@ export default function TwigTreeBranch({
       }
     };
   }, []);
+
+  useLayoutEffect(() => {
+    const rowShellElement = rowShellRef.current;
+
+    if (!rowShellElement) {
+      return;
+    }
+
+    const updateRowCenterOffset = () => {
+      setRowCenterOffset(rowShellElement.getBoundingClientRect().height / 2);
+    };
+
+    updateRowCenterOffset();
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateRowCenterOffset();
+    });
+
+    resizeObserver.observe(rowShellElement, { box: "border-box" });
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [
+    item.label,
+    item.trailing,
+    expanded,
+    loadedChildren,
+    isLoading,
+    loadError,
+  ]);
 
   useEffect(() => {
     setLoadedChildren(item.children);
@@ -318,7 +366,7 @@ export default function TwigTreeBranch({
       <li
         role="treeitem"
         className={itemClassName}
-        style={itemOptions.style}
+        style={itemStyle}
         id={treeItemId}
         tabIndex={isFocusable ? 0 : -1}
         aria-level={level}
@@ -350,6 +398,7 @@ export default function TwigTreeBranch({
         }}
       >
         <span
+          ref={rowShellRef as React.RefObject<HTMLSpanElement>}
           className={rowShellClassName}
           style={rowOptions.style}
           data-disabled={item.disabled ? "true" : "false"}
@@ -404,7 +453,7 @@ export default function TwigTreeBranch({
     <li
       role="treeitem"
       className={itemClassName}
-      style={itemOptions.style}
+      style={itemStyle}
       id={treeItemId}
       tabIndex={isFocusable ? 0 : -1}
       aria-level={level}
@@ -432,17 +481,13 @@ export default function TwigTreeBranch({
       }}
     >
       <div
+        ref={rowShellRef as React.RefObject<HTMLDivElement>}
         className={rowShellClassName}
         style={rowOptions.style}
         data-disabled={item.disabled ? "true" : "false"}
       >
         <div
-          className={joinClassNames(
-            styles.toggleRow,
-            item.disabled && defaultStyles.disabled
-              ? styles.itemDisabled
-              : undefined,
-          )}
+          className={joinClassNames(styles.toggleRow)}
           aria-hidden="true"
           data-disabled={item.disabled ? "true" : "false"}
           onClick={() => {
@@ -460,7 +505,13 @@ export default function TwigTreeBranch({
           </i>
           <span
             id={labelId}
-            className={joinClassNames(styles.labelContent, labelClassName)}
+            className={joinClassNames(
+              styles.labelContent,
+              item.disabled && defaultStyles.disabled
+                ? styles.itemDisabled
+                : undefined,
+              labelClassName,
+            )}
             style={labelOptions.style}
             onKeyDownCapture={(event) => {
               onTreeItemDescendantKeyDownCapture(event, {
@@ -477,7 +528,12 @@ export default function TwigTreeBranch({
         </div>
         {item.trailing ? (
           <span
-            className={styles.trailingContent}
+            className={joinClassNames(
+              styles.trailingContent,
+              item.disabled && defaultStyles.disabled
+                ? styles.itemDisabled
+                : undefined,
+            )}
             onKeyDownCapture={(event) => {
               onTreeItemDescendantKeyDownCapture(event, {
                 ...baseNavigationOptions,

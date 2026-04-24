@@ -8,7 +8,7 @@ export const TWIG_TREE_DEFAULTS = {
     radius: 10,
   },
   itemLayout: {
-    paddingBlock: 2,
+    gap: 4,
   },
   animation: {
     enabled: true,

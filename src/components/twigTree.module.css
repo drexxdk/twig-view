@@ -1,8 +1,10 @@
 .tree {
-  --row-block-size: calc(var(--toggle-size) + (var(--item-padding-block) * 2));
+  --row-block-size: var(--toggle-size);
   --branch-indent: calc(var(--toggle-size) + var(--spacing));
   --label-offset: calc(var(--toggle-size) + var(--toggle-label-gap));
   --connector-origin-x: calc(((var(--toggle-size) / 2) + var(--spacing)) * -1);
+  --row-center-offset: calc(var(--toggle-size) / 2);
+  --item-gap: 4px;
 
   width: 100%;
   display: flex;
@@ -44,7 +46,6 @@
     min-height: var(--row-block-size);
     max-inline-size: 100%;
     width: 100%;
-    padding-block: var(--item-padding-block);
   }
 
   .labelContent {
@@ -111,7 +112,7 @@
     display: inline-flex;
     align-items: center;
     gap: var(--toggle-label-gap);
-    padding: var(--item-padding-block) 0;
+    padding: 0;
     cursor: pointer;
     border: 0;
     background: none;
@@ -202,6 +203,10 @@
     font-style: normal;
   }
 
+  .toggleButtonDisabled {
+    filter: saturate(0.4) brightness(0.9);
+  }
+
   .toggleButtonGlyph {
     position: absolute;
     top: 50%;
@@ -248,6 +253,7 @@
   ul {
     display: flex;
     flex-direction: column;
+    gap: var(--item-gap);
     list-style-type: none;
     padding-inline-start: 0;
     margin-block-start: 0;
@@ -257,6 +263,7 @@
     & > li {
       display: flex;
       flex-direction: column;
+      gap: var(--item-gap);
       position: relative;
 
       &:has(> .childrenViewport > ul) {
@@ -268,7 +275,7 @@
             left: calc(var(--connector-origin-x) - (var(--line-width) / 2));
             top: 0;
             width: var(--child-elbow-width);
-            height: calc(50% + (var(--line-width) / 2));
+            height: calc(var(--row-center-offset) + (var(--line-width) / 2));
             box-sizing: border-box;
             border-left: var(--line-width) solid var(--line-color);
             border-bottom: var(--line-width) solid var(--line-color);
@@ -281,8 +288,8 @@
               position: absolute;
               z-index: 0;
               left: calc(var(--connector-origin-x) - (var(--line-width) / 2));
-              top: calc(var(--item-padding-block) + (var(--toggle-size) / 2));
-              bottom: 0;
+              top: var(--row-center-offset);
+              bottom: calc(var(--item-gap) * -1);
               width: var(--line-width);
               background-color: var(--line-color);
               pointer-events: none;
@@ -308,9 +315,9 @@
       content: "";
       position: absolute;
       z-index: 0;
-      top: calc(50% + (var(--toggle-size) / 2));
+      top: var(--row-center-offset);
       left: calc((var(--toggle-size) / 2) - (var(--line-width) / 2));
-      bottom: 0;
+      bottom: calc(var(--item-gap) * -1);
       width: var(--line-width);
       background-color: var(--line-color);
       opacity: 0;

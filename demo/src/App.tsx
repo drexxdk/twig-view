@@ -20,7 +20,7 @@ type ControlsState = {
   toggleRadius: number;
   toggleLabelGap: number;
   spacing: number;
-  itemPaddingBlock: number;
+  itemGap: number;
   useDefaultDisabledStyles: boolean;
   useDefaultFocusStyles: boolean;
   useDefaultActionStyles: boolean;
@@ -313,7 +313,7 @@ export default function App() {
     toggleRadius: TWIG_TREE_DEFAULTS.toggle.radiusPercent,
     toggleLabelGap: TWIG_TREE_DEFAULTS.toggle.labelGapPx,
     spacing: 4,
-    itemPaddingBlock: TWIG_TREE_DEFAULTS.itemLayout.paddingBlock,
+    itemGap: TWIG_TREE_DEFAULTS.itemLayout.gap,
     useDefaultDisabledStyles: true,
     useDefaultFocusStyles: true,
     useDefaultActionStyles: true,
@@ -789,7 +789,7 @@ export default function App() {
                   }}
                   spacing={controls.spacing}
                   itemLayout={{
-                    paddingBlock: controls.itemPaddingBlock,
+                    gap: controls.itemGap,
                   }}
                   useDefaultDisabledStyles={controls.useDefaultDisabledStyles}
                   useDefaultFocusStyles={controls.useDefaultFocusStyles}
@@ -824,7 +824,7 @@ export default function App() {
               <div className="demoControlsGrid">
                 <ControlSection
                   title="Tree layout"
-                  description="Spacing, row padding, and ID prefix."
+                  description="Spacing, item gap, and ID prefix."
                 >
                   <div style={groupGridStyle}>
                     <NumberField
@@ -838,13 +838,13 @@ export default function App() {
                       }}
                     />
                     <NumberField
-                      label="Row padding"
-                      value={controls.itemPaddingBlock}
+                      label="Item gap"
+                      value={controls.itemGap}
                       min={0}
                       max={16}
                       step={1}
                       onChange={(value) => {
-                        patchControls({ itemPaddingBlock: value });
+                        patchControls({ itemGap: value });
                       }}
                     />
                     <TextField

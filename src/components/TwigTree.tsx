@@ -81,8 +81,11 @@ export default function TwigTree({
   );
   const resolvedItemLayout = useMemo(
     () => ({
-      paddingBlock:
-        itemLayout?.paddingBlock ?? TWIG_TREE_DEFAULTS.itemLayout.paddingBlock,
+      gap:
+        itemLayout?.gap ??
+        (itemLayout?.paddingBlock !== undefined
+          ? itemLayout.paddingBlock * 2
+          : TWIG_TREE_DEFAULTS.itemLayout.gap),
     }),
     [itemLayout],
   );
@@ -414,7 +417,7 @@ export default function TwigTree({
           "--toggle-radius": resolvedToggle.radius,
           "--toggle-label-gap": resolvedToggle.labelGap,
           "--spacing": `${spacing}px`,
-          "--item-padding-block": `${resolvedItemLayout.paddingBlock}px`,
+          "--item-gap": `${resolvedItemLayout.gap}px`,
           "--twig-animation-duration": `${resolvedAnimation.duration}ms`,
           "--twig-animation-easing": resolvedAnimation.easing,
           "--twig-animation-opacity": resolvedAnimation.animateOpacity

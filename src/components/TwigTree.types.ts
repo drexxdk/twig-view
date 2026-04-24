@@ -87,6 +87,7 @@ export type TwigTreeConnectorOptions = {
 };
 
 export type TwigTreeItemLayoutOptions = {
+  gap?: number;
   paddingBlock?: number;
 };
 
