@@ -1,6 +1,6 @@
 {
   "name": "twig-view",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Accessible React tree view with crisp connector lines and flexible toggles",
   "license": "MIT",
   "homepage": "https://drexxdk.github.io/twig-view/",
