@@ -3,6 +3,17 @@
   "version": "0.1.0",
   "description": "Accessible React tree view with crisp connector lines and flexible toggles",
   "license": "MIT",
+  "homepage": "https://drexxdk.github.io/twig-view/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/drexxdk/twig-view.git"
+  },
+  "bugs": {
+    "url": "https://github.com/drexxdk/twig-view/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "react",
     "tree",
