@@ -1,5 +1,6 @@
 import React from "react";
 import styles from "./twigTree.module.css";
+import { TWIG_TREE_DEFAULTS } from "./TwigTree.defaults";
 import type {
   NormalizedAnimationOptions,
   TwigTreeAnimationOptions,
@@ -34,25 +35,26 @@ export function normalizeAnimation(
     return {
       enabled: false,
       duration: 0,
-      easing: "ease",
-      animateOpacity: false,
+      easing: TWIG_TREE_DEFAULTS.animation.easing,
+      animateOpacity: TWIG_TREE_DEFAULTS.animation.disabledAnimateOpacity,
     };
   }
 
   if (animation === true || animation === undefined) {
     return {
-      enabled: true,
-      duration: 220,
-      easing: "ease",
-      animateOpacity: true,
+      enabled: TWIG_TREE_DEFAULTS.animation.enabled,
+      duration: TWIG_TREE_DEFAULTS.animation.duration,
+      easing: TWIG_TREE_DEFAULTS.animation.easing,
+      animateOpacity: TWIG_TREE_DEFAULTS.animation.animateOpacity,
     };
   }
 
   return {
-    enabled: animation.enabled ?? true,
-    duration: animation.duration ?? 220,
-    easing: animation.easing ?? "ease",
-    animateOpacity: animation.animateOpacity ?? true,
+    enabled: animation.enabled ?? TWIG_TREE_DEFAULTS.animation.enabled,
+    duration: animation.duration ?? TWIG_TREE_DEFAULTS.animation.duration,
+    easing: animation.easing ?? TWIG_TREE_DEFAULTS.animation.easing,
+    animateOpacity:
+      animation.animateOpacity ?? TWIG_TREE_DEFAULTS.animation.animateOpacity,
   };
 }
 

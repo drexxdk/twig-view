@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import useLineWidthDpi from "../utils/useLineWidthDpi";
 import TwigTreeBranch from "./TwigTreeBranch";
+import { TWIG_TREE_DEFAULTS } from "./TwigTree.defaults";
 import styles from "./twigTree.module.css";
 import {
   getActivatableDescendantLink,
@@ -43,19 +44,20 @@ export type {
   TwigTreeToggleOptions,
   TwigTreeToggleStateOptions,
 } from "./TwigTree.types";
+export { TWIG_TREE_DEFAULTS } from "./TwigTree.defaults";
 
 export default function TwigTree({
   items,
   connector,
-  spacing = 16,
+  spacing = TWIG_TREE_DEFAULTS.spacing,
   itemLayout,
   useDefaultStyles,
   useDefaultDisabledStyles,
   useDefaultFocusStyles,
   useDefaultActionStyles,
   useDefaultStatusStyles,
-  idPrefix = "twig-tree",
-  ariaLabel = "Tree",
+  idPrefix = TWIG_TREE_DEFAULTS.idPrefix,
+  ariaLabel = TWIG_TREE_DEFAULTS.ariaLabel,
   slots,
   animation,
   onWillOpen,
@@ -71,15 +73,16 @@ export default function TwigTree({
   const [activeTreeItemId, setActiveTreeItemId] = useState<string | null>(null);
   const resolvedConnector = useMemo(
     () => ({
-      width: connector?.width ?? 1,
-      color: connector?.color ?? "rgba(255, 0, 0, 0.5)",
-      radius: connector?.radius ?? 10,
+      width: connector?.width ?? TWIG_TREE_DEFAULTS.connector.width,
+      color: connector?.color ?? TWIG_TREE_DEFAULTS.connector.color,
+      radius: connector?.radius ?? TWIG_TREE_DEFAULTS.connector.radius,
     }),
     [connector],
   );
   const resolvedItemLayout = useMemo(
     () => ({
-      paddingBlock: itemLayout?.paddingBlock ?? 2,
+      paddingBlock:
+        itemLayout?.paddingBlock ?? TWIG_TREE_DEFAULTS.itemLayout.paddingBlock,
     }),
     [itemLayout],
   );
@@ -122,18 +125,24 @@ export default function TwigTree({
   );
   const resolvedToggle = useMemo<TwigTreeResolvedToggleOptions>(
     () => ({
-      size: toggle?.size ?? 16,
+      size: toggle?.size ?? TWIG_TREE_DEFAULTS.toggle.size,
       radius:
         typeof toggle?.radius === "number"
           ? `${toggle.radius}%`
-          : (toggle?.radius ?? "50%"),
+          : (toggle?.radius ?? TWIG_TREE_DEFAULTS.toggle.radius),
       labelGap:
         typeof toggle?.labelGap === "number"
           ? `${toggle.labelGap}px`
-          : (toggle?.labelGap ?? "4px"),
+          : (toggle?.labelGap ?? TWIG_TREE_DEFAULTS.toggle.labelGap),
       button: toggle?.button ?? {},
       icon: {
-        size: toggle?.icon?.size ?? Math.max(10, (toggle?.size ?? 16) * 0.6),
+        size:
+          toggle?.icon?.size ??
+          Math.max(
+            TWIG_TREE_DEFAULTS.toggle.iconMinSize,
+            (toggle?.size ?? TWIG_TREE_DEFAULTS.toggle.size) *
+              TWIG_TREE_DEFAULTS.toggle.iconSizeFactor,
+          ),
         className: toggle?.icon?.className,
         style: toggle?.icon?.style,
       },
@@ -144,7 +153,7 @@ export default function TwigTree({
   );
   const resolvedComponents = useMemo<Required<TwigTreeComponentsOptions>>(
     () => ({
-      link: components?.link ?? "a",
+      link: components?.link ?? TWIG_TREE_DEFAULTS.components.link,
     }),
     [components],
   );

@@ -1,12 +1,4 @@
 .tree {
-  --toggle-size: 16px;
-  --toggle-radius: 50%;
-  --toggle-label-gap: 4px;
-  --spacing: 4px;
-  --line-width: 1px;
-  --line-color: rgba(255, 0, 0, 0.5);
-  --line-radius: 0px;
-  --item-padding-block: 2px;
   --row-block-size: calc(var(--toggle-size) + (var(--item-padding-block) * 2));
   --branch-indent: calc(var(--toggle-size) + var(--spacing));
   --label-offset: calc(var(--toggle-size) + var(--toggle-label-gap));
