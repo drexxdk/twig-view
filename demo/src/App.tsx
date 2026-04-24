@@ -386,45 +386,163 @@ export default function App() {
     [managedBranchEnabled],
   );
 
+  const statusPillStyle = {
+    display: "inline-flex",
+    alignItems: "center",
+    minHeight: 24,
+    padding: "0 10px",
+    borderRadius: 999,
+    border: "1px solid rgba(125, 211, 252, 0.18)",
+    background: "rgba(56, 189, 248, 0.08)",
+    color: "#d8f3ff",
+    fontSize: 12,
+    fontWeight: 600,
+    whiteSpace: "nowrap",
+  } as const;
+
+  const metaTextStyle = {
+    color: "#8aa0bb",
+    fontSize: 12,
+    lineHeight: 1.45,
+  } as const;
+
+  const richLabelStyle = {
+    display: "grid",
+    gap: 2,
+    minWidth: 0,
+  } as const;
+
   const twigTreeItems = useMemo<TwigTreeItem[]>(
     () => [
-      createDemoButtonItem("test-1", "test 1"),
-      createDemoButtonItem("test-2", "test 2 (disabled)", true),
       {
-        id: "test-3",
-        label:
-          "test 3 waejoiewga iojgew ijowaeg ijoaegw ijwaegj iijoegw aijoagew ijoaegw jioaweg ",
+        id: "workspace-navigation",
+        label: (
+          <div style={richLabelStyle}>
+            <span>Workspace navigation</span>
+            <span style={metaTextStyle}>
+              Product, billing, and engineering areas with nested sections.
+            </span>
+          </div>
+        ),
+        trailing: <span style={statusPillStyle}>Pinned</span>,
         defaultExpanded: true,
         children: [
-          createDemoButtonItem("test-3-1", "test 3.1"),
           {
-            id: "test-3-action-button",
-            label: "test 3 action button",
-            onClickCallback: () => {
-              window.alert("Demo action button clicked");
-            },
-          },
-          {
-            id: "test-3-action-link",
-            label: "test 3 action link",
-            href: "https://example.com",
-            target: "_blank",
-            rel: "noreferrer",
-          },
-          {
-            id: "test-3-2",
-            label: "test 3.2",
+            id: "workspace-product",
+            label: (
+              <div style={richLabelStyle}>
+                <span>Product roadmap</span>
+                <span style={metaTextStyle}>
+                  Q3 launches, dependency tracking, and design review notes.
+                </span>
+              </div>
+            ),
+            defaultExpanded: true,
             children: [
-              createDemoButtonItem("test-3-2-1", "test 3.2.1"),
-              createDemoButtonItem("test-3-2-2", "test 3.2.2"),
-              createDemoButtonItem("test-3-2-3", "test 3.2.3"),
+              createDemoButtonItem("workspace-product-overview", "Overview"),
+              {
+                id: "workspace-product-spec",
+                label: (
+                  <div style={richLabelStyle}>
+                    <span>Tree view refresh proposal</span>
+                    <span style={metaTextStyle}>
+                      Multi-line labels, custom rows, and lazy branches for
+                      large datasets.
+                    </span>
+                  </div>
+                ),
+                href: GITHUB_URL,
+                target: "_blank",
+                rel: "noreferrer",
+                trailing: <span style={statusPillStyle}>Spec</span>,
+              },
+              {
+                id: "workspace-product-review",
+                label: "Request design review",
+                trailing: <span style={statusPillStyle}>Action</span>,
+                onClickCallback: () => {
+                  window.alert(
+                    "Demo action: opened the design review workflow",
+                  );
+                },
+              },
+            ],
+          },
+          {
+            id: "workspace-support",
+            label: (
+              <div style={richLabelStyle}>
+                <span>Customer support</span>
+                <span style={metaTextStyle}>
+                  Queues grouped by priority, SLA, and owner.
+                </span>
+              </div>
+            ),
+            children: [
+              createDemoButtonItem(
+                "workspace-support-high",
+                "High priority queue",
+              ),
+              createDemoButtonItem(
+                "workspace-support-billing",
+                "Billing escalations",
+              ),
+              createDemoButtonItem(
+                "workspace-support-vip",
+                "VIP follow-ups",
+                true,
+              ),
             ],
           },
         ],
       },
       {
-        id: "test-4",
-        label: "managed branch",
+        id: "content-library",
+        label: (
+          <div style={richLabelStyle}>
+            <span>Content library</span>
+            <span style={metaTextStyle}>
+              Custom items with summaries, owners, and publishing state.
+            </span>
+          </div>
+        ),
+        defaultExpanded: true,
+        children: [
+          {
+            id: "content-case-study",
+            label: (
+              <div style={richLabelStyle}>
+                <span>Case study: enterprise onboarding</span>
+                <span style={metaTextStyle}>
+                  Updated 2 hours ago by Mia Chen. Includes embedded media and
+                  release checklist.
+                </span>
+              </div>
+            ),
+            trailing: <span style={statusPillStyle}>Draft</span>,
+            onClickCallback: () => {},
+          },
+          {
+            id: "content-guidelines",
+            label: (
+              <div style={richLabelStyle}>
+                <span>Editorial guidelines</span>
+                <span style={metaTextStyle}>
+                  Shared reference link item with a secondary line of
+                  descriptive text.
+                </span>
+              </div>
+            ),
+            href: NPM_URL,
+            target: "_blank",
+            rel: "noreferrer",
+            trailing: <span style={statusPillStyle}>Reference</span>,
+          },
+        ],
+      },
+      {
+        id: "release-ops",
+        label: "Release operations",
         defaultExpanded: true,
         disabled: !managedBranchEnabled,
         trailing: (
@@ -435,21 +553,38 @@ export default function App() {
               onChange={(event) => {
                 setManagedBranchEnabled(event.target.checked);
               }}
-              aria-label="Enable managed branch"
+              aria-label="Enable release operations"
             />
             <span>{managedBranchEnabled ? "Enabled" : "Disabled"}</span>
           </label>
         ),
         children: [
-          createDemoButtonItem("test-4-1", "test 4.1", !managedBranchEnabled),
+          createDemoButtonItem(
+            "release-checklist",
+            "Release checklist",
+            !managedBranchEnabled,
+          ),
           {
-            id: "test-4-2",
-            label: "test 4.2",
+            id: "release-notes",
+            label: (
+              <div style={richLabelStyle}>
+                <span>Release notes</span>
+                <span style={metaTextStyle}>
+                  Disabled branch state demonstrates inherited styling and
+                  navigation behavior.
+                </span>
+              </div>
+            ),
             disabled: !managedBranchEnabled,
             children: [
               createDemoButtonItem(
-                "test-4-2-1",
-                "test 4.2.1",
+                "release-notes-web",
+                "Web changelog",
+                !managedBranchEnabled,
+              ),
+              createDemoButtonItem(
+                "release-notes-api",
+                "API changelog",
                 !managedBranchEnabled,
               ),
             ],
@@ -457,21 +592,51 @@ export default function App() {
         ],
       },
       {
-        id: "test-5",
-        label: "test 5 (lazy)",
-        loadingLabel: "Loading test 5 children...",
+        id: "analytics-lazy",
+        label: (
+          <div style={richLabelStyle}>
+            <span>Analytics workspace</span>
+            <span style={metaTextStyle}>
+              Loads child reports on demand to demonstrate asynchronous branch
+              expansion.
+            </span>
+          </div>
+        ),
+        loadingLabel: "Loading dashboards and saved reports...",
         loadChildren: async () => {
           await delay(700);
 
           return [
-            createDemoButtonItem("test-5-1", "test 5.1"),
-            createDemoButtonItem("test-5-2", "test 5.2 (disabled)", true),
             {
-              id: "test-5-3",
-              label: "test 5.3",
+              id: "analytics-overview",
+              label: (
+                <div style={richLabelStyle}>
+                  <span>Executive overview</span>
+                  <span style={metaTextStyle}>
+                    Weekly conversion trends, traffic sources, and rollout
+                    health.
+                  </span>
+                </div>
+              ),
+              onClickCallback: () => {},
+              trailing: <span style={statusPillStyle}>Live</span>,
+            },
+            {
+              id: "analytics-events",
+              label: "Event schema reference",
+              href: GITHUB_URL,
+              target: "_blank",
+              rel: "noreferrer",
+            },
+            {
+              id: "analytics-cohorts",
+              label: "Saved cohorts",
               children: [
-                createDemoButtonItem("test-5-3-1", "test 5.3.1"),
-                createDemoButtonItem("test-5-3-2", "test 5.3.2"),
+                createDemoButtonItem("analytics-cohort-trial", "Trial users"),
+                createDemoButtonItem(
+                  "analytics-cohort-enterprise",
+                  "Enterprise accounts",
+                ),
               ],
             },
           ];
@@ -610,7 +775,6 @@ export default function App() {
               <div className="demoPanelHeader demoPanelHeaderPreview">
                 <div>
                   <p className="demoPanelEyebrow">Preview</p>
-                  <h3 style={{ margin: 0 }}>TwigTree</h3>
                 </div>
               </div>
 
@@ -654,7 +818,6 @@ export default function App() {
               <div className="demoPanelHeader demoPanelHeaderControls">
                 <div>
                   <p className="demoPanelEyebrow">Controls</p>
-                  <h3 style={{ margin: 0 }}>Tune behavior and visuals</h3>
                 </div>
               </div>
 

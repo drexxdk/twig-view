@@ -89,23 +89,6 @@ code {
   pointer-events: none;
 }
 
-.heroBand::before {
-  background:
-    linear-gradient(
-      140deg,
-      transparent 14%,
-      rgba(125, 211, 252, 0.08) 22%,
-      transparent 34%
-    ),
-    linear-gradient(
-      220deg,
-      transparent 62%,
-      rgba(125, 211, 252, 0.08) 69%,
-      transparent 80%
-    );
-  opacity: 0.8;
-}
-
 .heroBand::after {
   background:
     radial-gradient(
@@ -163,7 +146,6 @@ code {
   padding: 28px;
 }
 
-.sectionBlock:before,
 .ctaBand:before {
   content: "";
   position: absolute;
@@ -496,7 +478,13 @@ code {
 }
 
 .cardGrid {
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 720px) {
+  .cardGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .infoCard {
@@ -628,36 +616,23 @@ code {
 }
 
 @media (min-width: 720px) {
-  .demoControlsPanel,
-  .demoPreviewPanel {
-    position: sticky;
-    top: 0;
-    max-height: 100vh;
-    max-height: 100svh;
-    max-height: 100dvh;
-  }
-
   .demoControlsPanel {
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: auto auto;
     container-type: inline-size;
   }
 
   .demoControlsGrid {
-    overflow-y: auto;
-    overflow-x: hidden;
     padding-right: 6px;
     align-content: start;
   }
 
   .demoPreviewPanel {
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: auto auto;
   }
 
   .demoPreviewTree {
-    overflow-y: auto;
-    overflow-x: hidden;
     padding-right: 6px;
   }
 }

@@ -281,7 +281,7 @@
               position: absolute;
               z-index: 0;
               left: calc(var(--connector-origin-x) - (var(--line-width) / 2));
-              top: 50%;
+              top: calc(var(--item-padding-block) + (var(--toggle-size) / 2));
               bottom: 0;
               width: var(--line-width);
               background-color: var(--line-color);
