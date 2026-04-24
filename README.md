@@ -1,41 +1,28 @@
 # twig-view
 
-Accessible React tree view with flexible connector lines, controlled or uncontrolled expansion, keyboard navigation, and imperative tree APIs.
+Accessible React tree view for nested data with keyboard navigation, configurable connector lines, customizable toggles, async child loading, and slot-based styling hooks.
 
-## Status
+## Demo
 
-Initial implementation scaffold with:
+Live demo: https://drexxdk.github.io/twig-view/
 
-- accessible tree semantics
-- roving focus and keyboard navigation
-- controlled and uncontrolled expansion
-- imperative tree handle
-- custom node and toggle rendering
-- rounded or styled connector line options
-- stable styling hooks via `data-slot` attributes
-- device-pixel-snapped connector line widths
+## Install
 
-## Styling
+```bash
+npm install twig-view
+```
 
-The package only ships structural tree layout and connector geometry.
+Peer dependencies:
 
-- Use `renderNode` and `renderToggle` for custom content.
-- Use the `line` prop to control connector width, color, radius, and style.
-- Use the `toggle` prop to control default toggle background, foreground, and focus ring tokens without replacing the built-in toggle renderer.
-- Target internal parts with your own CSS via `data-slot` attributes like `tree-item`, `tree-row`, `tree-toggle`, `tree-guides`, and `tree-content`.
-- Toggle focus styles are exposed through CSS variables: `--tree-toggle-bg`, `--tree-toggle-foreground`, `--tree-toggle-focus-ring-color`, and `--tree-toggle-focus-ring-offset`.
-- For the built-in toggle renderer, root `toggleClassName` and `toggleStyle` are merged with `node.toggleClassName` and `node.toggleStyle`, with node-level values taking precedence when they overlap.
-- `renderToggle` replaces the built-in toggle icon markup. The root toggle CSS variables still exist on the tree, but class/style merging for the built-in icon no longer applies once you fully custom-render the toggle.
-- If the currently focused item disappears from the visible tree, including when it is removed from `data`, focus falls back to the nearest visible enabled ancestor. If no visible ancestor exists, the tree falls back to the first visible enabled item.
-- Node `id` values should be globally unique and stable across rerenders, reorders, and controlled updates. Focus recovery, imperative methods, and subtree preservation all rely on stable IDs rather than array position.
-- Standard `className` and `style` props are forwarded to the tree root.
+- `react` `^18 || ^19`
+- `react-dom` `^18 || ^19`
 
-## Example
+## Quick start
 
 ```tsx
-import TreeView, { type TreeViewNode } from "twig-view";
+import TwigTree, { type TwigTreeItem } from "twig-view";
 
-const data: TreeViewNode[] = [
+const items: TwigTreeItem[] = [
   {
     id: "docs",
     label: "Documentation",
@@ -48,11 +35,24 @@ const data: TreeViewNode[] = [
           {
             id: "api",
             label: "API reference",
-            toggleClassName: "nodeToggle",
-            toggleStyle: { backgroundColor: "#0f766e" },
-            children: [{ id: "v1", label: "v1" }],
+            children: [
+              {
+                id: "v1",
+                label: "v1",
+                onClickCallback: () => {
+                  console.log("Open API v1");
+                },
+              },
+            ],
           },
         ],
+      },
+      {
+        id: "repo",
+        label: "Repository",
+        href: "https://github.com/drexxdk/twig-view",
+        target: "_blank",
+        rel: "noreferrer",
       },
     ],
   },
@@ -60,29 +60,80 @@ const data: TreeViewNode[] = [
 
 export function Example() {
   return (
-    <TreeView
+    <TwigTree
+      items={items}
       ariaLabel="Documentation tree"
-      data={data}
-      line={{ color: "#22c55e", radius: 12, width: 1.5 }}
+      connector={{ color: "#22c55e", radius: 12, width: 1.5 }}
+      spacing={4}
+      itemLayout={{ paddingBlock: 2 }}
+      animation={{ duration: 220, easing: "ease", animateOpacity: true }}
       toggle={{
-        background: "#22c55e",
-        foreground: "#052e16",
-        focusRingColor: "#86efac",
+        size: 16,
+        radius: "50%",
+        labelGap: 4,
       }}
-      toggleClassName="rootToggle"
-      toggleStyle={{ border: "1px solid rgba(255, 255, 255, 0.2)" }}
+      useDefaultFocusStyles
+      useDefaultActionStyles
     />
   );
 }
 ```
 
-In this setup, the root `toggle` prop provides the default color tokens for the built-in toggle renderer, while `toggleClassName` and `toggleStyle` are merged with any node-level `toggleClassName` and `toggleStyle`. Node-level values win when they overlap.
+## Data model
+
+`TwigTreeItem` is a union of three item shapes:
+
+- Branch item: `label`, optional `children`, optional `defaultExpanded`, optional `loadChildren`, optional `loadingLabel`
+- Link item: `label`, `href`, optional `target`, optional `rel`
+- Button item: `label`, `onClickCallback`
+
+Every item can also define:
+
+- `id?`
+- `trailing?`
+- `disabled?`
+
+Use stable `id` values when items can move or rerender dynamically.
+
+## Main props
+
+- `items`: tree data to render
+- `ariaLabel`: accessible label for the tree root
+- `connector`: line `width`, `color`, and `radius`
+- `spacing`: horizontal distance between levels
+- `itemLayout`: currently supports `paddingBlock`
+- `toggle`: default toggle size, radius, gap, icon, and open/closed element options
+- `animation`: `enabled`, `duration`, `easing`, and `animateOpacity`
+- `slots`: element-level `className` / `style` hooks for `tree`, `item`, `branch`, `leaf`, `row`, `branchRow`, `leafRow`, `label`, `action`, and `children`
+- `components.link`: custom link component for link items
+- `useDefaultDisabledStyles`, `useDefaultFocusStyles`, `useDefaultActionStyles`, `useDefaultStatusStyles`
+- `onWillOpen`, `onOpenStart`, `onOpenEnd`, `onWillClose`, `onCloseStart`, `onCloseEnd`
+
+## Styling
+
+The package ships structural layout, connectors, and optional default state styles.
+
+- Use `slots.*.className` and `slots.*.style` to target internal elements
+- Use `toggle.button`, `toggle.icon`, `toggle.open`, and `toggle.closed` to theme the built-in toggle
+- CSS custom properties are applied on the tree root for connector, spacing, toggle, and animation values
+- If you need custom link rendering, provide `components.link`
 
 ## Development
 
 ```bash
 npm install
+npm run dev
 npm test
 npm run build
-npm run dev
+npm run build:demo
 ```
+
+Notes:
+
+- `npm run dev` starts the demo app from `demo/`
+- `npm run build` builds the package library into `dist/`
+- `npm run build:demo` builds the GitHub Pages demo into `demo/dist/`
+
+## GitHub Pages
+
+The repository includes a Pages workflow that builds the Vite demo and deploys `demo/dist` to GitHub Pages on pushes to `main`.
