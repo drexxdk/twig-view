@@ -22,7 +22,7 @@ export const TWIG_TREE_DEFAULTS = {
     radius: "50%",
     radiusPercent: 50,
     labelGap: "4px",
-    labelGapPx: 4,
+    labelGapPx: 8,
     iconMinSize: 10,
     iconSizeFactor: 0.6,
   },

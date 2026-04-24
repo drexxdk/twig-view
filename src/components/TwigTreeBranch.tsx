@@ -1,10 +1,4 @@
-import React, {
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import DefaultToggle from "./DefaultToggle";
 import styles from "./twigTree.module.css";
 import {
@@ -54,7 +48,6 @@ export default function TwigTreeBranch({
     item.defaultExpanded ? "open" : "closed",
   );
   const timeoutRef = useRef<number | null>(null);
-  const rowShellRef = useRef<HTMLElement | null>(null);
   const loadChildren = item.loadChildren;
   const resolvedChildren = loadedChildren ?? item.children;
   const hasChildren = Boolean(resolvedChildren?.length);
@@ -128,13 +121,6 @@ export default function TwigTreeBranch({
     styles.toggleButtonGlyph,
     toggleIconOptions.className,
   );
-  const [rowCenterOffset, setRowCenterOffset] = useState<number | null>(null);
-  const itemStyle = {
-    ...(itemOptions.style ?? {}),
-    ...(rowCenterOffset !== null
-      ? { ["--row-center-offset" as const]: `${rowCenterOffset}px` }
-      : {}),
-  } as React.CSSProperties;
 
   function clickPrimaryAction() {
     if (!hasPrimaryAction || item.disabled) {
@@ -205,37 +191,6 @@ export default function TwigTreeBranch({
       }
     };
   }, []);
-
-  useLayoutEffect(() => {
-    const rowShellElement = rowShellRef.current;
-
-    if (!rowShellElement) {
-      return;
-    }
-
-    const updateRowCenterOffset = () => {
-      setRowCenterOffset(rowShellElement.getBoundingClientRect().height / 2);
-    };
-
-    updateRowCenterOffset();
-
-    const resizeObserver = new ResizeObserver(() => {
-      updateRowCenterOffset();
-    });
-
-    resizeObserver.observe(rowShellElement, { box: "border-box" });
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, [
-    item.label,
-    item.trailing,
-    expanded,
-    loadedChildren,
-    isLoading,
-    loadError,
-  ]);
 
   useEffect(() => {
     setLoadedChildren(item.children);
@@ -366,7 +321,7 @@ export default function TwigTreeBranch({
       <li
         role="treeitem"
         className={itemClassName}
-        style={itemStyle}
+        style={itemOptions.style}
         id={treeItemId}
         tabIndex={isFocusable ? 0 : -1}
         aria-level={level}
@@ -398,7 +353,6 @@ export default function TwigTreeBranch({
         }}
       >
         <span
-          ref={rowShellRef as React.RefObject<HTMLSpanElement>}
           className={rowShellClassName}
           style={rowOptions.style}
           data-disabled={item.disabled ? "true" : "false"}
@@ -453,7 +407,7 @@ export default function TwigTreeBranch({
     <li
       role="treeitem"
       className={itemClassName}
-      style={itemStyle}
+      style={itemOptions.style}
       id={treeItemId}
       tabIndex={isFocusable ? 0 : -1}
       aria-level={level}
@@ -481,28 +435,31 @@ export default function TwigTreeBranch({
       }}
     >
       <div
-        ref={rowShellRef as React.RefObject<HTMLDivElement>}
         className={rowShellClassName}
         style={rowOptions.style}
         data-disabled={item.disabled ? "true" : "false"}
       >
         <div
-          className={joinClassNames(styles.toggleRow)}
-          aria-hidden="true"
-          data-disabled={item.disabled ? "true" : "false"}
+          className={styles.branchPrimary}
           onClick={() => {
             focusCurrentTreeItem();
             toggleExpanded();
           }}
         >
-          <i
-            className={toggleButtonClassName}
-            style={toggleButtonOptions.style}
+          <div
+            className={joinClassNames(styles.toggleRow)}
+            aria-hidden="true"
+            data-disabled={item.disabled ? "true" : "false"}
           >
-            <span className={toggleGlyphClassName} style={toggleGlyphStyle}>
-              {toggleIcon}
-            </span>
-          </i>
+            <i
+              className={toggleButtonClassName}
+              style={toggleButtonOptions.style}
+            >
+              <span className={toggleGlyphClassName} style={toggleGlyphStyle}>
+                {toggleIcon}
+              </span>
+            </i>
+          </div>
           <span
             id={labelId}
             className={joinClassNames(

@@ -5,6 +5,7 @@
   --connector-origin-x: calc(((var(--toggle-size) / 2) + var(--spacing)) * -1);
   --row-center-offset: calc(var(--toggle-size) / 2);
   --item-gap: 4px;
+  --connector-line-color: var(--line-color);
 
   width: 100%;
   display: flex;
@@ -16,16 +17,11 @@
     }
 
     li[data-disabled="true"] {
-      > .childrenViewport > ul > li > .itemRow:before,
-      > .childrenViewport > ul > li:not(:last-child):after {
-        opacity: 0.5;
-      }
-    }
-
-    li[data-disabled="true"][data-phase="open"] > .branchRowShell:after,
-    li[data-disabled="true"][data-phase="opening"] > .branchRowShell:after,
-    li[data-disabled="true"][data-phase="closing"] > .branchRowShell:after {
-      opacity: 0.5;
+      --connector-line-color: color-mix(
+        in srgb,
+        var(--line-color) 50%,
+        var(--page-bg-soft)
+      );
     }
   }
 
@@ -40,12 +36,23 @@
     --child-elbow-width: calc(var(--branch-indent) + (var(--line-width) / 2));
 
     position: relative;
-    display: inline-flex;
-    align-items: center;
+    display: grid;
+    align-items: start;
     gap: 12px;
     min-height: var(--row-block-size);
     max-inline-size: 100%;
     width: 100%;
+  }
+
+  .branchPrimary {
+    position: relative;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: var(--toggle-size) minmax(0, 1fr);
+    align-items: center;
+    align-self: stretch;
+    column-gap: var(--toggle-label-gap);
+    cursor: pointer;
   }
 
   .labelContent {
@@ -95,6 +102,7 @@
 
   .branchRowShell,
   .leafRowShell {
+    grid-template-columns: minmax(0, 1fr) auto;
     justify-content: space-between;
   }
 
@@ -105,13 +113,13 @@
   }
 
   .toggleRow {
-    flex: 1 1 auto;
-    min-width: 0;
+    width: var(--toggle-size);
+    min-width: var(--toggle-size);
+    min-height: var(--toggle-size);
     position: relative;
     z-index: 2;
-    display: inline-flex;
-    align-items: center;
-    gap: var(--toggle-label-gap);
+    display: inline-grid;
+    place-items: center;
     padding: 0;
     cursor: pointer;
     border: 0;
@@ -130,7 +138,7 @@
     z-index: 3;
     flex: 0 0 auto;
     display: inline-flex;
-    align-items: center;
+    align-items: start;
   }
 
   &[data-default-focus-styles="true"] li[role="treeitem"] {
@@ -230,6 +238,8 @@
     display: grid;
     grid-template-rows: 1fr;
     opacity: 1;
+    position: relative;
+    margin-top: 0;
   }
 
   .childrenViewport > ul {
@@ -241,7 +251,12 @@
     transition:
       grid-template-rows var(--twig-animation-duration)
         var(--twig-animation-easing),
-      opacity var(--twig-animation-duration) var(--twig-animation-easing);
+      opacity var(--twig-animation-duration) var(--twig-animation-easing),
+      margin-top var(--twig-animation-duration) var(--twig-animation-easing);
+  }
+
+  .childrenViewport[data-expanded="true"] {
+    margin-top: var(--item-gap);
   }
 
   .childrenViewport[data-expanded="false"] {
@@ -263,7 +278,7 @@
     & > li {
       display: flex;
       flex-direction: column;
-      gap: var(--item-gap);
+      gap: 0;
       position: relative;
 
       &:has(> .childrenViewport > ul) {
@@ -275,23 +290,23 @@
             left: calc(var(--connector-origin-x) - (var(--line-width) / 2));
             top: 0;
             width: var(--child-elbow-width);
-            height: calc(var(--row-center-offset) + (var(--line-width) / 2));
+            height: calc(50% + (var(--line-width) / 2));
             box-sizing: border-box;
-            border-left: var(--line-width) solid var(--line-color);
-            border-bottom: var(--line-width) solid var(--line-color);
+            border-left: var(--line-width) solid var(--connector-line-color);
+            border-bottom: var(--line-width) solid var(--connector-line-color);
             pointer-events: none;
           }
 
           &:not(:last-child) {
-            &:after {
+            > .itemRow:after {
               content: "";
               position: absolute;
               z-index: 0;
               left: calc(var(--connector-origin-x) - (var(--line-width) / 2));
-              top: var(--row-center-offset);
+              top: 50%;
               bottom: calc(var(--item-gap) * -1);
               width: var(--line-width);
-              background-color: var(--line-color);
+              background-color: var(--connector-line-color);
               pointer-events: none;
             }
           }
@@ -299,6 +314,20 @@
           &:last-child {
             > .itemRow:before {
               border-bottom-left-radius: var(--line-radius);
+            }
+          }
+
+          &:not(:last-child):has(> .childrenViewport > ul) {
+            > .childrenViewport:after {
+              content: "";
+              position: absolute;
+              z-index: 0;
+              left: calc(var(--connector-origin-x) - (var(--line-width) / 2));
+              top: 0;
+              bottom: calc(var(--item-gap) * -1);
+              width: var(--line-width);
+              background-color: var(--connector-line-color);
+              pointer-events: none;
             }
           }
         }
@@ -310,36 +339,47 @@
     }
   }
 
-  li:has(> .childrenViewport > ul) > .branchRowShell {
+  li:has(> .childrenViewport > ul) > .branchRowShell > .branchPrimary {
     &:after {
       content: "";
       position: absolute;
       z-index: 0;
-      top: var(--row-center-offset);
+      top: 50%;
       left: calc((var(--toggle-size) / 2) - (var(--line-width) / 2));
       bottom: calc(var(--item-gap) * -1);
       width: var(--line-width);
-      background-color: var(--line-color);
+      background-color: var(--connector-line-color);
       opacity: 0;
       pointer-events: none;
     }
   }
 
-  li:has(> .childrenViewport[data-animate="true"]) > .branchRowShell:after {
+  li:has(> .childrenViewport[data-animate="true"])
+    > .branchRowShell
+    > .branchPrimary:after {
     transition: opacity var(--twig-animation-duration)
       var(--twig-animation-easing);
   }
 
-  li[data-phase="open"]:has(> .childrenViewport > ul) > .branchRowShell:after,
+  li[data-phase="open"]:has(> .childrenViewport > ul)
+    > .branchRowShell
+    > .branchPrimary:after,
   li[data-phase="opening"]:has(> .childrenViewport > ul)
-    > .branchRowShell:after,
+    > .branchRowShell
+    > .branchPrimary:after,
   li[data-phase="closing"]:has(> .childrenViewport > ul)
-    > .branchRowShell:after {
+    > .branchRowShell
+    > .branchPrimary:after {
     opacity: 1;
   }
 
+  li[data-phase="closing"] > .childrenViewport {
+    margin-top: var(--item-gap);
+  }
+
   li[data-phase="closing"][data-expanded="false"]:has(> .childrenViewport > ul)
-    > .branchRowShell:after {
+    > .branchRowShell
+    > .branchPrimary:after {
     opacity: calc(1 - var(--twig-animation-opacity));
   }
 }
