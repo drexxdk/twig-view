@@ -293,8 +293,10 @@
 }
 
 .tree .childrenViewport[data-animate="true"] {
-  transition: grid-template-rows var(--twig-animation-duration)
-    var(--twig-animation-easing);
+  transition:
+    grid-template-rows var(--twig-animation-duration)
+      var(--twig-animation-easing),
+    margin-top var(--twig-animation-duration) var(--twig-animation-easing);
 }
 
 .tree .childrenViewport[data-animate="true"] > ul {
@@ -303,11 +305,6 @@
 }
 
 .tree .childrenViewport[data-expanded="true"] {
-  margin-top: var(--item-gap);
-}
-
-.tree li[data-phase="opening"] > .childrenViewport,
-.tree li[data-phase="closing"] > .childrenViewport {
   margin-top: var(--item-gap);
 }
 
@@ -445,10 +442,6 @@
   > .branchRowShell
   > .branchPrimary:after {
   opacity: 1;
-}
-
-.tree li[data-phase="closing"] > .childrenViewport {
-  margin-top: var(--item-gap);
 }
 
 .tree
