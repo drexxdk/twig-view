@@ -10,409 +10,450 @@
   width: 100%;
   display: flex;
   flex-direction: column;
+}
 
-  &[data-default-disabled-styles="true"] {
-    .itemDisabled {
-      opacity: 0.5;
-    }
+.tree[data-default-disabled-styles="true"] .itemDisabled {
+  opacity: 0.5;
+}
 
-    li[data-disabled="true"] {
-      --connector-line-color: color-mix(
-        in srgb,
-        var(--line-color) 50%,
-        var(--page-bg-soft)
-      );
-    }
-  }
+.tree[data-default-disabled-styles="true"]
+  li[data-disabled="true"]:has(> .childrenViewport) {
+  --connector-line-color: color-mix(
+    in srgb,
+    var(--line-color) 50%,
+    var(--page-bg-soft)
+  );
+}
 
-  &[data-default-status-styles="true"] {
-    .statusRow {
-      color: #94a3b8;
-      font-style: italic;
-    }
-  }
+.tree[data-default-status-styles="true"] .statusRow {
+  color: #94a3b8;
+  font-style: italic;
+}
 
-  .itemRow {
-    --child-elbow-width: calc(var(--branch-indent) + (var(--line-width) / 2));
+.tree .itemRow {
+  --child-elbow-width: calc(var(--branch-indent) + (var(--line-width) / 2));
 
-    position: relative;
-    display: grid;
-    align-items: start;
-    gap: 12px;
-    min-height: var(--row-block-size);
-    max-inline-size: 100%;
-    width: 100%;
-  }
+  position: relative;
+  display: grid;
+  align-items: start;
+  gap: 12px;
+  min-height: var(--row-block-size);
+  max-inline-size: 100%;
+  width: 100%;
+}
 
-  .branchPrimary {
-    position: relative;
-    min-width: 0;
-    display: grid;
-    grid-template-columns: var(--toggle-size) minmax(0, 1fr);
-    align-items: center;
-    align-self: stretch;
-    column-gap: var(--toggle-label-gap);
-    cursor: pointer;
-  }
+.tree .branchPrimary {
+  position: relative;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: var(--toggle-size) minmax(0, 1fr);
+  align-items: center;
+  align-self: stretch;
+  column-gap: var(--toggle-label-gap);
+  cursor: pointer;
+}
 
-  .branchRowShell[data-disabled="true"] > .branchPrimary {
-    cursor: not-allowed;
-  }
+.tree .branchRowShell[data-disabled="true"] > .branchPrimary {
+  cursor: not-allowed;
+}
 
-  .labelContent {
-    display: block;
-    min-width: 0;
-    overflow-wrap: anywhere;
-    line-height: 1.35;
-  }
+.tree .labelContent {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+}
 
-  .itemAction {
-    display: flex;
-    align-items: center;
-    min-width: 0;
-    max-width: 100%;
-    width: 100%;
-  }
+.tree .itemAction {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+}
 
-  .statusRow {
-    padding-inline-start: var(--label-offset);
-  }
+.tree .statusRow {
+  padding-inline-start: var(--label-offset);
+}
 
-  &[data-default-action-styles="true"] {
-    .itemAction {
-      padding: 0 8px;
-      border: 0;
-      border-radius: 10px;
-      background: none;
-      color: inherit;
-      font: inherit;
-      line-height: 1.35;
-      text-align: left;
-      text-decoration: none;
-      cursor: pointer;
-    }
+.tree[data-default-action-styles="true"] .itemAction {
+  padding: 0 8px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  line-height: 1.35;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
 
-    .toggleRow > .labelContent {
-      padding-inline: 8px;
-      line-height: 1.35;
-    }
+.tree[data-default-action-styles="true"] .toggleRow > .labelContent {
+  padding-inline: 8px;
+  line-height: 1.35;
+}
 
-    .itemAction:disabled,
-    .itemAction[aria-disabled="true"] {
-      cursor: not-allowed;
-    }
+.tree[data-default-action-styles="true"] .itemAction:disabled,
+.tree[data-default-action-styles="true"] .itemAction[aria-disabled="true"] {
+  cursor: not-allowed;
+}
 
-    .itemAction:hover:not(:disabled):not([aria-disabled="true"]):not(:has(> *)),
-    .itemAction:hover:not(:disabled):not([aria-disabled="true"])
-      > :first-child:not(:has(> *)),
-    .itemAction:hover:not(:disabled):not([aria-disabled="true"])
-      > :first-child:has(> *)
-      > :first-child,
-    li[data-disabled="false"]
-      > .branchRowShell
-      > .branchPrimary:hover
-      > .labelContent:not(:has(> *)),
-    li[data-disabled="false"]
-      > .branchRowShell
-      > .branchPrimary:hover
-      > .labelContent
-      > :first-child:not(:has(> *)),
-    li[data-disabled="false"]
-      > .branchRowShell
-      > .branchPrimary:hover
-      > .labelContent
-      > :first-child:has(> *)
-      > :first-child {
-      text-decoration: underline;
-      text-underline-offset: 0.14em;
-      text-decoration-thickness: from-font;
-    }
-  }
+.tree[data-default-action-styles="true"]
+  .itemAction:hover:not(:disabled):not([aria-disabled="true"]):not(:has(> *)),
+.tree[data-default-action-styles="true"]
+  .itemAction:hover:not(:disabled):not([aria-disabled="true"])
+  > :first-child:not(:has(> *)),
+.tree[data-default-action-styles="true"]
+  .itemAction:hover:not(:disabled):not([aria-disabled="true"])
+  > :first-child:has(> *)
+  > :first-child,
+.tree[data-default-action-styles="true"]
+  li[data-disabled="false"]
+  > .branchRowShell
+  > .branchPrimary:hover
+  > .labelContent:not(:has(> *)),
+.tree[data-default-action-styles="true"]
+  li[data-disabled="false"]
+  > .branchRowShell
+  > .branchPrimary:hover
+  > .labelContent
+  > :first-child:not(:has(> *)),
+.tree[data-default-action-styles="true"]
+  li[data-disabled="false"]
+  > .branchRowShell
+  > .branchPrimary:hover
+  > .labelContent
+  > :first-child:has(> *)
+  > :first-child {
+  text-decoration: underline;
+  text-underline-offset: 0.14em;
+  text-decoration-thickness: from-font;
+}
 
-  .leafRowShell {
-    padding-inline-start: var(--label-offset);
-  }
+.tree .leafRowShell {
+  padding-inline-start: var(--label-offset);
+}
 
-  .branchRowShell,
-  .leafRowShell {
-    grid-template-columns: minmax(0, 1fr) auto;
-    justify-content: space-between;
-  }
+.tree .branchRowShell,
+.tree .leafRowShell {
+  grid-template-columns: minmax(0, 1fr) auto;
+  justify-content: space-between;
+}
 
-  .branchRowShell {
-    --child-elbow-width: calc(
-      (var(--toggle-size) / 2) + var(--spacing) + (var(--line-width) / 2)
-    );
-  }
+.tree .branchRowShell {
+  --child-elbow-width: calc(
+    (var(--toggle-size) / 2) + var(--spacing) + (var(--line-width) / 2)
+  );
+}
 
-  .toggleRow {
-    width: var(--toggle-size);
-    min-width: var(--toggle-size);
-    min-height: var(--toggle-size);
-    position: relative;
-    z-index: 2;
-    display: inline-grid;
-    place-items: center;
-    padding: 0;
-    cursor: pointer;
-    border: 0;
-    background: none;
-    color: inherit;
-    font: inherit;
-    text-align: left;
-  }
+.tree .toggleRow {
+  width: var(--toggle-size);
+  min-width: var(--toggle-size);
+  min-height: var(--toggle-size);
+  position: relative;
+  z-index: 2;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  cursor: pointer;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
 
-  .toggleRow[data-disabled="true"] {
-    cursor: not-allowed;
-  }
+.tree .toggleRow[data-disabled="true"] {
+  cursor: not-allowed;
+}
 
-  .trailingContent {
-    position: relative;
-    z-index: 3;
-    flex: 0 0 auto;
-    display: inline-flex;
-    align-items: start;
-  }
+.tree .trailingContent {
+  position: relative;
+  z-index: 3;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: start;
+}
 
-  &[data-default-focus-styles="true"] li[role="treeitem"] {
-    &:focus-visible {
-      outline: none;
-    }
+.tree[data-default-focus-styles="true"] li[role="treeitem"]:focus-visible {
+  outline: none;
+}
 
-    &:focus-visible > .leafRowShell {
-      box-shadow: inset 0 0 0 2px currentColor;
-      border-radius: calc(var(--toggle-size) / 2 + 6px);
-    }
+.tree[data-default-focus-styles="true"]
+  li[role="treeitem"]:focus-visible
+  > .leafRowShell {
+  box-shadow: inset 0 0 0 2px currentColor;
+  border-radius: calc(var(--toggle-size) / 2 + 6px);
+}
 
-    &[data-interactive-focus-target="label"]:focus-visible > .leafRowShell,
-    &[data-interactive-focus-target="trailing"]:focus-visible > .leafRowShell {
-      box-shadow: none;
-    }
+.tree[data-default-focus-styles="true"]
+  li[role="treeitem"][data-interactive-focus-target="label"]:focus-visible
+  > .leafRowShell,
+.tree[data-default-focus-styles="true"]
+  li[role="treeitem"][data-interactive-focus-target="trailing"]:focus-visible
+  > .leafRowShell {
+  box-shadow: none;
+}
 
-    &[data-interactive-focus-target="label"]:focus-visible
-      > .leafRowShell
-      > .labelContent
-      :is(
-        .itemAction,
-        a[href],
-        button:not([disabled]),
-        input:not([disabled]),
-        select:not([disabled]),
-        textarea:not([disabled]),
-        [role="button"],
-        [role="link"],
-        [tabindex]:not([tabindex="-1"])
-      ),
-    &[data-interactive-focus-target="trailing"]:focus-visible
-      > .leafRowShell
-      > .trailingContent
-      :is(
-        .itemAction,
-        a[href],
-        button:not([disabled]),
-        input:not([disabled]),
-        select:not([disabled]),
-        textarea:not([disabled]),
-        [role="button"],
-        [role="link"],
-        [tabindex]:not([tabindex="-1"])
-      ) {
-      box-shadow: 0 0 0 2px currentColor;
-      border-radius: 10px;
-    }
+.tree[data-default-focus-styles="true"]
+  li[role="treeitem"][data-interactive-focus-target="label"]:focus-visible
+  > .leafRowShell
+  > .labelContent
+  :is(
+    .itemAction,
+    a[href],
+    button:not([disabled]),
+    input:not([disabled]),
+    select:not([disabled]),
+    textarea:not([disabled]),
+    [role="button"],
+    [role="link"],
+    [tabindex]:not([tabindex="-1"])
+  ),
+.tree[data-default-focus-styles="true"]
+  li[role="treeitem"][data-interactive-focus-target="trailing"]:focus-visible
+  > .leafRowShell
+  > .trailingContent
+  :is(
+    .itemAction,
+    a[href],
+    button:not([disabled]),
+    input:not([disabled]),
+    select:not([disabled]),
+    textarea:not([disabled]),
+    [role="button"],
+    [role="link"],
+    [tabindex]:not([tabindex="-1"])
+  ) {
+  box-shadow: 0 0 0 2px currentColor;
+  border-radius: 10px;
+}
 
-    &:focus-visible > .branchRowShell > .toggleRow > .toggleButton:after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      box-shadow: inset 0 0 0 2px currentColor;
-      pointer-events: none;
-    }
-  }
+.tree[data-default-focus-styles="true"]
+  li[role="treeitem"]:focus-visible
+  > .branchRowShell
+  > .toggleRow
+  > .toggleButton:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 2px currentColor;
+  pointer-events: none;
+}
 
-  .toggleButton {
-    position: relative;
-    z-index: 1;
-    display: inline-grid;
-    place-items: center;
-    flex: 0 0 var(--toggle-size);
-    width: var(--toggle-size);
-    height: var(--toggle-size);
-    border-radius: var(--toggle-radius);
-    overflow: visible;
-    font-style: normal;
-  }
+.tree .toggleButton {
+  position: relative;
+  z-index: 1;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 var(--toggle-size);
+  width: var(--toggle-size);
+  height: var(--toggle-size);
+  border-radius: var(--toggle-radius);
+  overflow: visible;
+  font-style: normal;
+}
 
-  .toggleButtonDisabled {
-    filter: saturate(0.4) brightness(0.9);
-  }
+.tree .toggleButtonDisabled {
+  filter: saturate(0.4) brightness(0.9);
+}
 
-  .toggleButtonGlyph {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    transform-origin: center;
-    display: inline-grid;
-    place-items: center;
-    flex: none;
-    line-height: 1;
-    overflow: visible;
-  }
+.tree .toggleButtonGlyph {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transform-origin: center;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  line-height: 1;
+  overflow: visible;
+}
 
-  .toggleButtonIconSvg {
-    display: block;
-    width: 100%;
-    height: 100%;
-  }
+.tree .toggleButtonIconSvg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
 
-  .childrenViewport {
-    display: grid;
-    grid-template-rows: 1fr;
-    opacity: 1;
-    position: relative;
-    margin-top: 0;
-  }
+.tree .childrenViewport {
+  display: grid;
+  grid-template-rows: 1fr;
+  position: relative;
+  margin-top: 0;
+}
 
-  .childrenViewport > ul {
-    min-height: 0;
-    overflow: hidden;
-  }
+.tree .childrenViewport > ul {
+  min-height: 0;
+  overflow: hidden;
+  opacity: 1;
+}
 
-  .childrenViewport[data-animate="true"] {
-    transition:
-      grid-template-rows var(--twig-animation-duration)
-        var(--twig-animation-easing),
-      opacity var(--twig-animation-duration) var(--twig-animation-easing),
-      margin-top var(--twig-animation-duration) var(--twig-animation-easing);
-  }
+.tree .childrenViewport[data-animate="true"] {
+  transition: grid-template-rows var(--twig-animation-duration)
+    var(--twig-animation-easing);
+}
 
-  .childrenViewport[data-expanded="true"] {
-    margin-top: var(--item-gap);
-  }
+.tree .childrenViewport[data-animate="true"] > ul {
+  transition: opacity var(--twig-animation-duration)
+    var(--twig-animation-easing);
+}
 
-  .childrenViewport[data-expanded="false"] {
-    grid-template-rows: 0fr;
-    opacity: calc(1 - var(--twig-animation-opacity));
-    pointer-events: none;
-  }
+.tree .childrenViewport[data-expanded="true"] {
+  margin-top: var(--item-gap);
+}
 
-  ul {
-    display: flex;
-    flex-direction: column;
-    gap: var(--item-gap);
-    list-style-type: none;
-    padding-inline-start: 0;
-    margin-block-start: 0;
-    margin-block-end: 0;
-    position: relative;
+.tree li[data-phase="opening"] > .childrenViewport,
+.tree li[data-phase="closing"] > .childrenViewport {
+  margin-top: var(--item-gap);
+}
 
-    & > li {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      position: relative;
+.tree .childrenViewport[data-expanded="false"] {
+  grid-template-rows: 0fr;
+}
 
-      &:has(> .childrenViewport > ul) {
-        > .childrenViewport > ul > li {
-          > .itemRow:before {
-            content: "";
-            position: absolute;
-            z-index: 0;
-            left: calc(var(--connector-origin-x) - (var(--line-width) / 2));
-            top: 0;
-            width: var(--child-elbow-width);
-            height: calc(50% + (var(--line-width) / 2));
-            box-sizing: border-box;
-            border-left: var(--line-width) solid var(--connector-line-color);
-            border-bottom: var(--line-width) solid var(--connector-line-color);
-            pointer-events: none;
-          }
+.tree .childrenViewport[data-expanded="false"] > ul {
+  opacity: calc(1 - var(--twig-animation-opacity));
+  pointer-events: none;
+}
 
-          &:not(:last-child) {
-            > .itemRow:after {
-              content: "";
-              position: absolute;
-              z-index: 0;
-              left: calc(var(--connector-origin-x) - (var(--line-width) / 2));
-              top: 50%;
-              bottom: calc(var(--item-gap) * -1);
-              width: var(--line-width);
-              background-color: var(--connector-line-color);
-              pointer-events: none;
-            }
-          }
+.tree ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--item-gap);
+  list-style-type: none;
+  padding-inline-start: 0;
+  margin-block-start: 0;
+  margin-block-end: 0;
+  position: relative;
+}
 
-          &:last-child {
-            > .itemRow:before {
-              border-bottom-left-radius: var(--line-radius);
-            }
-          }
+.tree ul > li {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
 
-          &:not(:last-child):has(> .childrenViewport > ul) {
-            > .childrenViewport:after {
-              content: "";
-              position: absolute;
-              z-index: 0;
-              left: calc(var(--connector-origin-x) - (var(--line-width) / 2));
-              top: 0;
-              bottom: calc(var(--item-gap) * -1);
-              width: var(--line-width);
-              background-color: var(--connector-line-color);
-              pointer-events: none;
-            }
-          }
-        }
-      }
+.tree ul > li > .childrenViewport > ul {
+  padding-left: var(--branch-indent);
+}
 
-      & > .childrenViewport > ul {
-        padding-left: var(--branch-indent);
-      }
-    }
-  }
+.tree
+  ul
+  > li:has(> .childrenViewport > ul)
+  > .childrenViewport
+  > ul
+  > li
+  > .itemRow:before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  left: calc(var(--connector-origin-x) - (var(--line-width) / 2));
+  top: 0;
+  width: var(--child-elbow-width);
+  height: calc(50% + (var(--line-width) / 2));
+  box-sizing: border-box;
+  border-left: var(--line-width) solid var(--connector-line-color);
+  border-bottom: var(--line-width) solid var(--connector-line-color);
+  pointer-events: none;
+}
 
-  li:has(> .childrenViewport > ul) > .branchRowShell > .branchPrimary {
-    &:after {
-      content: "";
-      position: absolute;
-      z-index: 0;
-      top: 50%;
-      left: calc((var(--toggle-size) / 2) - (var(--line-width) / 2));
-      bottom: calc(var(--item-gap) * -1);
-      width: var(--line-width);
-      background-color: var(--connector-line-color);
-      opacity: 0;
-      pointer-events: none;
-    }
-  }
+.tree
+  ul
+  > li:has(> .childrenViewport > ul)
+  > .childrenViewport
+  > ul
+  > li:not(:last-child)
+  > .itemRow:after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  left: calc(var(--connector-origin-x) - (var(--line-width) / 2));
+  top: 50%;
+  bottom: calc(var(--item-gap) * -1);
+  width: var(--line-width);
+  background-color: var(--connector-line-color);
+  pointer-events: none;
+}
 
+.tree
+  ul
+  > li:has(> .childrenViewport > ul)
+  > .childrenViewport
+  > ul
+  > li:last-child
+  > .itemRow:before {
+  border-bottom-left-radius: var(--line-radius);
+}
+
+.tree
+  ul
+  > li:has(> .childrenViewport > ul)
+  > .childrenViewport
+  > ul
+  > li:not(:last-child):has(> .childrenViewport > ul)
+  > .childrenViewport:after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  left: calc(var(--connector-origin-x) - (var(--line-width) / 2));
+  top: 0;
+  bottom: calc(var(--item-gap) * -1);
+  width: var(--line-width);
+  background-color: var(--connector-line-color);
+  pointer-events: none;
+}
+
+.tree
+  li:has(> .childrenViewport > ul)
+  > .branchRowShell
+  > .branchPrimary:after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  left: calc((var(--toggle-size) / 2) - (var(--line-width) / 2));
+  bottom: calc(var(--item-gap) * -1);
+  width: var(--line-width);
+  background-color: var(--connector-line-color);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tree
   li:has(> .childrenViewport[data-animate="true"])
-    > .branchRowShell
-    > .branchPrimary:after {
-    transition: opacity var(--twig-animation-duration)
-      var(--twig-animation-easing);
-  }
+  > .branchRowShell
+  > .branchPrimary:after {
+  transition: opacity var(--twig-animation-duration)
+    var(--twig-animation-easing);
+}
 
+.tree
   li[data-phase="open"]:has(> .childrenViewport > ul)
-    > .branchRowShell
-    > .branchPrimary:after,
+  > .branchRowShell
+  > .branchPrimary:after,
+.tree
   li[data-phase="opening"]:has(> .childrenViewport > ul)
-    > .branchRowShell
-    > .branchPrimary:after,
+  > .branchRowShell
+  > .branchPrimary:after,
+.tree
   li[data-phase="closing"]:has(> .childrenViewport > ul)
-    > .branchRowShell
-    > .branchPrimary:after {
-    opacity: 1;
-  }
+  > .branchRowShell
+  > .branchPrimary:after {
+  opacity: 1;
+}
 
-  li[data-phase="closing"] > .childrenViewport {
-    margin-top: var(--item-gap);
-  }
+.tree li[data-phase="closing"] > .childrenViewport {
+  margin-top: var(--item-gap);
+}
 
+.tree
   li[data-phase="closing"][data-expanded="false"]:has(> .childrenViewport > ul)
-    > .branchRowShell
-    > .branchPrimary:after {
-    opacity: calc(1 - var(--twig-animation-opacity));
-  }
+  > .branchRowShell
+  > .branchPrimary:after {
+  opacity: calc(1 - var(--twig-animation-opacity));
 }

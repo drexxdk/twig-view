@@ -38,50 +38,6 @@ type ControlsState = {
   useCustomDemoToggles: boolean;
 };
 
-const panelStyle = {
-  borderRadius: 20,
-  padding: 18,
-  background: "linear-gradient(180deg, rgba(15,23,42,0.84), rgba(2,6,23,0.72))",
-  border: "1px solid rgba(148,163,184,0.14)",
-  boxShadow: "0 24px 60px rgba(2, 6, 23, 0.28)",
-} as const;
-
-const groupGridStyle = {
-  display: "grid",
-  gap: 10,
-  gridTemplateColumns: "repeat(auto-fit, minmax(156px, 1fr))",
-} as const;
-
-const fieldLabelStyle = {
-  display: "grid",
-  gap: 6,
-  fontSize: 14,
-  color: "#cbd5e1",
-} as const;
-
-const inputStyle = {
-  width: "100%",
-  minHeight: 40,
-  borderRadius: 10,
-  border: "1px solid rgba(148,163,184,0.18)",
-  background: "rgba(15,23,42,0.9)",
-  color: "#e2e8f0",
-  padding: "0 12px",
-} as const;
-
-const sectionTitleStyle = {
-  margin: 0,
-  fontSize: 16,
-  color: "#f8fafc",
-} as const;
-
-const sectionTextStyle = {
-  margin: "6px 0 0",
-  fontSize: 13,
-  color: "#94a3b8",
-  lineHeight: 1.5,
-} as const;
-
 const GITHUB_URL = "https://github.com/drexxdk/twig-view";
 const NPM_URL = "https://www.npmjs.com/package/twig-view";
 const INSTALL_COMMAND = "npm install twig-view";
@@ -121,21 +77,13 @@ function NumberField({
   onChange: (value: number) => void;
 }) {
   return (
-    <label style={fieldLabelStyle}>
+    <label className="demoFieldLabel">
       <span>
         {label}
-        <span
-          style={{
-            marginLeft: 8,
-            color: "#7dd3fc",
-            fontVariantNumeric: "tabular-nums",
-          }}
-        >
-          {value}
-        </span>
+        <span className="demoFieldValue">{value}</span>
       </span>
       <input
-        style={{ accentColor: "#38bdf8" }}
+        className="demoRangeInput"
         type="range"
         min={min}
         max={max}
@@ -159,25 +107,11 @@ function ColorField({
   onChange: (value: string) => void;
 }) {
   return (
-    <label style={fieldLabelStyle}>
+    <label className="demoFieldLabel">
       <span>{label}</span>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "48px minmax(0, 1fr)",
-          gap: 8,
-          alignItems: "center",
-        }}
-      >
+      <div className="demoColorFieldRow">
         <input
-          style={{
-            width: 48,
-            height: 40,
-            borderRadius: 10,
-            border: "1px solid rgba(148,163,184,0.18)",
-            background: "transparent",
-            padding: 4,
-          }}
+          className="demoColorInput"
           type="color"
           value={value}
           onChange={(event) => {
@@ -185,7 +119,7 @@ function ColorField({
           }}
         />
         <input
-          style={inputStyle}
+          className="demoTextInput"
           type="text"
           value={value}
           onChange={(event) => {
@@ -207,10 +141,10 @@ function TextField({
   onChange: (value: string) => void;
 }) {
   return (
-    <label style={fieldLabelStyle}>
+    <label className="demoFieldLabel">
       <span>{label}</span>
       <input
-        style={inputStyle}
+        className="demoTextInput"
         type="text"
         value={value}
         onChange={(event) => {
@@ -231,18 +165,9 @@ function CheckboxField({
   onChange: (value: boolean) => void;
 }) {
   return (
-    <label
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 10,
-        minHeight: 40,
-        fontSize: 14,
-        color: "#cbd5e1",
-      }}
-    >
+    <label className="demoCheckboxField">
       <input
-        style={{ accentColor: "#38bdf8" }}
+        className="demoCheckboxInput"
         type="checkbox"
         checked={checked}
         onChange={(event) => {
@@ -269,25 +194,30 @@ function ControlSection({
     <section
       className={
         wide
-          ? "demoControlSection demoControlSectionWide"
-          : "demoControlSection"
+          ? "demoControlSection demoControlSectionWide demoPanelInset"
+          : "demoControlSection demoPanelInset"
       }
-      style={{
-        display: "grid",
-        gap: 12,
-        padding: 14,
-        borderRadius: 16,
-        background: "rgba(15,23,42,0.46)",
-        border: "1px solid rgba(148,163,184,0.1)",
-      }}
     >
       <header>
-        <h3 style={sectionTitleStyle}>{title}</h3>
-        {description ? <p style={sectionTextStyle}>{description}</p> : null}
+        <h3>{title}</h3>
+        {description ? <p>{description}</p> : null}
       </header>
       {children}
     </section>
   );
+}
+
+function RichLabel({ title, meta }: { title: string; meta: string }) {
+  return (
+    <div className="demoRichLabel">
+      <span>{title}</span>
+      <span className="demoMetaText">{meta}</span>
+    </div>
+  );
+}
+
+function StatusPill({ children }: { children: React.ReactNode }) {
+  return <span className="demoStatusPill">{children}</span>;
 }
 
 function createDemoButtonItem(
@@ -354,95 +284,34 @@ export default function App() {
     });
   }
 
-  const customToggleIconStyle = {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    height: "100%",
-    fontSize: controls.toggleIconSize,
-    lineHeight: 1,
-    fontWeight: 700,
-    textAlign: "center",
-    overflow: "visible",
-  } as const;
-
-  const customStarIconStyle = {
-    ...customToggleIconStyle,
-    transform: "translateY(-0.08em)",
-  } as const;
-
-  const branchToggleStyle = useMemo(
+  const customToggleIconVars = useMemo(
     () =>
       ({
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 8,
-        padding: "4px 10px",
-        borderRadius: 999,
-        background: managedBranchEnabled
-          ? "rgba(37,99,235,0.18)"
-          : "rgba(148,163,184,0.12)",
-        border: managedBranchEnabled
-          ? "1px solid rgba(96,165,250,0.35)"
-          : "1px solid rgba(148,163,184,0.18)",
-        color: "#cbd5e1",
-        fontSize: 12,
-        fontWeight: 600,
-      }) as const,
-    [managedBranchEnabled],
+        "--demo-toggle-icon-size": `${controls.toggleIconSize}px`,
+      }) as React.CSSProperties,
+    [controls.toggleIconSize],
   );
-
-  const statusPillStyle = {
-    display: "inline-flex",
-    alignItems: "center",
-    minHeight: 24,
-    padding: "0 10px",
-    borderRadius: 999,
-    border: "1px solid rgba(125, 211, 252, 0.18)",
-    background: "rgba(56, 189, 248, 0.08)",
-    color: "#d8f3ff",
-    fontSize: 12,
-    fontWeight: 600,
-    whiteSpace: "nowrap",
-  } as const;
-
-  const metaTextStyle = {
-    color: "#8aa0bb",
-    fontSize: 12,
-    lineHeight: 1.45,
-  } as const;
-
-  const richLabelStyle = {
-    display: "grid",
-    gap: 2,
-    minWidth: 0,
-  } as const;
 
   const twigTreeItems = useMemo<TwigTreeItem[]>(
     () => [
       {
         id: "workspace-navigation",
         label: (
-          <div style={richLabelStyle}>
-            <span>Workspace navigation</span>
-            <span style={metaTextStyle}>
-              Product, billing, and engineering areas with nested sections.
-            </span>
-          </div>
+          <RichLabel
+            title="Workspace navigation"
+            meta="Product, billing, and engineering areas with nested sections."
+          />
         ),
-        trailing: <span style={statusPillStyle}>Pinned</span>,
+        trailing: <StatusPill>Pinned</StatusPill>,
         defaultExpanded: true,
         children: [
           {
             id: "workspace-product",
             label: (
-              <div style={richLabelStyle}>
-                <span>Product roadmap</span>
-                <span style={metaTextStyle}>
-                  Q3 launches, dependency tracking, and design review notes.
-                </span>
-              </div>
+              <RichLabel
+                title="Product roadmap"
+                meta="Q3 launches, dependency tracking, and design review notes."
+              />
             ),
             defaultExpanded: true,
             children: [
@@ -450,23 +319,20 @@ export default function App() {
               {
                 id: "workspace-product-spec",
                 label: (
-                  <div style={richLabelStyle}>
-                    <span>Tree view refresh proposal</span>
-                    <span style={metaTextStyle}>
-                      Multi-line labels, custom rows, and lazy branches for
-                      large datasets.
-                    </span>
-                  </div>
+                  <RichLabel
+                    title="Tree view refresh proposal"
+                    meta="Multi-line labels, custom rows, and lazy branches for large datasets."
+                  />
                 ),
                 href: GITHUB_URL,
                 target: "_blank",
                 rel: "noreferrer",
-                trailing: <span style={statusPillStyle}>Spec</span>,
+                trailing: <StatusPill>Spec</StatusPill>,
               },
               {
                 id: "workspace-product-review",
                 label: "Request design review",
-                trailing: <span style={statusPillStyle}>Action</span>,
+                trailing: <StatusPill>Action</StatusPill>,
                 onClickCallback: () => {
                   console.log("[twig-view demo] tree item clicked", {
                     id: "workspace-product-review",
@@ -477,12 +343,10 @@ export default function App() {
               {
                 id: "workspace-product-rollout",
                 label: (
-                  <div style={richLabelStyle}>
-                    <span>Launch rollout plan</span>
-                    <span style={metaTextStyle}>
-                      Nested branch included to demonstrate deeper tree levels.
-                    </span>
-                  </div>
+                  <RichLabel
+                    title="Launch rollout plan"
+                    meta="Nested branch included to demonstrate deeper tree levels."
+                  />
                 ),
                 defaultExpanded: true,
                 children: [
@@ -511,12 +375,10 @@ export default function App() {
           {
             id: "workspace-support",
             label: (
-              <div style={richLabelStyle}>
-                <span>Customer support</span>
-                <span style={metaTextStyle}>
-                  Queues grouped by priority, SLA, and owner.
-                </span>
-              </div>
+              <RichLabel
+                title="Customer support"
+                meta="Queues grouped by priority, SLA, and owner."
+              />
             ),
             children: [
               createDemoButtonItem(
@@ -539,27 +401,22 @@ export default function App() {
       {
         id: "content-library",
         label: (
-          <div style={richLabelStyle}>
-            <span>Content library</span>
-            <span style={metaTextStyle}>
-              Custom items with summaries, owners, and publishing state.
-            </span>
-          </div>
+          <RichLabel
+            title="Content library"
+            meta="Custom items with summaries, owners, and publishing state."
+          />
         ),
         defaultExpanded: true,
         children: [
           {
             id: "content-case-study",
             label: (
-              <div style={richLabelStyle}>
-                <span>Case study: enterprise onboarding</span>
-                <span style={metaTextStyle}>
-                  Updated 2 hours ago by Mia Chen. Includes embedded media and
-                  release checklist.
-                </span>
-              </div>
+              <RichLabel
+                title="Case study: enterprise onboarding"
+                meta="Updated 2 hours ago by Mia Chen. Includes embedded media and release checklist."
+              />
             ),
-            trailing: <span style={statusPillStyle}>Draft</span>,
+            trailing: <StatusPill>Draft</StatusPill>,
             onClickCallback: () => {
               console.log("[twig-view demo] tree item clicked", {
                 id: "content-case-study",
@@ -570,18 +427,15 @@ export default function App() {
           {
             id: "content-guidelines",
             label: (
-              <div style={richLabelStyle}>
-                <span>Editorial guidelines</span>
-                <span style={metaTextStyle}>
-                  Shared reference link item with a secondary line of
-                  descriptive text.
-                </span>
-              </div>
+              <RichLabel
+                title="Editorial guidelines"
+                meta="Shared reference link item with a secondary line of descriptive text."
+              />
             ),
             href: NPM_URL,
             target: "_blank",
             rel: "noreferrer",
-            trailing: <span style={statusPillStyle}>Reference</span>,
+            trailing: <StatusPill>Reference</StatusPill>,
           },
         ],
       },
@@ -591,8 +445,12 @@ export default function App() {
         defaultExpanded: true,
         disabled: !managedBranchEnabled,
         trailing: (
-          <label style={branchToggleStyle}>
+          <label
+            className="demoBranchToggle"
+            data-enabled={managedBranchEnabled ? "true" : "false"}
+          >
             <input
+              className="demoCheckboxInput"
               type="checkbox"
               checked={managedBranchEnabled}
               onChange={(event) => {
@@ -612,13 +470,10 @@ export default function App() {
           {
             id: "release-notes",
             label: (
-              <div style={richLabelStyle}>
-                <span>Release notes</span>
-                <span style={metaTextStyle}>
-                  Disabled branch state demonstrates inherited styling and
-                  navigation behavior.
-                </span>
-              </div>
+              <RichLabel
+                title="Release notes"
+                meta="Disabled branch state demonstrates inherited styling and navigation behavior."
+              />
             ),
             disabled: !managedBranchEnabled,
             children: [
@@ -639,13 +494,10 @@ export default function App() {
       {
         id: "analytics-lazy",
         label: (
-          <div style={richLabelStyle}>
-            <span>Analytics workspace</span>
-            <span style={metaTextStyle}>
-              Loads child reports on demand to demonstrate asynchronous branch
-              expansion.
-            </span>
-          </div>
+          <RichLabel
+            title="Analytics workspace"
+            meta="Loads child reports on demand to demonstrate asynchronous branch expansion."
+          />
         ),
         loadingLabel: "Loading dashboards and saved reports...",
         loadChildren: async () => {
@@ -655,13 +507,10 @@ export default function App() {
             {
               id: "analytics-overview",
               label: (
-                <div style={richLabelStyle}>
-                  <span>Executive overview</span>
-                  <span style={metaTextStyle}>
-                    Weekly conversion trends, traffic sources, and rollout
-                    health.
-                  </span>
-                </div>
+                <RichLabel
+                  title="Executive overview"
+                  meta="Weekly conversion trends, traffic sources, and rollout health."
+                />
               ),
               onClickCallback: () => {
                 console.log("[twig-view demo] tree item clicked", {
@@ -669,7 +518,7 @@ export default function App() {
                   label: "Executive overview",
                 });
               },
-              trailing: <span style={statusPillStyle}>Live</span>,
+              trailing: <StatusPill>Live</StatusPill>,
             },
             {
               id: "analytics-events",
@@ -693,7 +542,7 @@ export default function App() {
         },
       },
     ],
-    [branchToggleStyle, managedBranchEnabled],
+    [managedBranchEnabled],
   );
 
   const customToggleEnabled = controls.useCustomDemoToggles;
@@ -723,7 +572,11 @@ export default function App() {
             color: "#9a3412",
           },
           icon: (
-            <span aria-hidden="true" style={customStarIconStyle}>
+            <span
+              aria-hidden="true"
+              className="demoCustomToggleIcon demoCustomToggleIconStar"
+              style={customToggleIconVars}
+            >
               ★
             </span>
           ),
@@ -734,7 +587,11 @@ export default function App() {
             color: "#991b1b",
           },
           icon: (
-            <span aria-hidden="true" style={customToggleIconStyle}>
+            <span
+              aria-hidden="true"
+              className="demoCustomToggleIcon"
+              style={customToggleIconVars}
+            >
               ♥
             </span>
           ),
@@ -766,14 +623,7 @@ export default function App() {
       };
 
   return (
-    <main
-      className="demoShell"
-      style={
-        {
-          display: "grid",
-        } as React.CSSProperties
-      }
-    >
+    <main className="demoShell">
       <section className="heroBand" aria-label="Introduction">
         <div className="heroInner">
           <div className="heroLead">
@@ -814,14 +664,7 @@ export default function App() {
       <div className="pageContent">
         <section className="playgroundSection" id="playground">
           <div className="demoWorkspace">
-            <section
-              className="demoPanel demoPreviewPanel"
-              style={{
-                ...panelStyle,
-                display: "grid",
-                gap: 12,
-              }}
-            >
+            <section className="demoPanel demoPreviewPanel demoPanelSurface demoPanelStack">
               <div className="demoPanelHeader demoPanelHeaderPreview">
                 <div>
                   <p className="demoPanelEyebrow">Preview</p>
@@ -864,7 +707,7 @@ export default function App() {
               </div>
             </section>
 
-            <section className="demoPanel demoControlsPanel" style={panelStyle}>
+            <section className="demoPanel demoControlsPanel demoPanelSurface">
               <div className="demoPanelHeader demoPanelHeaderControls">
                 <div>
                   <p className="demoPanelEyebrow">Controls</p>
@@ -876,7 +719,7 @@ export default function App() {
                   title="Tree layout"
                   description="Spacing, item gap, and ID prefix."
                 >
-                  <div style={groupGridStyle}>
+                  <div className="demoGroupGrid">
                     <NumberField
                       label="Spacing"
                       value={controls.spacing}
@@ -911,7 +754,7 @@ export default function App() {
                   title="Connectors"
                   description="Line width, color, and radius."
                 >
-                  <div style={groupGridStyle}>
+                  <div className="demoGroupGrid">
                     <NumberField
                       label="Line width"
                       value={controls.lineWidth}
@@ -946,7 +789,7 @@ export default function App() {
                   title="Animation"
                   description="Animation toggle, duration, and easing."
                 >
-                  <div style={groupGridStyle}>
+                  <div className="demoGroupGrid">
                     <CheckboxField
                       label="Enable animation"
                       checked={controls.animationEnabled}
@@ -985,7 +828,7 @@ export default function App() {
                   title="Default styles"
                   description="Toggle built-in disabled, focus, action, and status styles."
                 >
-                  <div style={groupGridStyle}>
+                  <div className="demoGroupGrid">
                     <CheckboxField
                       label="Custom toggle icons"
                       checked={controls.useCustomDemoToggles}
@@ -1036,7 +879,7 @@ export default function App() {
                   description="Size, spacing, icon size, and state styling."
                   wide
                 >
-                  <div style={groupGridStyle}>
+                  <div className="demoGroupGrid">
                     <NumberField
                       label="Toggle size"
                       value={controls.toggleSize}
