@@ -1,10 +1,27 @@
 # twig-view
 
-Accessible React tree view for nested data with keyboard navigation, configurable connector lines, customizable toggles, async child loading, and slot-based styling hooks.
+[![npm version](https://img.shields.io/npm/v/twig-view.svg)](https://www.npmjs.com/package/twig-view)
+[![npm license](https://img.shields.io/npm/l/twig-view.svg)](https://www.npmjs.com/package/twig-view)
+[![Demo](https://img.shields.io/badge/demo-live-0ea5e9)](https://drexxdk.github.io/twig-view/)
+[![Deploy demo](https://github.com/drexxdk/twig-view/actions/workflows/deploy-demo.yml/badge.svg)](https://github.com/drexxdk/twig-view/actions/workflows/deploy-demo.yml)
 
-## Demo
+Accessible React tree view for nested data with keyboard navigation, crisp connector lines, customizable toggles, async child loading, and slot-based styling hooks.
 
-Live demo: https://drexxdk.github.io/twig-view/
+Use it for documentation sidebars, content outlines, file explorers, navigation trees, or any nested UI where accessibility and customization both matter.
+
+## Why twig-view
+
+- Accessible tree semantics and keyboard navigation are built in.
+- Connector lines, spacing, toggles, and animation are configurable from the public API.
+- Branches can lazy-load children on demand.
+- Labels can be plain text, links, buttons, or richer React content.
+- Slot hooks let you style the tree without forking the component.
+
+## Demo and package links
+
+- Live demo: https://drexxdk.github.io/twig-view/
+- npm package: https://www.npmjs.com/package/twig-view
+- GitHub repository: https://github.com/drexxdk/twig-view
 
 ## Install
 
@@ -16,6 +33,8 @@ Peer dependencies:
 
 - `react` `^18 || ^19`
 - `react-dom` `^18 || ^19`
+
+Also works with `pnpm add twig-view` and `yarn add twig-view` if that matches your app.
 
 ## Quick start
 
@@ -79,6 +98,16 @@ export function Example() {
 }
 ```
 
+## What the component supports
+
+- Branch items with nested children and default expanded state
+- Link items with custom `href`, `target`, and `rel`
+- Button items with `onClickCallback`
+- Async branches through `loadChildren`
+- Disabled items and trailing content
+- Custom link rendering through `components.link`
+- Element-level customization through `slots`
+
 ## Data model
 
 `TwigTreeItem` is a union of three item shapes:
@@ -104,19 +133,45 @@ Use stable `id` values when items can move or rerender dynamically.
 - `itemLayout`: supports `gap` for vertical spacing between items and branches. `paddingBlock` is still accepted as a backward-compatible alias.
 - `toggle`: default toggle size, radius, gap, icon, and open/closed element options
 - `animation`: `enabled`, `duration`, `easing`, and `animateOpacity`
-- `slots`: element-level `className` / `style` hooks for `tree`, `item`, `branch`, `leaf`, `row`, `branchRow`, `leafRow`, `label`, `action`, and `children`
+- `slots`: element-level `className` and `style` hooks for `tree`, `item`, `branch`, `leaf`, `row`, `branchRow`, `leafRow`, `label`, `action`, and `children`
 - `components.link`: custom link component for link items
 - `useDefaultDisabledStyles`, `useDefaultFocusStyles`, `useDefaultActionStyles`, `useDefaultStatusStyles`
 - `onWillOpen`, `onOpenStart`, `onOpenEnd`, `onWillClose`, `onCloseStart`, `onCloseEnd`
 
-## Styling
+## Styling and customization
 
-The package ships structural layout, connectors, and optional default state styles.
+The package ships structural layout, connector rendering, and optional default state styles.
 
-- Use `slots.*.className` and `slots.*.style` to target internal elements
-- Use `toggle.button`, `toggle.icon`, `toggle.open`, and `toggle.closed` to theme the built-in toggle
-- CSS custom properties are applied on the tree root for connector, spacing, toggle, and animation values
-- If you need custom link rendering, provide `components.link`
+- Use `slots.*.className` and `slots.*.style` to target internal elements.
+- Use `toggle.button`, `toggle.icon`, `toggle.open`, and `toggle.closed` to theme the built-in toggle.
+- CSS custom properties are applied on the tree root for connector, spacing, toggle, and animation values.
+- If you need custom link rendering, provide `components.link`.
+
+The demo app shows richer label content, custom toggle states, and different spacing/connector combinations.
+
+## Async child loading
+
+For large trees or data fetched on demand, provide `loadChildren` on a branch item instead of preloading `children`.
+
+```tsx
+const items: TwigTreeItem[] = [
+  {
+    id: "analytics",
+    label: "Analytics",
+    loadingLabel: "Loading dashboards...",
+    loadChildren: async () => {
+      const response = await fetch("/api/tree/analytics");
+      return response.json();
+    },
+  },
+];
+```
+
+## Compatibility
+
+- React 18 and 19
+- TypeScript support through shipped declaration files
+- ESM package output
 
 ## Development
 
@@ -128,11 +183,14 @@ npm run build
 npm run build:demo
 ```
 
-Notes:
-
 - `npm run dev` starts the demo app from `demo/`
 - `npm run build` builds the package library into `dist/`
 - `npm run build:demo` builds the GitHub Pages demo into `demo/dist/`
+
+## Changelog and contributing
+
+- Changelog: see `CHANGELOG.md`
+- Contributing guide: see `CONTRIBUTING.md`
 
 ## GitHub Pages
 

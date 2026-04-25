@@ -1,7 +1,7 @@
 {
   "name": "twig-view",
   "version": "0.1.2",
-  "description": "Accessible React tree view with crisp connector lines and flexible toggles",
+  "description": "Accessible React tree view component for nested data, keyboard navigation, async branches, and customizable connectors",
   "license": "MIT",
   "homepage": "https://drexxdk.github.io/twig-view/",
   "repository": {
@@ -16,11 +16,20 @@
   },
   "keywords": [
     "react",
+    "react-component",
     "tree",
+    "tree-view",
     "treeview",
     "accessible",
+    "accessibility",
+    "a11y",
+    "keyboard-navigation",
     "hierarchy",
-    "outline"
+    "outline",
+    "nested-data",
+    "expandable",
+    "wai-aria",
+    "ui-component"
   ],
   "type": "module",
   "main": "./dist/index.js",
@@ -33,7 +42,8 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "sideEffects": [
     "**/*.css"
