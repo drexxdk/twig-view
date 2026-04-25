@@ -495,6 +495,46 @@ describe("TwigTree", () => {
     expect(loadChildren).toHaveBeenCalledTimes(1);
   });
 
+  it("retries async branch loading after an error", async () => {
+    const loadChildren = vi
+      .fn<() => Promise<TwigTreeItem[]>>()
+      .mockRejectedValueOnce(new Error("Network error"))
+      .mockResolvedValueOnce([
+        { id: "reports", label: "Reports", onClickCallback: () => {} },
+      ]);
+
+    renderTree([
+      {
+        id: "analytics",
+        label: "Analytics",
+        loadChildren,
+      },
+    ]);
+
+    const branch = screen.getByRole("treeitem", { name: "Analytics" });
+
+    fireEvent.click(screen.getByText("Analytics"));
+
+    await waitFor(() =>
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "Unable to load items",
+      ),
+    );
+    expect(loadChildren).toHaveBeenCalledTimes(1);
+    expect(branch).toHaveAttribute("aria-expanded", "true");
+
+    fireEvent.click(screen.getByText("Analytics"));
+    expect(branch).toHaveAttribute("aria-expanded", "false");
+
+    fireEvent.click(screen.getByText("Analytics"));
+
+    await waitFor(() =>
+      expect(screen.getByRole("treeitem", { name: "Reports" })).toBeVisible(),
+    );
+
+    expect(loadChildren).toHaveBeenCalledTimes(2);
+  });
+
   it("exposes an imperative handle for focus and expansion state", async () => {
     const ref = createRef<TwigTreeHandle>();
 
