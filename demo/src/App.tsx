@@ -295,11 +295,18 @@ function createDemoButtonItem(
   label: React.ReactNode,
   disabled = false,
 ): TwigTreeButtonItem {
+  const loggedLabel = typeof label === "string" ? label : undefined;
+
   return {
     id,
     label,
     disabled,
-    onClickCallback: () => {},
+    onClickCallback: () => {
+      console.log("[twig-view demo] tree item clicked", {
+        id,
+        label: loggedLabel ?? null,
+      });
+    },
   };
 }
 
@@ -461,10 +468,43 @@ export default function App() {
                 label: "Request design review",
                 trailing: <span style={statusPillStyle}>Action</span>,
                 onClickCallback: () => {
-                  window.alert(
-                    "Demo action: opened the design review workflow",
-                  );
+                  console.log("[twig-view demo] tree item clicked", {
+                    id: "workspace-product-review",
+                    label: "Request design review",
+                  });
                 },
+              },
+              {
+                id: "workspace-product-rollout",
+                label: (
+                  <div style={richLabelStyle}>
+                    <span>Launch rollout plan</span>
+                    <span style={metaTextStyle}>
+                      Nested branch included to demonstrate deeper tree levels.
+                    </span>
+                  </div>
+                ),
+                defaultExpanded: true,
+                children: [
+                  {
+                    id: "workspace-product-rollout-region",
+                    label: "Regional rollout",
+                    defaultExpanded: true,
+                    children: [
+                      {
+                        id: "workspace-product-rollout-region-emea",
+                        label: "EMEA launch",
+                        defaultExpanded: true,
+                        children: [
+                          createDemoButtonItem(
+                            "workspace-product-rollout-region-emea-pilot",
+                            "Pilot customer checklist",
+                          ),
+                        ],
+                      },
+                    ],
+                  },
+                ],
               },
             ],
           },
@@ -520,7 +560,12 @@ export default function App() {
               </div>
             ),
             trailing: <span style={statusPillStyle}>Draft</span>,
-            onClickCallback: () => {},
+            onClickCallback: () => {
+              console.log("[twig-view demo] tree item clicked", {
+                id: "content-case-study",
+                label: "Case study: enterprise onboarding",
+              });
+            },
           },
           {
             id: "content-guidelines",
@@ -618,7 +663,12 @@ export default function App() {
                   </span>
                 </div>
               ),
-              onClickCallback: () => {},
+              onClickCallback: () => {
+                console.log("[twig-view demo] tree item clicked", {
+                  id: "analytics-overview",
+                  label: "Executive overview",
+                });
+              },
               trailing: <span style={statusPillStyle}>Live</span>,
             },
             {

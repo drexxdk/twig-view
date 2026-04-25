@@ -55,16 +55,23 @@
     cursor: pointer;
   }
 
+  .branchRowShell[data-disabled="true"] > .branchPrimary {
+    cursor: not-allowed;
+  }
+
   .labelContent {
+    display: block;
     min-width: 0;
     overflow-wrap: anywhere;
+    line-height: 1.35;
   }
 
   .itemAction {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     min-width: 0;
     max-width: 100%;
+    width: 100%;
   }
 
   .statusRow {
@@ -73,7 +80,7 @@
 
   &[data-default-action-styles="true"] {
     .itemAction {
-      padding: 3px 8px;
+      padding: 0 8px;
       border: 0;
       border-radius: 10px;
       background: none;
@@ -93,6 +100,32 @@
     .itemAction:disabled,
     .itemAction[aria-disabled="true"] {
       cursor: not-allowed;
+    }
+
+    .itemAction:hover:not(:disabled):not([aria-disabled="true"]):not(:has(> *)),
+    .itemAction:hover:not(:disabled):not([aria-disabled="true"])
+      > :first-child:not(:has(> *)),
+    .itemAction:hover:not(:disabled):not([aria-disabled="true"])
+      > :first-child:has(> *)
+      > :first-child,
+    li[data-disabled="false"]
+      > .branchRowShell
+      > .branchPrimary:hover
+      > .labelContent:not(:has(> *)),
+    li[data-disabled="false"]
+      > .branchRowShell
+      > .branchPrimary:hover
+      > .labelContent
+      > :first-child:not(:has(> *)),
+    li[data-disabled="false"]
+      > .branchRowShell
+      > .branchPrimary:hover
+      > .labelContent
+      > :first-child:has(> *)
+      > :first-child {
+      text-decoration: underline;
+      text-underline-offset: 0.14em;
+      text-decoration-thickness: from-font;
     }
   }
 
