@@ -535,6 +535,29 @@ describe("TwigTree", () => {
     expect(loadChildren).toHaveBeenCalledTimes(2);
   });
 
+  it("renders a custom async load error label", async () => {
+    const loadChildren = vi
+      .fn<() => Promise<TwigTreeItem[]>>()
+      .mockRejectedValueOnce(new Error("Network error"));
+
+    renderTree([
+      {
+        id: "analytics",
+        label: "Analytics",
+        loadChildren,
+        loadErrorLabel: "Dashboards failed to load",
+      },
+    ]);
+
+    fireEvent.click(screen.getByText("Analytics"));
+
+    await waitFor(() =>
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "Dashboards failed to load",
+      ),
+    );
+  });
+
   it("exposes an imperative handle for focus and expansion state", async () => {
     const ref = createRef<TwigTreeHandle>();
 

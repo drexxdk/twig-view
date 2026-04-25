@@ -163,7 +163,7 @@ The demo app shows richer label content, custom toggle states, and different spa
 
 For large trees or data fetched on demand, provide `loadChildren` on a branch item instead of preloading `children`.
 
-When a branch opens, twig-view shows `loadingLabel` while `loadChildren` is pending, then caches the returned children for later expands until that item changes. If loading fails, the branch shows an inline error state and retries on the next reopen.
+When a branch opens, twig-view shows `loadingLabel` while `loadChildren` is pending, then caches the returned children for later expands until that item changes. If loading fails, the branch shows an inline error state, uses `loadErrorLabel` when provided, and retries on the next reopen.
 
 ```tsx
 const items: TwigTreeItem[] = [

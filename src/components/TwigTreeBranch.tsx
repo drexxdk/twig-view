@@ -531,7 +531,7 @@ export default function TwigTreeBranch({
                 className={joinClassNames(styles.itemRow, styles.statusRow)}
                 role="status"
               >
-                <span>Unable to load items</span>
+                <span>{item.loadErrorLabel ?? "Unable to load items"}</span>
               </span>
             </li>
           ) : (

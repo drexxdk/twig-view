@@ -12,6 +12,7 @@ export type TwigTreeBranchItem = TwigTreeItemBase & {
   defaultExpanded?: boolean;
   loadChildren?: () => Promise<TwigTreeItem[]>;
   loadingLabel?: React.ReactNode;
+  loadErrorLabel?: React.ReactNode;
   href?: never;
   target?: never;
   rel?: never;
@@ -27,6 +28,7 @@ export type TwigTreeLinkItem = TwigTreeItemBase & {
   defaultExpanded?: never;
   loadChildren?: never;
   loadingLabel?: never;
+  loadErrorLabel?: never;
 };
 
 export type TwigTreeButtonItem = TwigTreeItemBase & {
@@ -38,6 +40,7 @@ export type TwigTreeButtonItem = TwigTreeItemBase & {
   defaultExpanded?: never;
   loadChildren?: never;
   loadingLabel?: never;
+  loadErrorLabel?: never;
 };
 
 export type TwigTreeItem =
