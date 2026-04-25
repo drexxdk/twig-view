@@ -39,7 +39,8 @@ Also works with `pnpm add twig-view` and `yarn add twig-view` if that matches yo
 ## Quick start
 
 ```tsx
-import TwigTree, { type TwigTreeItem } from "twig-view";
+import { useRef } from "react";
+import TwigTree, { type TwigTreeHandle, type TwigTreeItem } from "twig-view";
 
 const items: TwigTreeItem[] = [
   {
@@ -78,22 +79,31 @@ const items: TwigTreeItem[] = [
 ];
 
 export function Example() {
+  const treeRef = useRef<TwigTreeHandle>(null);
+
   return (
-    <TwigTree
-      items={items}
-      ariaLabel="Documentation tree"
-      connector={{ color: "#22c55e", radius: 12, width: 1.5 }}
-      spacing={4}
-      itemLayout={{ gap: 4 }}
-      animation={{ duration: 220, easing: "ease", animateOpacity: true }}
-      toggle={{
-        size: 16,
-        radius: "50%",
-        labelGap: 4,
-      }}
-      useDefaultFocusStyles
-      useDefaultActionStyles
-    />
+    <>
+      <button type="button" onClick={() => treeRef.current?.expandAll()}>
+        Expand all
+      </button>
+
+      <TwigTree
+        ref={treeRef}
+        items={items}
+        ariaLabel="Documentation tree"
+        connector={{ color: "#22c55e", radius: 12, width: 1.5 }}
+        spacing={4}
+        itemLayout={{ gap: 4 }}
+        animation={{ duration: 220, easing: "ease", animateOpacity: true }}
+        toggle={{
+          size: 16,
+          radius: "50%",
+          labelGap: 4,
+        }}
+        useDefaultFocusStyles
+        useDefaultActionStyles
+      />
+    </>
   );
 }
 ```
@@ -166,6 +176,33 @@ const items: TwigTreeItem[] = [
   },
 ];
 ```
+
+## Imperative controls
+
+Attach a ref when you need to focus, expand, or inspect tree state from outside the component.
+
+```tsx
+import { useRef } from "react";
+import TwigTree, { type TwigTreeHandle } from "twig-view";
+
+const treeRef = useRef<TwigTreeHandle>(null);
+
+treeRef.current?.focus("docs");
+treeRef.current?.expand("docs");
+treeRef.current?.collapse("docs");
+treeRef.current?.toggle("docs");
+treeRef.current?.expandAll();
+treeRef.current?.collapseAll();
+treeRef.current?.getExpandedIds();
+treeRef.current?.getVisibleIds();
+```
+
+- `focus(itemId)`: moves focus to a visible item and returns whether it succeeded
+- `expand(itemId)`, `collapse(itemId)`, `toggle(itemId)`: control a single branch by item id and return whether an action was applied
+- `expandAll()` and `collapseAll()`: return the number of branches changed
+- `getExpandedIds()` and `getVisibleIds()`: return the current branch and visible item ids
+
+Use stable item `id` values for any tree you plan to control imperatively.
 
 ## Compatibility
 

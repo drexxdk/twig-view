@@ -1,6 +1,8 @@
 import React, {
+  forwardRef,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState,
@@ -22,6 +24,7 @@ import {
 import type {
   TwigTreeComponentsOptions,
   TwigTreeDefaultStyles,
+  TwigTreeHandle,
   TwigTreeNavigationOptions,
   TwigTreeProps,
   TwigTreeResolvedToggleOptions,
@@ -35,6 +38,7 @@ export type {
   TwigTreeComponentsOptions,
   TwigTreeConnectorOptions,
   TwigTreeElementOptions,
+  TwigTreeHandle,
   TwigTreeItem,
   TwigTreeItemLayoutOptions,
   TwigTreeLinkComponentProps,
@@ -46,7 +50,9 @@ export type {
 } from "./TwigTree.types";
 export { TWIG_TREE_DEFAULTS } from "./TwigTree.defaults";
 
-export default function TwigTree({
+const BRANCH_PRIMARY_SELECTOR = `[class~="${styles.branchPrimary}"]`;
+
+const TwigTree = forwardRef<TwigTreeHandle, TwigTreeProps>(function TwigTree({
   items,
   connector,
   spacing = TWIG_TREE_DEFAULTS.spacing,
@@ -68,7 +74,7 @@ export default function TwigTree({
   onCloseEnd,
   toggle,
   components,
-}: TwigTreeProps) {
+}: TwigTreeProps, ref) {
   const treeRef = useRef<HTMLElement | null>(null);
   const [activeTreeItemId, setActiveTreeItemId] = useState<string | null>(null);
   const resolvedConnector = useMemo(
@@ -178,7 +184,54 @@ export default function TwigTree({
     }
 
     nextItem.focus();
+    return true;
   }, []);
+
+  const getTreeItemElement = useCallback((itemId: string) => {
+    const root = treeRef.current;
+
+    if (!root) {
+      return null;
+    }
+
+    return root.querySelector<HTMLElement>(`[data-item-id="${itemId}"]`);
+  }, []);
+
+  const getBranchPrimaryElement = useCallback((itemId: string) => {
+    const treeItem = getTreeItemElement(itemId);
+
+    if (!treeItem) {
+      return null;
+    }
+
+    return treeItem.querySelector<HTMLElement>(BRANCH_PRIMARY_SELECTOR);
+  }, [getTreeItemElement]);
+
+  const clickBranchPrimary = useCallback(
+    (itemId: string, nextExpanded?: boolean) => {
+      const treeItem = getTreeItemElement(itemId);
+
+      if (!treeItem) {
+        return false;
+      }
+
+      const branchPrimary = getBranchPrimaryElement(itemId);
+
+      if (!branchPrimary) {
+        return false;
+      }
+
+      const expanded = treeItem.getAttribute("aria-expanded") === "true";
+
+      if (nextExpanded !== undefined && expanded === nextExpanded) {
+        return true;
+      }
+
+      branchPrimary.click();
+      return true;
+    },
+    [getBranchPrimaryElement, getTreeItemElement],
+  );
 
   const getVisibleTreeItems = useCallback(() => {
     const root = treeRef.current;
@@ -203,6 +256,83 @@ export default function TwigTree({
       root.querySelectorAll<HTMLElement>('[role="treeitem"]'),
     ).filter(isVisibleTreeItem);
   }, []);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      focus: (itemId) => {
+        const treeItem = getTreeItemElement(itemId);
+
+        if (!treeItem || !isNavigableTreeItem(treeItem)) {
+          return false;
+        }
+
+        treeItem.focus();
+        return true;
+      },
+      expand: (itemId) => clickBranchPrimary(itemId, true),
+      collapse: (itemId) => clickBranchPrimary(itemId, false),
+      toggle: (itemId) => clickBranchPrimary(itemId),
+      expandAll: () => {
+        const root = treeRef.current;
+
+        if (!root) {
+          return 0;
+        }
+
+        const branches = Array.from(
+          root.querySelectorAll<HTMLElement>(
+            `[role="treeitem"][aria-expanded="false"][data-disabled="false"]`,
+          ),
+        );
+
+        for (const branch of branches) {
+          branch.querySelector<HTMLElement>(BRANCH_PRIMARY_SELECTOR)?.click();
+        }
+
+        return branches.length;
+      },
+      collapseAll: () => {
+        const root = treeRef.current;
+
+        if (!root) {
+          return 0;
+        }
+
+        const branches = Array.from(
+          root.querySelectorAll<HTMLElement>(
+            `[role="treeitem"][aria-expanded="true"][data-disabled="false"]`,
+          ),
+        );
+
+        for (const branch of branches) {
+          branch.querySelector<HTMLElement>(BRANCH_PRIMARY_SELECTOR)?.click();
+        }
+
+        return branches.length;
+      },
+      getExpandedIds: () => {
+        const root = treeRef.current;
+
+        if (!root) {
+          return [];
+        }
+
+        return Array.from(
+          root.querySelectorAll<HTMLElement>(
+            `[role="treeitem"][aria-expanded="true"][data-item-id]`,
+          ),
+        )
+          .map((element) => element.dataset.itemId)
+          .filter((itemId): itemId is string => Boolean(itemId));
+      },
+      getVisibleIds: () =>
+        getOrderedVisibleTreeItems()
+          .map((element) => element.dataset.itemId)
+          .filter((itemId): itemId is string => Boolean(itemId)),
+    }),
+    [clickBranchPrimary, getOrderedVisibleTreeItems, getTreeItemElement],
+  );
 
   const focusRelativeTreeItem = useCallback(
     (treeItemId: string, offset: number) => {
@@ -463,4 +593,6 @@ export default function TwigTree({
       </ul>
     </section>
   );
-}
+});
+
+export default TwigTree;

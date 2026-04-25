@@ -1,7 +1,9 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
 import TwigTree, {
   type TwigTreeComponentsOptions,
+  type TwigTreeHandle,
   type TwigTreeItem,
   type TwigTreeLinkComponentProps,
 } from "./TwigTree";
@@ -444,5 +446,65 @@ describe("TwigTree", () => {
 
     fireEvent.keyDown(branch, { key: "ArrowLeft" });
     expect(branch).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("exposes an imperative handle for focus and expansion state", async () => {
+    const ref = createRef<TwigTreeHandle>();
+
+    render(
+      <TwigTree
+        ref={ref}
+        items={[
+          {
+            id: "branch-a",
+            label: "Branch A",
+            children: [
+              { id: "leaf-a", label: "Leaf A", onClickCallback: () => {} },
+            ],
+          },
+          {
+            id: "branch-b",
+            label: "Branch B",
+            children: [
+              { id: "leaf-b", label: "Leaf B", onClickCallback: () => {} },
+            ],
+          },
+        ]}
+        ariaLabel="Test tree"
+        animation={false}
+        useDefaultStyles
+      />,
+    );
+
+    expect(ref.current).not.toBeNull();
+    expect(ref.current?.getExpandedIds()).toEqual([]);
+    expect(ref.current?.getVisibleIds()).toEqual(["branch-a", "branch-b"]);
+
+    expect(ref.current?.expand("branch-a")).toBe(true);
+    await waitFor(() =>
+      expect(screen.getByRole("treeitem", { name: "Branch A" })).toHaveAttribute(
+        "aria-expanded",
+        "true",
+      ),
+    );
+    await waitFor(() => expect(ref.current?.getExpandedIds()).toEqual(["branch-a"]));
+    await waitFor(() =>
+      expect(ref.current?.getVisibleIds()).toEqual([
+        "branch-a",
+        "leaf-a",
+        "branch-b",
+      ]),
+    );
+
+    expect(ref.current?.expandAll()).toBe(1);
+    await waitFor(() =>
+      expect(ref.current?.getExpandedIds()).toEqual(["branch-a", "branch-b"]),
+    );
+
+    expect(ref.current?.focus("leaf-b")).toBe(true);
+    expect(screen.getByRole("treeitem", { name: "Leaf B" })).toHaveFocus();
+
+    expect(ref.current?.collapseAll()).toBe(2);
+    await waitFor(() => expect(ref.current?.getExpandedIds()).toEqual([]));
   });
 });

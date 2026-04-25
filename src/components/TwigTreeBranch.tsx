@@ -328,6 +328,7 @@ export default function TwigTreeBranch({
         aria-labelledby={labelId}
         aria-disabled={treeItemAriaDisabled}
         data-treeitem-id={treeItemId}
+        data-item-id={item.id ?? path.join("-")}
         data-parent-treeitem-id={parentTreeItemId}
         data-navigable={isTreeItemNavigable ? "true" : "false"}
         data-level={level}
@@ -415,6 +416,7 @@ export default function TwigTreeBranch({
       aria-disabled={treeItemAriaDisabled}
       aria-expanded={expanded}
       data-treeitem-id={treeItemId}
+      data-item-id={item.id ?? path.join("-")}
       data-parent-treeitem-id={parentTreeItemId}
       data-navigable={!item.disabled ? "true" : "false"}
       data-expanded={expanded ? "true" : "false"}

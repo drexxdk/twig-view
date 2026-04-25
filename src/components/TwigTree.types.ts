@@ -144,6 +144,17 @@ export type TwigTreeProps = {
   components?: TwigTreeComponentsOptions;
 };
 
+export type TwigTreeHandle = {
+  focus: (itemId: string) => boolean;
+  expand: (itemId: string) => boolean;
+  collapse: (itemId: string) => boolean;
+  toggle: (itemId: string) => boolean;
+  expandAll: () => number;
+  collapseAll: () => number;
+  getExpandedIds: () => string[];
+  getVisibleIds: () => string[];
+};
+
 export type NormalizedAnimationOptions = {
   enabled: boolean;
   duration: number;

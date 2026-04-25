@@ -7,6 +7,7 @@ export type {
   TwigTreeComponentsOptions,
   TwigTreeConnectorOptions,
   TwigTreeElementOptions,
+  TwigTreeHandle,
   TwigTreeItem,
   TwigTreeItemLayoutOptions,
   TwigTreeLinkComponentProps,
