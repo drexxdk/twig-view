@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   TWIG_TREE_DEFAULTS,
   TwigTree,
@@ -242,6 +242,7 @@ function createDemoButtonItem(
 
 export default function App() {
   const [managedBranchEnabled, setManagedBranchEnabled] = useState(false);
+  const analyticsLazyLoadAttemptsRef = useRef(0);
   const [controls, setControls] = useState<ControlsState>({
     lineWidth: TWIG_TREE_DEFAULTS.connector.width,
     lineColor: "#ffffff",
@@ -496,12 +497,20 @@ export default function App() {
         label: (
           <RichLabel
             title="Analytics workspace"
-            meta="Loads child reports on demand to demonstrate asynchronous branch expansion."
+            meta="Loads child reports on demand, fails on the first open, and retries on the next reopen."
           />
         ),
         loadingLabel: "Loading dashboards and saved reports...",
+        loadErrorLabel:
+          "Dashboards failed to load. Collapse and reopen to retry.",
         loadChildren: async () => {
           await delay(700);
+
+          analyticsLazyLoadAttemptsRef.current += 1;
+
+          if (analyticsLazyLoadAttemptsRef.current === 1) {
+            throw new Error("Demo analytics request failed");
+          }
 
           return [
             {
