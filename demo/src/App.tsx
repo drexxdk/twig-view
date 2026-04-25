@@ -61,6 +61,44 @@ const featureCards = [
   },
 ] as const;
 
+const demoExampleCards = [
+  {
+    title: "Workspace navigation",
+    branch: "Workspace navigation",
+    body: "Shows deep nesting, rich labels, buttons, links, status pills, and connector continuity across multiple levels.",
+    prompt:
+      "Open Product roadmap and Launch rollout plan to inspect multi-level navigation and mixed content rows.",
+  },
+  {
+    title: "Content library",
+    branch: "Content library",
+    body: "Demonstrates editorial-style labels with secondary metadata, publishing state, and reference-link items.",
+    prompt:
+      "Compare the drafted case study row with the linked Editorial guidelines item.",
+  },
+  {
+    title: "Disabled release flow",
+    branch: "Release operations",
+    body: "Highlights disabled branch behavior and how nested items inherit the disabled state until the flow is enabled.",
+    prompt:
+      "Toggle the release operations checkbox to compare disabled and enabled branches.",
+  },
+  {
+    title: "Async success",
+    branch: "Analytics snapshots",
+    body: "Illustrates a lazy branch that resolves immediately on first expand and then stays cached for later opens.",
+    prompt:
+      "Expand Analytics snapshots and inspect the loaded Daily pulse and Weekly KPI digest items.",
+  },
+  {
+    title: "Async retry",
+    branch: "Analytics workspace",
+    body: "Shows a lazy branch with a first-load failure, inline error messaging, and retry-on-reopen behavior.",
+    prompt:
+      "Expand Analytics workspace once to see the error state, then collapse and reopen it to recover.",
+  },
+] as const;
+
 function NumberField({
   label,
   value,
@@ -1003,6 +1041,30 @@ export default function App() {
                 </ControlSection>
               </div>
             </section>
+          </div>
+        </section>
+
+        <section className="sectionBlock" id="examples">
+          <div className="sectionIntro">
+            <p className="sectionKicker">Example Scenarios</p>
+            <h2 className="sectionHeading">
+              Named examples in the live demo tree.
+            </h2>
+            <p className="sectionLead">
+              The preview is more than a styling sandbox. Each top-level branch
+              is a concrete product scenario you can open, tweak, and compare
+              while adjusting the controls.
+            </p>
+          </div>
+          <div className="exampleGrid">
+            {demoExampleCards.map((card) => (
+              <article key={card.title} className="exampleCard">
+                <p className="exampleCardBranch">In tree: {card.branch}</p>
+                <h3 className="exampleCardTitle">{card.title}</h3>
+                <p className="exampleCardBody">{card.body}</p>
+                <p className="exampleCardPrompt">Try: {card.prompt}</p>
+              </article>
+            ))}
           </div>
         </section>
 

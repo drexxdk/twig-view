@@ -24,7 +24,7 @@ The current package surface is centered on accessible tree navigation, connector
   - `collapseAll()`
   - `getExpandedIds()`
   - `getVisibleIds()`
-- Expanded the demo to show richer labels, custom toggles, disabled states, and lazy-loading examples
+- Expanded the demo to show richer labels, custom toggles, disabled states, lazy-loading examples, and named scenario cards that explain what each live branch demonstrates
 - Strengthened npm/package presentation with a revised README, changelog, contributing guide, and release workflow
 - Added release and demo deployment workflows in `.github/workflows/`
 
@@ -92,7 +92,7 @@ Recent validation succeeded with:
 ### High Priority
 
 - Keep expanding advanced behavior coverage in `src/components/TwigTree.test.tsx`, especially richer customization cases and deeper nested interaction paths
-- Continue evolving the demo into a stronger public showcase with clearer, named real-world examples
+- Continue evolving the demo into a stronger public showcase beyond the current named scenario cards, adding more real-world patterns and copy-pasteable flows
 - Review `PROGRESS.md` alongside future feature work so it stays aligned with the shipped surface instead of drifting behind the repo
 - Keep the README as the primary complete document for now rather than splitting docs prematurely
 
