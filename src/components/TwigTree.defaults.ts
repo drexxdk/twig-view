@@ -12,7 +12,7 @@ export const TWIG_TREE_DEFAULTS = {
   },
   animation: {
     enabled: true,
-    duration: 220,
+    duration: 1500,
     easing: "ease",
     animateOpacity: true,
     disabledAnimateOpacity: false,

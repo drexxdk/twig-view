@@ -897,7 +897,7 @@ export default function App() {
                       label="Duration"
                       value={controls.animationDuration}
                       min={0}
-                      max={800}
+                      max={2500}
                       step={20}
                       onChange={(value) => {
                         patchControls({ animationDuration: value });

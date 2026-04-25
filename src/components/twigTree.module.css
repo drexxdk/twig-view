@@ -283,7 +283,7 @@
   display: grid;
   grid-template-rows: 1fr;
   position: relative;
-  margin-top: 0;
+  margin-top: var(--twig-connector-gap);
 }
 
 .tree .childrenViewport > ul {
@@ -302,10 +302,6 @@
 .tree .childrenViewport[data-animate="true"] > ul {
   transition: opacity var(--twig-animation-duration)
     var(--twig-animation-easing);
-}
-
-.tree .childrenViewport[data-expanded="true"] {
-  margin-top: var(--item-gap);
 }
 
 .tree .childrenViewport[data-expanded="false"] {
@@ -329,10 +325,16 @@
 }
 
 .tree ul > li {
+  --twig-connector-gap: 0px;
+
   display: flex;
   flex-direction: column;
   gap: 0;
   position: relative;
+}
+
+.tree ul > li[data-expanded="true"] {
+  --twig-connector-gap: var(--item-gap);
 }
 
 .tree ul > li > .childrenViewport > ul {
@@ -353,9 +355,16 @@
   top: 0;
   width: var(--child-elbow-width);
   height: calc(50% + (var(--line-width) / 2));
-  box-sizing: border-box;
-  border-left: var(--line-width) solid var(--connector-line-color);
-  border-bottom: var(--line-width) solid var(--connector-line-color);
+  background-image:
+    linear-gradient(var(--connector-line-color), var(--connector-line-color)),
+    linear-gradient(var(--connector-line-color), var(--connector-line-color));
+  background-position:
+    left top,
+    left bottom;
+  background-repeat: no-repeat;
+  background-size:
+    var(--line-width) 100%,
+    100% var(--line-width);
   pointer-events: none;
 }
 
@@ -384,6 +393,10 @@
   > ul
   > li:last-child
   > .itemRow:before {
+  box-sizing: border-box;
+  background-image: none;
+  border-left: var(--line-width) solid var(--connector-line-color);
+  border-bottom: var(--line-width) solid var(--connector-line-color);
   border-bottom-left-radius: var(--line-radius);
 }
 
@@ -414,38 +427,24 @@
   z-index: 0;
   top: 50%;
   left: calc((var(--toggle-size) / 2) - (var(--line-width) / 2));
-  bottom: calc(var(--item-gap) * -1);
+  bottom: calc(var(--twig-connector-gap) * -1);
   width: var(--line-width);
   background-color: var(--connector-line-color);
-  opacity: 0;
+  opacity: 1;
   pointer-events: none;
 }
 
 .tree
-  li:has(> .childrenViewport[data-animate="true"])
+  li:has(> .childrenViewport[data-animate="true"] > ul)
   > .branchRowShell
   > .branchPrimary:after {
-  transition: opacity var(--twig-animation-duration)
-    var(--twig-animation-easing);
+  transition:
+    bottom var(--twig-animation-duration) var(--twig-animation-easing),
+    opacity var(--twig-animation-duration) var(--twig-animation-easing);
 }
 
 .tree
-  li[data-phase="open"]:has(> .childrenViewport > ul)
-  > .branchRowShell
-  > .branchPrimary:after,
-.tree
-  li[data-phase="opening"]:has(> .childrenViewport > ul)
-  > .branchRowShell
-  > .branchPrimary:after,
-.tree
-  li[data-phase="closing"]:has(> .childrenViewport > ul)
-  > .branchRowShell
-  > .branchPrimary:after {
-  opacity: 1;
-}
-
-.tree
-  li[data-phase="closing"][data-expanded="false"]:has(> .childrenViewport > ul)
+  li[data-expanded="false"]:has(> .childrenViewport > ul)
   > .branchRowShell
   > .branchPrimary:after {
   opacity: calc(1 - var(--twig-animation-opacity));
