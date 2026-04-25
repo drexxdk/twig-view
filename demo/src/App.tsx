@@ -493,6 +493,48 @@ export default function App() {
         ],
       },
       {
+        id: "analytics-lazy-success",
+        label: (
+          <RichLabel
+            title="Analytics snapshots"
+            meta="Loads child reports on demand and succeeds on the first open."
+          />
+        ),
+        loadingLabel: "Loading daily and weekly snapshots...",
+        loadChildren: async () => {
+          await delay(500);
+
+          return [
+            {
+              id: "analytics-snapshot-daily",
+              label: (
+                <RichLabel
+                  title="Daily pulse"
+                  meta="Traffic, signups, and activation deltas from the last 24 hours."
+                />
+              ),
+              onClickCallback: () => {
+                console.log("[twig-view demo] tree item clicked", {
+                  id: "analytics-snapshot-daily",
+                  label: "Daily pulse",
+                });
+              },
+              trailing: <StatusPill>Fresh</StatusPill>,
+            },
+            {
+              id: "analytics-snapshot-weekly",
+              label: "Weekly KPI digest",
+              onClickCallback: () => {
+                console.log("[twig-view demo] tree item clicked", {
+                  id: "analytics-snapshot-weekly",
+                  label: "Weekly KPI digest",
+                });
+              },
+            },
+          ];
+        },
+      },
+      {
         id: "analytics-lazy",
         label: (
           <RichLabel

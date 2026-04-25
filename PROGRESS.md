@@ -2,38 +2,42 @@
 
 ## Current Status
 
-Initial implementation scaffold is complete and validated.
+`twig-view` is now a working React package with a public `TwigTree` API, an interactive demo, release automation, and direct test coverage for keyboard behavior, imperative control, and async loading flows.
 
-The project currently exists as a separate sibling repository at `C:\Users\draxx\Sources\twig-view`.
+The current package surface is centered on accessible tree navigation, connector customization, slot-based styling, async child loading, and programmatic tree control.
 
 ## Completed
 
-- Created a standalone React package scaffold for `twig-view`
-- Added package build, demo, and test setup
-- Added package entrypoint and exported types
-- Implemented an initial accessible `TreeView` component
-- Added roving focus and core keyboard navigation
-- Added controlled and uncontrolled expansion support
+- Established the package, demo, build, and test setup for `twig-view`
+- Published the `TwigTree` component and current exported type surface from `src/index.ts`
+- Added accessible tree semantics with roving focus and keyboard navigation
+- Added configurable connectors, spacing, animation, and toggle styling
+- Added slot-based element customization and custom link rendering
+- Added branch, link, and button item support with disabled and trailing content states
+- Added async child loading with `loadingLabel`, `loadErrorLabel`, cached loaded children, and retry-on-reopen behavior
 - Added imperative tree handle methods:
+  - `focus(itemId)`
+  - `expand(itemId)`
+  - `collapse(itemId)`
+  - `toggle(itemId)`
   - `expandAll()`
   - `collapseAll()`
-  - `expand(id)`
-  - `collapse(id)`
-  - `toggle(id)`
-  - `focus(id)`
+  - `getExpandedIds()`
   - `getVisibleIds()`
-- Added support for always-visible non-toggleable branches
-- Added custom node rendering via `renderNode`
-- Added custom toggle rendering via `renderToggle`
-- Added device-pixel-snapped connector width logic
-- Added an initial demo app
-- Added initial tests for semantics, imperative control, controlled expansion, and keyboard interaction
+- Expanded the demo to show richer labels, custom toggles, disabled states, and lazy-loading examples
+- Strengthened npm/package presentation with a revised README, changelog, contributing guide, and release workflow
+- Added release and demo deployment workflows in `.github/workflows/`
 
 ## Current Scope Implemented
 
-Implemented routing mode:
+Implemented item model:
 
-- `indent-vertical`
+- Branch items with nested `children`
+- Branch items with `defaultExpanded`
+- Link items with `href`, `target`, and `rel`
+- Button items with `onClickCallback`
+- Optional `id`, `trailing`, and `disabled` on all items
+- Async branch loading with `loadChildren`, `loadingLabel`, and `loadErrorLabel`
 
 Implemented accessibility behavior:
 
@@ -41,6 +45,7 @@ Implemented accessibility behavior:
 - item `treeitem` roles
 - child `group` markers
 - `aria-expanded` on expandable items
+- `aria-disabled` handling for disabled items
 - keyboard support for:
   - `ArrowUp`
   - `ArrowDown`
@@ -51,60 +56,67 @@ Implemented accessibility behavior:
   - `Enter`
   - `Space`
 
+Implemented customization surface:
+
+- `connector` options for width, color, and radius
+- `spacing` and `itemLayout.gap`
+- `toggle` customization for size, radius, label gap, icon, and open/closed state styles
+- `slots` for `tree`, `item`, `branch`, `leaf`, `row`, `branchRow`, `leafRow`, `label`, `action`, and `children`
+- `components.link` for custom link rendering
+- optional default disabled, focus, action, and status styles
+
 ## Validation Completed
 
-The following succeeded:
+Recent validation succeeded with:
 
-- `npm install`
-- `npm test`
-- `npx tsc --noEmit`
+- `npm run test`
+- `npx vitest run src/components/TwigTree.test.tsx`
 - `npm run build`
 
 ## Important Files
 
-- `src/components/tree-view/TreeView.tsx`
-- `src/components/tree-view/tree-view.module.css`
-- `src/components/tree-view/useLineWidthDpi.ts`
-- `src/components/tree-view/TreeView.test.tsx`
+- `src/components/TwigTree.tsx`
+- `src/components/TwigTreeBranch.tsx`
+- `src/components/TwigTree.types.ts`
+- `src/components/twigTree.module.css`
+- `src/components/TwigTree.test.tsx`
+- `src/utils/useLineWidthDpi.ts`
 - `src/index.ts`
+- `README.md`
 - `demo/src/App.tsx`
+- `.github/workflows/deploy-demo.yml`
+- `.github/workflows/release-package.yml`
 
 ## Next Steps
 
 ### High Priority
 
-- Add more built-in routing modes:
-  - `right-then-down`
-  - `down-then-right`
-  - possibly a more compact file-tree variant
-- Improve connector rendering so branch continuation and end-caps look closer to the target reference
-- Add selection state as a separate concern from focus and expansion
-- Tighten WAI-ARIA tree behavior for richer real-world accessibility coverage
+- Keep expanding advanced behavior coverage in `src/components/TwigTree.test.tsx`, especially richer customization cases and deeper nested interaction paths
+- Continue evolving the demo into a stronger public showcase with clearer, named real-world examples
+- Review `PROGRESS.md` alongside future feature work so it stays aligned with the shipped surface instead of drifting behind the repo
+- Keep the README as the primary complete document for now rather than splitting docs prematurely
 
-### API Refinement
+### Product and API Follow-up
 
-- Review whether `selectedId` or `selectedIds` should be part of v1
-- Decide whether to expose only a single-select tree first or support multi-select
-- Confirm whether `id` should remain strictly required for every node in v1
-- Review whether `loading` behavior should remain optional SSR fallback or gain more explicit SSR docs
+- Decide whether selection state belongs in the public API, and if so whether v1 should be single-select first
+- Review whether additional imperative helpers are needed beyond the current handle methods
+- Evaluate whether async loading needs more customization beyond the current label-based loading and error states
 
 ### Styling and UX
 
-- Add richer demo scenarios with larger toggle controls and mixed node content
-- Refine default toggle visuals
-- Improve default spacing tokens and line aesthetics
-- Test more browser zoom levels and high-DPI displays
+- Refine default toggle visuals and default status treatments
+- Continue validating connector rendering and spacing at more zoom levels and DPI settings
+- Add more showcase patterns such as file-explorer-like trees and content-outline examples
 
-### Testing
+### Distribution and Adoption
 
-- Add tests for `expandAll()` and `collapseAll()`
-- Add tests for focus movement through programmatic API calls
-- Add tests for non-toggleable branch edge cases
-- Add tests for additional routing modes once implemented
-- Add hydration-oriented tests if SSR behavior expands
+- Keep the README optimized for conversion while it remains the single complete document
+- Add runnable example templates or example repos beyond the live demo
+- Publish comparison/tutorial content once the showcase surface is stronger
+- Track npm/download and GitHub usage signals after each release cycle
 
 ## Notes
 
-- This is a strong v0.1 foundation, not a finished package.
-- The current implementation favors correctness and API direction over final visual polish.
-- Future work should keep accessibility, programmatic control, and connector flexibility aligned rather than treating them as separate concerns.
+- The old `TreeView`/routing-mode notes in this file no longer describe the current implementation and have been removed.
+- The current package is already usable and publishable, but there is still room to deepen examples, polish defaults, and expand advanced-state coverage.
+- Accessibility, programmatic control, async behavior, and visual connector quality should continue to evolve together rather than as isolated features.

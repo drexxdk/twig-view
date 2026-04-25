@@ -7,6 +7,7 @@ import TwigTree, {
   type TwigTreeItem,
   type TwigTreeLinkComponentProps,
 } from "./TwigTree";
+import type { TwigTreeProps } from "./TwigTree.types";
 
 vi.mock("./twigTree.module.css", () => ({
   default: new Proxy(
@@ -28,6 +29,8 @@ function renderTree(
   items: TwigTreeItem[],
   options?: {
     components?: TwigTreeComponentsOptions;
+    slots?: TwigTreeProps["slots"];
+    toggle?: TwigTreeProps["toggle"];
   },
 ) {
   return render(
@@ -37,6 +40,8 @@ function renderTree(
       animation={false}
       useDefaultStyles
       components={options?.components}
+      slots={options?.slots}
+      toggle={options?.toggle}
     />,
   );
 }
@@ -308,6 +313,45 @@ describe("TwigTree", () => {
     await waitFor(() => expect(parent).toHaveFocus());
   });
 
+  it("handles home and end navigation from a descendant branch control", async () => {
+    renderTree([
+      {
+        id: "parent",
+        label: "Parent",
+        defaultExpanded: true,
+        children: [
+          {
+            id: "branch",
+            label: "Branch",
+            defaultExpanded: true,
+            trailing: <button type="button">Branch action</button>,
+            children: [
+              { id: "child", label: "Child", onClickCallback: () => {} },
+            ],
+          },
+        ],
+      },
+      {
+        id: "last-leaf",
+        label: "Last leaf",
+        onClickCallback: () => {},
+      },
+    ]);
+
+    const parent = screen.getByRole("treeitem", { name: "Parent" });
+    const button = screen.getByRole("button", { name: "Branch action" });
+    const lastLeaf = screen.getByRole("treeitem", { name: "Last leaf" });
+
+    button.focus();
+    expect(button).toHaveFocus();
+
+    fireEvent.keyDown(button, { key: "End" });
+    await waitFor(() => expect(lastLeaf).toHaveFocus());
+
+    fireEvent.keyDown(button, { key: "Home" });
+    await waitFor(() => expect(parent).toHaveFocus());
+  });
+
   it("preserves native behavior for a descendant text input", async () => {
     renderTree([
       {
@@ -556,6 +600,81 @@ describe("TwigTree", () => {
         "Dashboards failed to load",
       ),
     );
+  });
+
+  it("applies slot and toggle customization props to rendered elements", () => {
+    renderTree(
+      [
+        {
+          id: "branch",
+          label: "Branch",
+          defaultExpanded: true,
+          children: [{ id: "leaf", label: "Leaf", onClickCallback: () => {} }],
+        },
+      ],
+      {
+        slots: {
+          item: {
+            className: "test-item-slot",
+            style: { borderColor: "rgb(255, 0, 0)" },
+          },
+          row: {
+            className: "test-row-slot",
+            style: { paddingInlineStart: "13px" },
+          },
+          label: {
+            className: "test-label-slot",
+            style: { color: "rgb(0, 128, 0)" },
+          },
+          children: {
+            className: "test-children-slot",
+            style: { marginTop: "7px" },
+          },
+        },
+        toggle: {
+          button: {
+            className: "test-toggle-button",
+            style: { backgroundColor: "rgb(0, 0, 255)" },
+          },
+          icon: {
+            className: "test-toggle-icon",
+            size: 18,
+          },
+          open: {
+            icon: <span data-testid="custom-open-icon">open</span>,
+          },
+        },
+      },
+    );
+
+    const branch = screen.getByRole("treeitem", { name: "Branch" });
+    const group = screen.getByRole("group");
+    const customIcon = screen.getByTestId("custom-open-icon");
+
+    expect(branch).toHaveClass("test-item-slot");
+    expect(branch).toHaveStyle({ borderColor: "rgb(255, 0, 0)" });
+
+    const row = branch.querySelector(".test-row-slot");
+    expect(row).not.toBeNull();
+    expect(row).toHaveStyle({ paddingInlineStart: "13px" });
+
+    const label = branch.querySelector(".test-label-slot");
+    expect(label).not.toBeNull();
+    expect(label).toHaveStyle({ color: "rgb(0, 128, 0)" });
+
+    const childrenViewport = branch.querySelector(".test-children-slot");
+    expect(childrenViewport).not.toBeNull();
+    expect(childrenViewport).toHaveStyle({ marginTop: "7px" });
+    expect(childrenViewport).toContainElement(group);
+
+    const toggleButton = branch.querySelector(".test-toggle-button");
+    expect(toggleButton).not.toBeNull();
+    expect(toggleButton).toHaveStyle({ backgroundColor: "rgb(0, 0, 255)" });
+
+    const toggleIcon = branch.querySelector(".test-toggle-icon");
+    expect(toggleIcon).not.toBeNull();
+    expect(toggleIcon).toHaveStyle({ width: "18px", height: "18px" });
+    expect(toggleIcon).toContainElement(customIcon);
   });
 
   it("exposes an imperative handle for focus and expansion state", async () => {
