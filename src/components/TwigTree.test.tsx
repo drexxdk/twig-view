@@ -448,6 +448,53 @@ describe("TwigTree", () => {
     expect(branch).toHaveAttribute("aria-expanded", "false");
   });
 
+  it("loads async branch children once and shows the loading label", async () => {
+    let resolveChildren: ((items: TwigTreeItem[]) => void) | undefined;
+    const loadChildren = vi.fn(
+      () =>
+        new Promise<TwigTreeItem[]>((resolve) => {
+          resolveChildren = resolve;
+        }),
+    );
+
+    renderTree([
+      {
+        id: "analytics",
+        label: "Analytics",
+        loadingLabel: "Loading dashboards...",
+        loadChildren,
+      },
+    ]);
+
+    const branch = screen.getByRole("treeitem", { name: "Analytics" });
+
+    fireEvent.click(screen.getByText("Analytics"));
+
+    expect(branch).toHaveAttribute("aria-expanded", "true");
+    expect(loadChildren).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Loading dashboards...",
+    );
+
+    resolveChildren?.([
+      { id: "reports", label: "Reports", onClickCallback: () => {} },
+    ]);
+
+    await waitFor(() =>
+      expect(screen.getByRole("treeitem", { name: "Reports" })).toBeVisible(),
+    );
+
+    fireEvent.click(screen.getByText("Analytics"));
+    expect(branch).toHaveAttribute("aria-expanded", "false");
+
+    fireEvent.click(screen.getByText("Analytics"));
+    await waitFor(() =>
+      expect(screen.getByRole("treeitem", { name: "Reports" })).toBeVisible(),
+    );
+
+    expect(loadChildren).toHaveBeenCalledTimes(1);
+  });
+
   it("exposes an imperative handle for focus and expansion state", async () => {
     const ref = createRef<TwigTreeHandle>();
 
@@ -482,12 +529,13 @@ describe("TwigTree", () => {
 
     expect(ref.current?.expand("branch-a")).toBe(true);
     await waitFor(() =>
-      expect(screen.getByRole("treeitem", { name: "Branch A" })).toHaveAttribute(
-        "aria-expanded",
-        "true",
-      ),
+      expect(
+        screen.getByRole("treeitem", { name: "Branch A" }),
+      ).toHaveAttribute("aria-expanded", "true"),
     );
-    await waitFor(() => expect(ref.current?.getExpandedIds()).toEqual(["branch-a"]));
+    await waitFor(() =>
+      expect(ref.current?.getExpandedIds()).toEqual(["branch-a"]),
+    );
     await waitFor(() =>
       expect(ref.current?.getVisibleIds()).toEqual([
         "branch-a",

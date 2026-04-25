@@ -52,29 +52,32 @@ export { TWIG_TREE_DEFAULTS } from "./TwigTree.defaults";
 
 const BRANCH_PRIMARY_SELECTOR = `[class~="${styles.branchPrimary}"]`;
 
-const TwigTree = forwardRef<TwigTreeHandle, TwigTreeProps>(function TwigTree({
-  items,
-  connector,
-  spacing = TWIG_TREE_DEFAULTS.spacing,
-  itemLayout,
-  useDefaultStyles,
-  useDefaultDisabledStyles,
-  useDefaultFocusStyles,
-  useDefaultActionStyles,
-  useDefaultStatusStyles,
-  idPrefix = TWIG_TREE_DEFAULTS.idPrefix,
-  ariaLabel = TWIG_TREE_DEFAULTS.ariaLabel,
-  slots,
-  animation,
-  onWillOpen,
-  onOpenStart,
-  onOpenEnd,
-  onWillClose,
-  onCloseStart,
-  onCloseEnd,
-  toggle,
-  components,
-}: TwigTreeProps, ref) {
+const TwigTree = forwardRef<TwigTreeHandle, TwigTreeProps>(function TwigTree(
+  {
+    items,
+    connector,
+    spacing = TWIG_TREE_DEFAULTS.spacing,
+    itemLayout,
+    useDefaultStyles,
+    useDefaultDisabledStyles,
+    useDefaultFocusStyles,
+    useDefaultActionStyles,
+    useDefaultStatusStyles,
+    idPrefix = TWIG_TREE_DEFAULTS.idPrefix,
+    ariaLabel = TWIG_TREE_DEFAULTS.ariaLabel,
+    slots,
+    animation,
+    onWillOpen,
+    onOpenStart,
+    onOpenEnd,
+    onWillClose,
+    onCloseStart,
+    onCloseEnd,
+    toggle,
+    components,
+  }: TwigTreeProps,
+  ref,
+) {
   const treeRef = useRef<HTMLElement | null>(null);
   const [activeTreeItemId, setActiveTreeItemId] = useState<string | null>(null);
   const resolvedConnector = useMemo(
@@ -197,15 +200,18 @@ const TwigTree = forwardRef<TwigTreeHandle, TwigTreeProps>(function TwigTree({
     return root.querySelector<HTMLElement>(`[data-item-id="${itemId}"]`);
   }, []);
 
-  const getBranchPrimaryElement = useCallback((itemId: string) => {
-    const treeItem = getTreeItemElement(itemId);
+  const getBranchPrimaryElement = useCallback(
+    (itemId: string) => {
+      const treeItem = getTreeItemElement(itemId);
 
-    if (!treeItem) {
-      return null;
-    }
+      if (!treeItem) {
+        return null;
+      }
 
-    return treeItem.querySelector<HTMLElement>(BRANCH_PRIMARY_SELECTOR);
-  }, [getTreeItemElement]);
+      return treeItem.querySelector<HTMLElement>(BRANCH_PRIMARY_SELECTOR);
+    },
+    [getTreeItemElement],
+  );
 
   const clickBranchPrimary = useCallback(
     (itemId: string, nextExpanded?: boolean) => {
