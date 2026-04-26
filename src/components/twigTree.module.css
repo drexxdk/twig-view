@@ -4,6 +4,7 @@
   --label-offset: calc(var(--toggle-size) + var(--toggle-label-gap));
   --connector-origin-x: calc(((var(--toggle-size) / 2) + var(--spacing)) * -1);
   --row-center-offset: calc(var(--toggle-size) / 2);
+  --branch-connector-bleed: calc(var(--spacing) / 2);
   --item-gap: 4px;
   --connector-line-color: var(--line-color);
 
@@ -427,7 +428,7 @@
   z-index: 0;
   top: 50%;
   left: calc((var(--toggle-size) / 2) - (var(--line-width) / 2));
-  bottom: calc(var(--twig-connector-gap) * -1);
+  bottom: calc((var(--twig-connector-gap) * -1) - var(--branch-connector-bleed));
   width: var(--line-width);
   background-color: var(--connector-line-color);
   opacity: 1;
