@@ -77,9 +77,8 @@
 }
 
 .tree[data-default-action-styles="true"] .itemAction {
-  padding: 0 8px;
+  padding: 0;
   border: 0;
-  border-radius: 10px;
   background: none;
   color: inherit;
   font: inherit;
@@ -139,6 +138,10 @@
 .tree .leafRowShell {
   grid-template-columns: minmax(0, 1fr) auto;
   justify-content: space-between;
+}
+
+.tree .leafRowShell:not(:has(> .trailingContent)) {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .tree .branchRowShell {
@@ -212,6 +215,21 @@
     [tabindex]:not([tabindex="-1"])
   ),
 .tree[data-default-focus-styles="true"]
+  li[role="treeitem"]
+  > .leafRowShell
+  > .labelContent
+  :is(
+    .itemAction,
+    a[href],
+    button:not([disabled]),
+    input:not([disabled]),
+    select:not([disabled]),
+    textarea:not([disabled]),
+    [role="button"],
+    [role="link"],
+    [tabindex]:not([tabindex="-1"])
+  ):is(:focus, :focus-visible),
+.tree[data-default-focus-styles="true"]
   li[role="treeitem"][data-interactive-focus-target="trailing"]:focus-visible
   > .leafRowShell
   > .trailingContent
@@ -225,14 +243,30 @@
     [role="button"],
     [role="link"],
     [tabindex]:not([tabindex="-1"])
-  ) {
-  box-shadow: 0 0 0 2px currentColor;
-  border-radius: 10px;
+  ),
+.tree[data-default-focus-styles="true"]
+  li[role="treeitem"]
+  > .leafRowShell
+  > .trailingContent
+  :is(
+    .itemAction,
+    a[href],
+    button:not([disabled]),
+    input:not([disabled]),
+    select:not([disabled]),
+    textarea:not([disabled]),
+    [role="button"],
+    [role="link"],
+    [tabindex]:not([tabindex="-1"])
+  ):is(:focus, :focus-visible) {
+  outline: none;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .tree[data-default-focus-styles="true"]
   li[role="treeitem"]:focus-visible
   > .branchRowShell
+  > .branchPrimary
   > .toggleRow
   > .toggleButton:after {
   content: "";

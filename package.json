@@ -1,6 +1,6 @@
 {
   "name": "twig-view",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Accessible React tree view component for nested data, keyboard navigation, async branches, and customizable connectors",
   "license": "MIT",
   "homepage": "https://drexxdk.github.io/twig-view/",
