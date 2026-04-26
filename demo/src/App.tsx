@@ -1,3 +1,12 @@
+import {
+  Radio,
+  RadioGroup,
+  Tab,
+  TabGroup,
+  TabList,
+  TabPanel,
+  TabPanels,
+} from "@headlessui/react";
 import { useMemo, useRef, useState } from "react";
 import {
   TWIG_TREE_DEFAULTS,
@@ -30,13 +39,33 @@ type ControlsState = {
   animationDuration: number;
   animationEasing: string;
   animateOpacity: boolean;
+  treeSlotClassName: string;
+  treeSlotStyle: string;
+  rowSlotClassName: string;
+  rowSlotStyle: string;
+  labelSlotClassName: string;
+  labelSlotStyle: string;
+  childrenSlotClassName: string;
+  childrenSlotStyle: string;
   toggleIconSize: number;
-  toggleOpenFill: string;
-  toggleClosedFill: string;
-  toggleIconColor: string;
-  toggleShadow: string;
+  toggleButtonClassName: string;
+  toggleButtonStyle: string;
+  toggleIconClassName: string;
+  toggleIconStyle: string;
+  toggleOpenClassName: string;
+  toggleOpenStyle: string;
+  toggleClosedClassName: string;
+  toggleClosedStyle: string;
   useCustomDemoToggles: boolean;
 };
+
+type ControlTabId =
+  | "layout"
+  | "connectors"
+  | "animation"
+  | "slots"
+  | "styles"
+  | "toggles";
 
 const GITHUB_URL = "https://github.com/drexxdk/twig-view";
 const NPM_URL = "https://www.npmjs.com/package/twig-view";
@@ -99,6 +128,81 @@ const demoExampleCards = [
   },
 ] as const;
 
+const controlTabs: Array<{
+  id: ControlTabId;
+  label: string;
+}> = [
+  {
+    id: "layout",
+    label: "Layout",
+  },
+  {
+    id: "connectors",
+    label: "Connectors",
+  },
+  {
+    id: "animation",
+    label: "Animation",
+  },
+  {
+    id: "slots",
+    label: "Slots",
+  },
+  {
+    id: "styles",
+    label: "Default styles",
+  },
+  {
+    id: "toggles",
+    label: "Toggles",
+  },
+] as const;
+
+const easingOptions = [
+  {
+    id: "ease",
+    label: "Ease",
+    value: "ease",
+    description: "Balanced default curve for general UI motion.",
+  },
+  {
+    id: "linear",
+    label: "Linear",
+    value: "linear",
+    description: "Constant speed from start to finish.",
+  },
+  {
+    id: "ease-in",
+    label: "Ease in",
+    value: "ease-in",
+    description: "Starts slow and accelerates toward the end.",
+  },
+  {
+    id: "ease-out",
+    label: "Ease out",
+    value: "ease-out",
+    description: "Starts quickly and settles gently.",
+  },
+  {
+    id: "ease-in-out",
+    label: "Ease in out",
+    value: "ease-in-out",
+    description: "Slow start, fast middle, slow finish.",
+  },
+  {
+    id: "custom",
+    label: "Custom",
+    value: null,
+    description: "Enter any valid CSS easing function.",
+  },
+] as const;
+
+function getEasingPreset(value: string) {
+  return easingOptions.find(
+    (option) => option.value !== null && option.value === value,
+  );
+}
+
 function NumberField({
   label,
   value,
@@ -131,6 +235,37 @@ function NumberField({
           onChange(Number(event.target.value));
         }}
       />
+    </label>
+  );
+}
+
+function TextAreaField({
+  label,
+  value,
+  placeholder,
+  description,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  placeholder?: string;
+  description?: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="demoFieldLabel demoFieldLabelWide">
+      <span>{label}</span>
+      <textarea
+        className="demoTextAreaInput"
+        value={value}
+        placeholder={placeholder}
+        onChange={(event) => {
+          onChange(event.target.value);
+        }}
+      />
+      {description ? (
+        <span className="demoFieldDescription">{description}</span>
+      ) : null}
     </label>
   );
 }
@@ -172,23 +307,31 @@ function ColorField({
 function TextField({
   label,
   value,
+  placeholder,
+  description,
   onChange,
 }: {
   label: string;
   value: string;
+  placeholder?: string;
+  description?: string;
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="demoFieldLabel">
+    <label className="demoFieldLabel demoFieldLabelWide">
       <span>{label}</span>
       <input
         className="demoTextInput"
         type="text"
         value={value}
+        placeholder={placeholder}
         onChange={(event) => {
           onChange(event.target.value);
         }}
       />
+      {description ? (
+        <span className="demoFieldDescription">{description}</span>
+      ) : null}
     </label>
   );
 }
@@ -220,22 +363,14 @@ function CheckboxField({
 function ControlSection({
   title,
   description,
-  wide = false,
   children,
 }: {
   title: string;
   description: string;
-  wide?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <section
-      className={
-        wide
-          ? "demoControlSection demoControlSectionWide demoPanelInset"
-          : "demoControlSection demoPanelInset"
-      }
-    >
+    <section className="demoControlSection demoPanelInset">
       <header>
         <h3>{title}</h3>
         {description ? <p>{description}</p> : null}
@@ -256,6 +391,102 @@ function RichLabel({ title, meta }: { title: string; meta: string }) {
 
 function StatusPill({ children }: { children: React.ReactNode }) {
   return <span className="demoStatusPill">{children}</span>;
+}
+
+function EasingField({
+  value,
+  customValue,
+  onPresetChange,
+  onCustomValueChange,
+}: {
+  value: string;
+  customValue: string;
+  onPresetChange: (value: string) => void;
+  onCustomValueChange: (value: string) => void;
+}) {
+  const selectedOptionId = getEasingPreset(value)?.id ?? "custom";
+
+  return (
+    <div className="demoFieldStack demoFieldStackWide">
+      <div className="demoFieldHeaderBlock">
+        <span className="demoFieldTitle">Animation easing</span>
+        <p className="demoFieldDescription">
+          Pick a common CSS easing curve or switch to Custom for
+          <code> cubic-bezier(...)</code> and <code>steps(...)</code>.
+        </p>
+      </div>
+
+      <RadioGroup
+        value={selectedOptionId}
+        onChange={onPresetChange}
+        aria-label="Animation easing"
+        className="demoOptionGrid"
+      >
+        {easingOptions.map((option) => (
+          <Radio key={option.id} value={option.id} className="demoOptionCard">
+            <div className="demoOptionCardHeader">
+              <span className="demoOptionCardTitle">{option.label}</span>
+              {option.value ? <code>{option.value}</code> : null}
+            </div>
+            <p className="demoOptionCardBody">{option.description}</p>
+          </Radio>
+        ))}
+      </RadioGroup>
+
+      {selectedOptionId === "custom" ? (
+        <TextField
+          label="Animation custom easing"
+          value={customValue}
+          placeholder="cubic-bezier(0.22, 1, 0.36, 1) or steps(4, end)"
+          description="Use any valid CSS easing function. Examples: cubic-bezier(0.22, 1, 0.36, 1), steps(4, end), linear."
+          onChange={onCustomValueChange}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function toCamelCase(value: string) {
+  return value.replace(/-([a-z])/g, (_, character: string) =>
+    character.toUpperCase(),
+  );
+}
+
+function parseStyleDeclarations(value: string) {
+  if (!value.trim()) {
+    return undefined;
+  }
+
+  const styleEntries = value
+    .split(";")
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .map((entry) => {
+      const separatorIndex = entry.indexOf(":");
+
+      if (separatorIndex < 0) {
+        return null;
+      }
+
+      const property = entry.slice(0, separatorIndex).trim();
+      const propertyValue = entry.slice(separatorIndex + 1).trim();
+
+      if (!property || !propertyValue) {
+        return null;
+      }
+
+      return [
+        property.startsWith("--") ? property : toCamelCase(property),
+        propertyValue,
+      ] as const;
+    })
+    .filter((entry): entry is readonly [string, string] => entry !== null);
+
+  if (!styleEntries.length) {
+    return undefined;
+  }
+
+  return Object.fromEntries(styleEntries) as React.CSSProperties;
 }
 
 function createDemoButtonItem(
@@ -281,6 +512,9 @@ function createDemoButtonItem(
 export default function App() {
   const [managedBranchEnabled, setManagedBranchEnabled] = useState(false);
   const analyticsLazyLoadAttemptsRef = useRef(0);
+  const [customAnimationEasing, setCustomAnimationEasing] = useState(
+    "cubic-bezier(0.22, 1, 0.36, 1)",
+  );
   const [controls, setControls] = useState<ControlsState>({
     lineWidth: TWIG_TREE_DEFAULTS.connector.width,
     lineColor: "#ffffff",
@@ -299,14 +533,26 @@ export default function App() {
     animationDuration: TWIG_TREE_DEFAULTS.animation.duration,
     animationEasing: TWIG_TREE_DEFAULTS.animation.easing,
     animateOpacity: TWIG_TREE_DEFAULTS.animation.animateOpacity,
+    treeSlotClassName: "demoTreeSlot",
+    treeSlotStyle: "",
+    rowSlotClassName: "demoPreviewRowSlot",
+    rowSlotStyle: "",
+    labelSlotClassName: "demoPreviewLabelSlot",
+    labelSlotStyle: "",
+    childrenSlotClassName: "demoPreviewChildrenSlot",
+    childrenSlotStyle: "",
     toggleIconSize: Math.max(
       TWIG_TREE_DEFAULTS.toggle.iconMinSize,
       TWIG_TREE_DEFAULTS.toggle.size * TWIG_TREE_DEFAULTS.toggle.iconSizeFactor,
     ),
-    toggleOpenFill: "#2563eb",
-    toggleClosedFill: "#1d4ed8",
-    toggleIconColor: "#ffffff",
-    toggleShadow: "0 8px 20px rgba(15, 23, 42, 0.35)",
+    toggleButtonClassName: "demoPreviewToggleButton",
+    toggleButtonStyle: "",
+    toggleIconClassName: "demoPreviewToggleIconSlot",
+    toggleIconStyle: "",
+    toggleOpenClassName: "demoPreviewToggleOpen",
+    toggleOpenStyle: "",
+    toggleClosedClassName: "demoPreviewToggleClosed",
+    toggleClosedStyle: "",
     useCustomDemoToggles: false,
   });
 
@@ -321,6 +567,37 @@ export default function App() {
       useDefaultActionStyles: value,
       useDefaultStatusStyles: value,
     });
+  }
+
+  function patchAnimationEasing(value: string) {
+    patchControls({ animationEasing: value });
+  }
+
+  function selectAnimationEasing(nextOptionId: string) {
+    const matchingOption = easingOptions.find(
+      (option) => option.id === nextOptionId,
+    );
+
+    if (!matchingOption) {
+      return;
+    }
+
+    if (matchingOption.value === null) {
+      patchAnimationEasing(customAnimationEasing);
+      return;
+    }
+
+    patchAnimationEasing(matchingOption.value);
+  }
+
+  function updateCustomAnimationEasing(value: string) {
+    setCustomAnimationEasing(value);
+
+    if (!value.trim()) {
+      return;
+    }
+
+    patchAnimationEasing(value);
   }
 
   const customToggleIconVars = useMemo(
@@ -647,19 +924,17 @@ export default function App() {
         radius: `${controls.toggleRadius}%`,
         labelGap: controls.toggleLabelGap,
         button: {
-          style: {
-            boxShadow: controls.toggleShadow,
-            background: "#0f172a",
-          },
+          className: controls.toggleButtonClassName || undefined,
+          style: parseStyleDeclarations(controls.toggleButtonStyle),
         },
         icon: {
           size: controls.toggleIconSize,
+          className: controls.toggleIconClassName || undefined,
+          style: parseStyleDeclarations(controls.toggleIconStyle),
         },
         open: {
-          style: {
-            background: "#facc15",
-            color: "#9a3412",
-          },
+          className: controls.toggleOpenClassName || undefined,
+          style: parseStyleDeclarations(controls.toggleOpenStyle),
           icon: (
             <span
               aria-hidden="true"
@@ -671,10 +946,8 @@ export default function App() {
           ),
         },
         closed: {
-          style: {
-            background: "#f87171",
-            color: "#991b1b",
-          },
+          className: controls.toggleClosedClassName || undefined,
+          style: parseStyleDeclarations(controls.toggleClosedStyle),
           icon: (
             <span
               aria-hidden="true"
@@ -691,23 +964,21 @@ export default function App() {
         radius: `${controls.toggleRadius}%`,
         labelGap: controls.toggleLabelGap,
         button: {
-          style: {
-            color: controls.toggleIconColor,
-            boxShadow: controls.toggleShadow,
-          },
+          className: controls.toggleButtonClassName || undefined,
+          style: parseStyleDeclarations(controls.toggleButtonStyle),
         },
         icon: {
           size: controls.toggleIconSize,
+          className: controls.toggleIconClassName || undefined,
+          style: parseStyleDeclarations(controls.toggleIconStyle),
         },
         open: {
-          style: {
-            background: controls.toggleOpenFill,
-          },
+          className: controls.toggleOpenClassName || undefined,
+          style: parseStyleDeclarations(controls.toggleOpenStyle),
         },
         closed: {
-          style: {
-            background: controls.toggleClosedFill,
-          },
+          className: controls.toggleClosedClassName || undefined,
+          style: parseStyleDeclarations(controls.toggleClosedStyle),
         },
       };
 
@@ -780,9 +1051,20 @@ export default function App() {
                   ariaLabel="TwigTree demo"
                   slots={{
                     tree: {
-                      style: {
-                        minHeight: 18,
-                      },
+                      className: controls.treeSlotClassName || undefined,
+                      style: parseStyleDeclarations(controls.treeSlotStyle),
+                    },
+                    row: {
+                      className: controls.rowSlotClassName || undefined,
+                      style: parseStyleDeclarations(controls.rowSlotStyle),
+                    },
+                    label: {
+                      className: controls.labelSlotClassName || undefined,
+                      style: parseStyleDeclarations(controls.labelSlotStyle),
+                    },
+                    children: {
+                      className: controls.childrenSlotClassName || undefined,
+                      style: parseStyleDeclarations(controls.childrenSlotStyle),
                     },
                   }}
                   animation={{
@@ -803,243 +1085,393 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="demoControlsGrid">
-                <ControlSection
-                  title="Tree layout"
-                  description="Spacing, item gap, and ID prefix."
+              <TabGroup className="demoTabsRoot">
+                <TabList
+                  className="demoTabList demoPanelInset"
+                  aria-label="Control categories"
                 >
-                  <div className="demoGroupGrid">
-                    <NumberField
-                      label="Spacing"
-                      value={controls.spacing}
-                      min={0}
-                      max={24}
-                      step={1}
-                      onChange={(value) => {
-                        patchControls({ spacing: value });
-                      }}
-                    />
-                    <NumberField
-                      label="Item gap"
-                      value={controls.itemGap}
-                      min={0}
-                      max={16}
-                      step={1}
-                      onChange={(value) => {
-                        patchControls({ itemGap: value });
-                      }}
-                    />
-                    <TextField
-                      label="ID prefix"
-                      value={controls.idPrefix}
-                      onChange={(value) => {
-                        patchControls({ idPrefix: value });
-                      }}
-                    />
-                  </div>
-                </ControlSection>
+                  {controlTabs.map((tab) => (
+                    <Tab key={tab.id} className="demoTabButton">
+                      <span className="demoTabButtonLabel">{tab.label}</span>
+                    </Tab>
+                  ))}
+                </TabList>
 
-                <ControlSection
-                  title="Connectors"
-                  description="Line width, color, and radius."
-                >
-                  <div className="demoGroupGrid">
-                    <NumberField
-                      label="Line width"
-                      value={controls.lineWidth}
-                      min={0.5}
-                      max={6}
-                      step={0.5}
-                      onChange={(value) => {
-                        patchControls({ lineWidth: value });
-                      }}
-                    />
-                    <NumberField
-                      label="Line radius"
-                      value={controls.lineRadius}
-                      min={0}
-                      max={24}
-                      step={1}
-                      onChange={(value) => {
-                        patchControls({ lineRadius: value });
-                      }}
-                    />
-                    <ColorField
-                      label="Line color"
-                      value={controls.lineColor}
-                      onChange={(value) => {
-                        patchControls({ lineColor: value });
-                      }}
-                    />
-                  </div>
-                </ControlSection>
+                <TabPanels className="demoTabPanels">
+                  <TabPanel className="demoTabPanel">
+                    <ControlSection
+                      title="Tree layout"
+                      description="Spacing, item gap, and ID prefix."
+                    >
+                      <div className="demoGroupGrid">
+                        <NumberField
+                          label="Tree spacing"
+                          value={controls.spacing}
+                          min={0}
+                          max={24}
+                          step={1}
+                          onChange={(value) => {
+                            patchControls({ spacing: value });
+                          }}
+                        />
+                        <NumberField
+                          label="Tree item gap"
+                          value={controls.itemGap}
+                          min={0}
+                          max={16}
+                          step={1}
+                          onChange={(value) => {
+                            patchControls({ itemGap: value });
+                          }}
+                        />
+                        <TextField
+                          label="Tree ID prefix"
+                          value={controls.idPrefix}
+                          placeholder="twig-tree"
+                          description="Used as the base for generated tree item IDs in the preview."
+                          onChange={(value) => {
+                            patchControls({ idPrefix: value });
+                          }}
+                        />
+                      </div>
+                    </ControlSection>
+                  </TabPanel>
 
-                <ControlSection
-                  title="Animation"
-                  description="Animation toggle, duration, and easing."
-                >
-                  <div className="demoGroupGrid">
-                    <CheckboxField
-                      label="Enable animation"
-                      checked={controls.animationEnabled}
-                      onChange={(value) => {
-                        patchControls({ animationEnabled: value });
-                      }}
-                    />
-                    <CheckboxField
-                      label="Animate opacity"
-                      checked={controls.animateOpacity}
-                      onChange={(value) => {
-                        patchControls({ animateOpacity: value });
-                      }}
-                    />
-                    <NumberField
-                      label="Duration"
-                      value={controls.animationDuration}
-                      min={0}
-                      max={2500}
-                      step={20}
-                      onChange={(value) => {
-                        patchControls({ animationDuration: value });
-                      }}
-                    />
-                    <TextField
-                      label="Easing"
-                      value={controls.animationEasing}
-                      onChange={(value) => {
-                        patchControls({ animationEasing: value });
-                      }}
-                    />
-                  </div>
-                </ControlSection>
+                  <TabPanel className="demoTabPanel">
+                    <ControlSection
+                      title="Connectors"
+                      description="Line width, color, and corner radius."
+                    >
+                      <div className="demoGroupGrid">
+                        <NumberField
+                          label="Connector width"
+                          value={controls.lineWidth}
+                          min={0.5}
+                          max={6}
+                          step={0.5}
+                          onChange={(value) => {
+                            patchControls({ lineWidth: value });
+                          }}
+                        />
+                        <NumberField
+                          label="Connector radius"
+                          value={controls.lineRadius}
+                          min={0}
+                          max={24}
+                          step={1}
+                          onChange={(value) => {
+                            patchControls({ lineRadius: value });
+                          }}
+                        />
+                        <ColorField
+                          label="Connector color"
+                          value={controls.lineColor}
+                          onChange={(value) => {
+                            patchControls({ lineColor: value });
+                          }}
+                        />
+                      </div>
+                    </ControlSection>
+                  </TabPanel>
 
-                <ControlSection
-                  title="Default styles"
-                  description="Toggle built-in disabled, focus, action, and status styles."
-                >
-                  <div className="demoGroupGrid">
-                    <CheckboxField
-                      label="Custom toggle icons"
-                      checked={controls.useCustomDemoToggles}
-                      onChange={(value) => {
-                        patchControls({ useCustomDemoToggles: value });
-                      }}
-                    />
-                    <CheckboxField
-                      label="Enable all default styles"
-                      checked={allDefaultStylesEnabled}
-                      onChange={(value) => {
-                        patchAllDefaultStyles(value);
-                      }}
-                    />
-                    <CheckboxField
-                      label="Disabled styles"
-                      checked={controls.useDefaultDisabledStyles}
-                      onChange={(value) => {
-                        patchControls({ useDefaultDisabledStyles: value });
-                      }}
-                    />
-                    <CheckboxField
-                      label="Focus styles"
-                      checked={controls.useDefaultFocusStyles}
-                      onChange={(value) => {
-                        patchControls({ useDefaultFocusStyles: value });
-                      }}
-                    />
-                    <CheckboxField
-                      label="Action styles"
-                      checked={controls.useDefaultActionStyles}
-                      onChange={(value) => {
-                        patchControls({ useDefaultActionStyles: value });
-                      }}
-                    />
-                    <CheckboxField
-                      label="Status styles"
-                      checked={controls.useDefaultStatusStyles}
-                      onChange={(value) => {
-                        patchControls({ useDefaultStatusStyles: value });
-                      }}
-                    />
-                  </div>
-                </ControlSection>
+                  <TabPanel className="demoTabPanel">
+                    <ControlSection
+                      title="Animation"
+                      description="Animation enablement, duration, easing, and opacity fade."
+                    >
+                      <div className="demoGroupGrid">
+                        <CheckboxField
+                          label="Animation enabled"
+                          checked={controls.animationEnabled}
+                          onChange={(value) => {
+                            patchControls({ animationEnabled: value });
+                          }}
+                        />
+                        <CheckboxField
+                          label="Animation opacity fade"
+                          checked={controls.animateOpacity}
+                          onChange={(value) => {
+                            patchControls({ animateOpacity: value });
+                          }}
+                        />
+                        <NumberField
+                          label="Animation duration"
+                          value={controls.animationDuration}
+                          min={0}
+                          max={2500}
+                          step={20}
+                          onChange={(value) => {
+                            patchControls({ animationDuration: value });
+                          }}
+                        />
+                      </div>
 
-                <ControlSection
-                  title="Toggles"
-                  description="Size, spacing, icon size, and state styling."
-                  wide
-                >
-                  <div className="demoGroupGrid">
-                    <NumberField
-                      label="Toggle size"
-                      value={controls.toggleSize}
-                      min={12}
-                      max={36}
-                      step={1}
-                      onChange={(value) => {
-                        patchControls({ toggleSize: value });
-                      }}
-                    />
-                    <NumberField
-                      label="Toggle radius"
-                      value={controls.toggleRadius}
-                      min={0}
-                      max={50}
-                      step={1}
-                      onChange={(value) => {
-                        patchControls({ toggleRadius: value });
-                      }}
-                    />
-                    <NumberField
-                      label="Toggle gap"
-                      value={controls.toggleLabelGap}
-                      min={0}
-                      max={24}
-                      step={1}
-                      onChange={(value) => {
-                        patchControls({ toggleLabelGap: value });
-                      }}
-                    />
-                    <NumberField
-                      label="Icon size"
-                      value={controls.toggleIconSize}
-                      min={8}
-                      max={28}
-                      step={1}
-                      onChange={(value) => {
-                        patchControls({ toggleIconSize: value });
-                      }}
-                    />
-                    <ColorField
-                      label="Open fill"
-                      value={controls.toggleOpenFill}
-                      onChange={(value) => {
-                        patchControls({ toggleOpenFill: value });
-                      }}
-                    />
-                    <ColorField
-                      label="Closed fill"
-                      value={controls.toggleClosedFill}
-                      onChange={(value) => {
-                        patchControls({ toggleClosedFill: value });
-                      }}
-                    />
-                    <ColorField
-                      label="Icon color"
-                      value={controls.toggleIconColor}
-                      onChange={(value) => {
-                        patchControls({ toggleIconColor: value });
-                      }}
-                    />
-                    <TextField
-                      label="Toggle shadow"
-                      value={controls.toggleShadow}
-                      onChange={(value) => {
-                        patchControls({ toggleShadow: value });
-                      }}
-                    />
-                  </div>
-                </ControlSection>
-              </div>
+                      <EasingField
+                        value={controls.animationEasing}
+                        customValue={customAnimationEasing}
+                        onPresetChange={selectAnimationEasing}
+                        onCustomValueChange={updateCustomAnimationEasing}
+                      />
+                    </ControlSection>
+                  </TabPanel>
+
+                  <TabPanel className="demoTabPanel">
+                    <ControlSection
+                      title="Slots"
+                      description="These map directly to the public slots API. Clear a class name to see the preview lose that demo styling."
+                    >
+                      <div className="demoGroupGrid">
+                        <TextField
+                          label="Tree slot className"
+                          value={controls.treeSlotClassName}
+                          placeholder="demoTreeSlot"
+                          description="Applied to the tree root element."
+                          onChange={(value) => {
+                            patchControls({ treeSlotClassName: value });
+                          }}
+                        />
+                        <TextAreaField
+                          label="Tree slot style"
+                          value={controls.treeSlotStyle}
+                          placeholder="min-height: 18px;"
+                          description="Inline CSS declarations for the tree root, separated by semicolons."
+                          onChange={(value) => {
+                            patchControls({ treeSlotStyle: value });
+                          }}
+                        />
+                        <TextField
+                          label="Row slot className"
+                          value={controls.rowSlotClassName}
+                          placeholder="demoPreviewRowSlot"
+                          description="Applied to both branch and leaf rows."
+                          onChange={(value) => {
+                            patchControls({ rowSlotClassName: value });
+                          }}
+                        />
+                        <TextAreaField
+                          label="Row slot style"
+                          value={controls.rowSlotStyle}
+                          placeholder="padding-block: 2px;"
+                          description="Inline CSS declarations for all rows."
+                          onChange={(value) => {
+                            patchControls({ rowSlotStyle: value });
+                          }}
+                        />
+                        <TextField
+                          label="Label slot className"
+                          value={controls.labelSlotClassName}
+                          placeholder="demoPreviewLabelSlot"
+                          description="Applied to label wrappers for both leaves and branches."
+                          onChange={(value) => {
+                            patchControls({ labelSlotClassName: value });
+                          }}
+                        />
+                        <TextAreaField
+                          label="Label slot style"
+                          value={controls.labelSlotStyle}
+                          placeholder="max-width: 62ch;"
+                          description="Inline CSS declarations for label wrappers."
+                          onChange={(value) => {
+                            patchControls({ labelSlotStyle: value });
+                          }}
+                        />
+                        <TextField
+                          label="Children slot className"
+                          value={controls.childrenSlotClassName}
+                          placeholder="demoPreviewChildrenSlot"
+                          description="Applied to the expandable children viewport."
+                          onChange={(value) => {
+                            patchControls({ childrenSlotClassName: value });
+                          }}
+                        />
+                        <TextAreaField
+                          label="Children slot style"
+                          value={controls.childrenSlotStyle}
+                          placeholder="padding-bottom: 4px;"
+                          description="Inline CSS declarations for the children viewport container."
+                          onChange={(value) => {
+                            patchControls({ childrenSlotStyle: value });
+                          }}
+                        />
+                      </div>
+                    </ControlSection>
+                  </TabPanel>
+
+                  <TabPanel className="demoTabPanel">
+                    <ControlSection
+                      title="Default styles"
+                      description="Toggle the built-in disabled, focus, action, and status treatments."
+                    >
+                      <div className="demoGroupGrid">
+                        <CheckboxField
+                          label="All default styles"
+                          checked={allDefaultStylesEnabled}
+                          onChange={(value) => {
+                            patchAllDefaultStyles(value);
+                          }}
+                        />
+                        <CheckboxField
+                          label="Default disabled styles"
+                          checked={controls.useDefaultDisabledStyles}
+                          onChange={(value) => {
+                            patchControls({ useDefaultDisabledStyles: value });
+                          }}
+                        />
+                        <CheckboxField
+                          label="Default focus styles"
+                          checked={controls.useDefaultFocusStyles}
+                          onChange={(value) => {
+                            patchControls({ useDefaultFocusStyles: value });
+                          }}
+                        />
+                        <CheckboxField
+                          label="Default action styles"
+                          checked={controls.useDefaultActionStyles}
+                          onChange={(value) => {
+                            patchControls({ useDefaultActionStyles: value });
+                          }}
+                        />
+                        <CheckboxField
+                          label="Default status styles"
+                          checked={controls.useDefaultStatusStyles}
+                          onChange={(value) => {
+                            patchControls({ useDefaultStatusStyles: value });
+                          }}
+                        />
+                      </div>
+                    </ControlSection>
+                  </TabPanel>
+
+                  <TabPanel className="demoTabPanel">
+                    <ControlSection
+                      title="Toggles"
+                      description="These map directly to the public toggle API. Use className and style fields instead of demo-only pseudo props."
+                    >
+                      <div className="demoGroupGrid">
+                        <CheckboxField
+                          label="Toggle custom icons"
+                          checked={controls.useCustomDemoToggles}
+                          onChange={(value) => {
+                            patchControls({ useCustomDemoToggles: value });
+                          }}
+                        />
+                        <NumberField
+                          label="Toggle size"
+                          value={controls.toggleSize}
+                          min={12}
+                          max={36}
+                          step={1}
+                          onChange={(value) => {
+                            patchControls({ toggleSize: value });
+                          }}
+                        />
+                        <NumberField
+                          label="Toggle radius"
+                          value={controls.toggleRadius}
+                          min={0}
+                          max={50}
+                          step={1}
+                          onChange={(value) => {
+                            patchControls({ toggleRadius: value });
+                          }}
+                        />
+                        <NumberField
+                          label="Toggle label gap"
+                          value={controls.toggleLabelGap}
+                          min={0}
+                          max={24}
+                          step={1}
+                          onChange={(value) => {
+                            patchControls({ toggleLabelGap: value });
+                          }}
+                        />
+                        <NumberField
+                          label="Toggle icon size"
+                          value={controls.toggleIconSize}
+                          min={8}
+                          max={28}
+                          step={1}
+                          onChange={(value) => {
+                            patchControls({ toggleIconSize: value });
+                          }}
+                        />
+                        <TextField
+                          label="Toggle button className"
+                          value={controls.toggleButtonClassName}
+                          placeholder="demoPreviewToggleButton"
+                          description="Applied to the toggle button wrapper."
+                          onChange={(value) => {
+                            patchControls({ toggleButtonClassName: value });
+                          }}
+                        />
+                        <TextAreaField
+                          label="Toggle button style"
+                          value={controls.toggleButtonStyle}
+                          placeholder="box-shadow: 0 8px 20px rgba(15, 23, 42, 0.35);"
+                          description="Inline CSS declarations for the toggle button wrapper."
+                          onChange={(value) => {
+                            patchControls({ toggleButtonStyle: value });
+                          }}
+                        />
+                        <TextField
+                          label="Toggle icon className"
+                          value={controls.toggleIconClassName}
+                          placeholder="demoPreviewToggleIconSlot"
+                          description="Applied to the icon wrapper around the default or custom icon node."
+                          onChange={(value) => {
+                            patchControls({ toggleIconClassName: value });
+                          }}
+                        />
+                        <TextAreaField
+                          label="Toggle icon style"
+                          value={controls.toggleIconStyle}
+                          placeholder="filter: drop-shadow(0 1px 1px rgba(15, 23, 42, 0.35));"
+                          description="Inline CSS declarations for the icon wrapper."
+                          onChange={(value) => {
+                            patchControls({ toggleIconStyle: value });
+                          }}
+                        />
+                        <TextField
+                          label="Toggle open className"
+                          value={controls.toggleOpenClassName}
+                          placeholder="demoPreviewToggleOpen"
+                          description="Applied when a branch is expanded."
+                          onChange={(value) => {
+                            patchControls({ toggleOpenClassName: value });
+                          }}
+                        />
+                        <TextAreaField
+                          label="Toggle open style"
+                          value={controls.toggleOpenStyle}
+                          placeholder="background: #2563eb;"
+                          description="Inline CSS declarations for the expanded state."
+                          onChange={(value) => {
+                            patchControls({ toggleOpenStyle: value });
+                          }}
+                        />
+                        <TextField
+                          label="Toggle closed className"
+                          value={controls.toggleClosedClassName}
+                          placeholder="demoPreviewToggleClosed"
+                          description="Applied when a branch is collapsed."
+                          onChange={(value) => {
+                            patchControls({ toggleClosedClassName: value });
+                          }}
+                        />
+                        <TextAreaField
+                          label="Toggle closed style"
+                          value={controls.toggleClosedStyle}
+                          placeholder="background: #1d4ed8;"
+                          description="Inline CSS declarations for the collapsed state."
+                          onChange={(value) => {
+                            patchControls({ toggleClosedStyle: value });
+                          }}
+                        />
+                      </div>
+                    </ControlSection>
+                  </TabPanel>
+                </TabPanels>
+              </TabGroup>
             </section>
           </div>
         </section>

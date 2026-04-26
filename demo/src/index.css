@@ -624,9 +624,132 @@ code {
   gap: 14px;
 }
 
+.demoTabsRoot {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.demoTabList {
+  position: relative;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  align-items: end;
+  padding: 8px 8px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(125, 211, 252, 0.42) rgba(15, 23, 42, 0.32);
+  border-radius: 18px 18px 0 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(15, 23, 42, 0.58),
+    rgba(8, 18, 34, 0.7)
+  );
+}
+
+.demoTabList::-webkit-scrollbar {
+  height: 10px;
+}
+
+.demoTabList::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.32);
+  border-radius: 999px;
+}
+
+.demoTabList::-webkit-scrollbar-thumb {
+  background: rgba(125, 211, 252, 0.42);
+  border-radius: 999px;
+}
+
+.demoTabList::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  background: rgba(125, 211, 252, 0.14);
+}
+
+.demoTabButton {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  flex: 0 0 auto;
+  margin-bottom: -1px;
+  padding: 12px 14px 14px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-bottom-color: transparent;
+  border-radius: 14px 14px 0 0;
+  background: linear-gradient(
+    180deg,
+    rgba(15, 23, 42, 0.46),
+    rgba(10, 18, 34, 0.8)
+  );
+  color: var(--text-secondary);
+  text-align: left;
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.demoTabButton:hover {
+  transform: translateY(-1px);
+  border-color: rgba(125, 211, 252, 0.22);
+}
+
+.demoTabButton[data-selected] {
+  border-color: rgba(125, 211, 252, 0.34);
+  border-bottom-color: rgba(8, 18, 34, 0.92);
+  background: linear-gradient(
+    180deg,
+    rgba(56, 189, 248, 0.2),
+    rgba(15, 23, 42, 0.82)
+  );
+  color: var(--text-primary);
+  box-shadow:
+    inset 0 1px 0 rgba(216, 243, 255, 0.08),
+    0 12px 28px rgba(2, 6, 23, 0.18);
+}
+
+.demoTabButton:focus-visible,
+.demoOptionCard:focus-visible {
+  outline: 2px solid rgba(125, 211, 252, 0.72);
+  outline-offset: 2px;
+}
+
+.demoTabButtonLabel {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: inherit;
+}
+
+.demoTabButtonMeta {
+  font-size: 0.77rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.demoTabButton[data-selected] .demoTabButtonMeta {
+  color: rgba(216, 243, 255, 0.86);
+}
+
+.demoTabPanels,
+.demoTabPanel {
+  min-width: 0;
+}
+
 .demoGroupGrid {
   display: grid;
-  gap: 10px;
+  gap: 12px;
   grid-template-columns: repeat(auto-fit, minmax(156px, 1fr));
 }
 
@@ -639,18 +762,77 @@ code {
 }
 
 .demoControlSection h3 {
+  margin: 0;
   line-height: 1.2;
 }
 
 .demoControlSection p {
-  max-width: 56ch;
+  margin: 0;
+  max-width: none;
+}
+
+.demoControlSection > header {
+  display: grid;
+  gap: 8px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.demoFieldStack {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  background: linear-gradient(
+    180deg,
+    rgba(8, 18, 34, 0.58),
+    rgba(15, 23, 42, 0.36)
+  );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.demoFieldStackWide {
+  grid-column: 1 / -1;
+}
+
+.demoFieldHeaderBlock {
+  display: grid;
+  gap: 6px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.demoFieldTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #e2e8f0;
 }
 
 .demoFieldLabel {
   display: grid;
   gap: 6px;
+  min-width: 0;
+  align-content: start;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgba(7, 16, 31, 0.42);
   font-size: 14px;
   color: #cbd5e1;
+}
+
+.demoFieldDescription {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  max-width: none;
+}
+
+.demoFieldDescription code {
+  color: var(--accent);
 }
 
 .demoFieldValue {
@@ -670,6 +852,19 @@ code {
   border: 1px solid rgba(148, 163, 184, 0.18);
 }
 
+.demoTextAreaInput {
+  width: 100%;
+  min-height: 88px;
+  padding: 10px 12px;
+  resize: vertical;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(15, 23, 42, 0.9);
+  color: #e2e8f0;
+  font: inherit;
+  line-height: 1.45;
+}
+
 .demoTextInput {
   width: 100%;
   min-height: 40px;
@@ -685,6 +880,69 @@ code {
   align-items: center;
 }
 
+.demoOptionGrid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.demoOptionCard {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.4);
+  color: #dbe7f4;
+  cursor: pointer;
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.demoOptionCard:hover {
+  transform: translateY(-1px);
+  border-color: rgba(125, 211, 252, 0.2);
+}
+
+.demoOptionCard[data-checked] {
+  border-color: rgba(125, 211, 252, 0.34);
+  background: linear-gradient(
+    180deg,
+    rgba(56, 189, 248, 0.16),
+    rgba(15, 23, 42, 0.58)
+  );
+  box-shadow: inset 0 0 0 1px rgba(125, 211, 252, 0.12);
+}
+
+.demoOptionCardHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.demoOptionCardTitle {
+  font-weight: 700;
+  color: #f8fbff;
+}
+
+.demoOptionCardHeader code {
+  color: var(--accent);
+  font-size: 0.78rem;
+}
+
+.demoOptionCardBody {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
 .demoColorInput {
   width: 48px;
   height: 40px;
@@ -692,11 +950,19 @@ code {
   padding: 4px;
 }
 
+.demoFieldLabelWide {
+  grid-column: 1 / -1;
+}
+
 .demoCheckboxField {
   display: flex;
   align-items: center;
   gap: 10px;
   min-height: 40px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgba(7, 16, 31, 0.42);
   font-size: 14px;
   color: #cbd5e1;
 }
@@ -760,6 +1026,39 @@ code {
 
 .demoCustomToggleIconStar {
   transform: translateY(-0.08em);
+}
+
+.demoTreeSlot {
+  min-height: 18px;
+}
+
+.demoPreviewRowSlot {
+  padding-block: 2px;
+}
+
+.demoPreviewLabelSlot {
+  max-width: 62ch;
+}
+
+.demoPreviewChildrenSlot {
+  padding-bottom: 4px;
+}
+
+.demoPreviewToggleButton {
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.35);
+}
+
+.demoPreviewToggleIconSlot {
+  filter: drop-shadow(0 1px 1px rgba(15, 23, 42, 0.35));
+}
+
+.demoPreviewToggleOpen {
+  background: #2563eb;
+}
+
+.demoPreviewToggleClosed {
+  background: #1d4ed8;
 }
 
 .demoPreviewTree {
