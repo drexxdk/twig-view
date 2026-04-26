@@ -428,7 +428,9 @@
   z-index: 0;
   top: 50%;
   left: calc((var(--toggle-size) / 2) - (var(--line-width) / 2));
-  bottom: calc((var(--twig-connector-gap) * -1) - var(--branch-connector-bleed));
+  bottom: calc(
+    (var(--twig-connector-gap) * -1) - var(--branch-connector-bleed)
+  );
   width: var(--line-width);
   background-color: var(--connector-line-color);
   opacity: 1;
