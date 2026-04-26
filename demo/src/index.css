@@ -1032,10 +1032,6 @@ code {
   min-height: 18px;
 }
 
-.demoPreviewRowSlot {
-  padding-block: 2px;
-}
-
 .demoPreviewLabelSlot {
   max-width: 62ch;
 }

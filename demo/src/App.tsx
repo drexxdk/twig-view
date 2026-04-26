@@ -1251,8 +1251,8 @@ export default function App() {
                         <TextAreaField
                           label="Row slot style"
                           value={controls.rowSlotStyle}
-                          placeholder="padding-block: 2px;"
-                          description="Inline CSS declarations for all rows."
+                          placeholder="background: rgba(255, 255, 255, 0.03);"
+                          description="Inline CSS declarations for all rows. Prefer item gap over vertical row padding."
                           onChange={(value) => {
                             patchControls({ rowSlotStyle: value });
                           }}
