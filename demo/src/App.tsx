@@ -509,6 +509,134 @@ function createDemoButtonItem(
   };
 }
 
+const pinataDropdownOptions = [
+  { id: "account", label: "Account settings", icon: "⚙️" },
+  { id: "notifications", label: "Email notifications", badge: "4" },
+  { id: "billing", label: "Billing & plans", icon: "✨" },
+  { id: "disabled", label: "Coming soon", disabled: true },
+] as const;
+
+function PinataDropdownShowcase() {
+  const [isOpen, setIsOpen] = useState(true);
+  const [selectedOptions, setSelectedOptions] = useState<string[]>(["account"]);
+
+  function toggleOption(optionId: string) {
+    setSelectedOptions((current) =>
+      current.includes(optionId)
+        ? current.filter((id) => id !== optionId)
+        : [...current, optionId],
+    );
+  }
+
+  return (
+    <section className="pinataShowcase" aria-labelledby="pinata-title">
+      <div className="pinataConfetti" aria-hidden="true">
+        <span>✦</span>
+        <span>●</span>
+        <span>✳</span>
+        <span>◆</span>
+        <span>✦</span>
+        <span>●</span>
+      </div>
+      <div className="pinataShowcaseCopy">
+        <span className="pinataLaunchBadge">
+          <span aria-hidden="true">🪅</span> A little more joy in every menu
+        </span>
+        <h1 id="pinata-title">
+          Meet <span>Pinata Dropdown</span>
+        </h1>
+        <p>
+          One playful, polished dropdown for all your products. Pick one, pick a
+          few, and keep every action in reach.
+        </p>
+        <div className="pinataProof">
+          <span aria-hidden="true">✦</span> Multiple choice, made delightful
+        </div>
+      </div>
+      <div className="pinataDemo">
+        <div className="pinataDemoTopline">
+          <span>YOUR NEXT FAVORITE MENU</span>
+          <span className="pinataLiveBadge">
+            <span aria-hidden="true">●</span> LIVE DEMO
+          </span>
+        </div>
+        <div className="pinataDropdown">
+          <button
+            className="pinataTrigger"
+            type="button"
+            aria-expanded={isOpen}
+            aria-controls="pinata-options"
+            onClick={() => setIsOpen((open) => !open)}
+          >
+            <span>Status</span>
+            {selectedOptions.length > 0 && (
+              <span className="pinataCount">{selectedOptions.length}</span>
+            )}
+            <span
+              className={`pinataChevron${isOpen ? " isOpen" : ""}`}
+              aria-hidden="true"
+            />
+          </button>
+          {isOpen && (
+            <div
+              className="pinataMenu"
+              id="pinata-options"
+              role="listbox"
+              aria-label="Choose status options"
+              aria-multiselectable="true"
+            >
+              {pinataDropdownOptions.map((option) => {
+                const isSelected = selectedOptions.includes(option.id);
+                return (
+                  <button
+                    key={option.id}
+                    className={`pinataOption${isSelected ? " isSelected" : ""}`}
+                    type="button"
+                    role="option"
+                    aria-selected={isSelected}
+                    disabled={"disabled" in option && option.disabled}
+                    onClick={() => toggleOption(option.id)}
+                  >
+                    <span className="pinataCheckbox" aria-hidden="true">
+                      {isSelected && <span>✓</span>}
+                    </span>
+                    {"icon" in option && (
+                      <span className="pinataOptionIcon" aria-hidden="true">
+                        {option.icon}
+                      </span>
+                    )}
+                    <span className="pinataOptionLabel">{option.label}</span>
+                    {"badge" in option && (
+                      <span className="pinataOptionBadge">{option.badge}</span>
+                    )}
+                    {isSelected && (
+                      <span className="pinataSelectedSparkle" aria-hidden="true">
+                        ✦
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+        <p className="pinataDemoHint">
+          <span aria-hidden="true">↗</span> Try selecting a few options
+        </p>
+        <span className="pinataDecor pinataDecorOne" aria-hidden="true">
+          ✦
+        </span>
+        <span className="pinataDecor pinataDecorTwo" aria-hidden="true">
+          ●
+        </span>
+        <span className="pinataDecor pinataDecorThree" aria-hidden="true">
+          ◆
+        </span>
+      </div>
+    </section>
+  );
+}
+
 export default function App() {
   const [managedBranchEnabled, setManagedBranchEnabled] = useState(false);
   const analyticsLazyLoadAttemptsRef = useRef(0);
@@ -984,6 +1112,7 @@ export default function App() {
 
   return (
     <main className="demoShell">
+      <PinataDropdownShowcase />
       <section className="heroBand" aria-label="Introduction">
         <div className="heroInner">
           <div className="heroLead">
