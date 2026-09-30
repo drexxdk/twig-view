@@ -581,9 +581,8 @@ function PinataDropdownShowcase() {
             <div
               className="pinataMenu"
               id="pinata-options"
-              role="listbox"
-              aria-label="Choose status options"
-              aria-multiselectable="true"
+              role="group"
+              aria-label="Status options"
             >
               {pinataDropdownOptions.map((option) => {
                 const isSelected = selectedOptions.includes(option.id);
@@ -592,8 +591,7 @@ function PinataDropdownShowcase() {
                     key={option.id}
                     className={`pinataOption${isSelected ? " isSelected" : ""}`}
                     type="button"
-                    role="option"
-                    aria-selected={isSelected}
+                    aria-pressed={isSelected}
                     disabled={"disabled" in option && option.disabled}
                     onClick={() => toggleOption(option.id)}
                   >
